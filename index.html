@@ -9,36 +9,17 @@
     <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 彻底移除老旧的 1.7.1 版本，全面锁定 2.8.2 版本，确保错误提示精准无误 -->
+    <!-- 🌟 彻底移除动态注入，改用最原始的静态标签+同步阻塞加载，完美绕过广告插件拦截 -->
+    <script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
     <script>
-        window.tcbSdkLoaded = false;
-        window.tcbSdkFailed = false;
-        (function() {
-            var urls = [
-                "https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js",
-                "https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js",
-                "https://unpkg.zhimg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"
-            ];
-            var i = 0;
-            function loadNext() {
-                if (i >= urls.length) {
-                    window.tcbSdkFailed = true;
-                    return;
-                }
-                var script = document.createElement('script');
-                script.src = urls[i++];
-                script.onload = function() {
-                    if (typeof cloudbase !== 'undefined') {
-                        window.tcbSdkLoaded = true;
-                    } else {
-                        loadNext();
-                    }
-                };
-                script.onerror = loadNext;
-                document.head.appendChild(script);
-            }
-            loadNext();
-        })();
+        if (typeof cloudbase === 'undefined') {
+            document.write('<script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
+        }
+    </script>
+    <script>
+        if (typeof cloudbase === 'undefined') {
+            document.write('<script src="https://unpkg.zhimg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
+        }
     </script>
     
     <script>
@@ -698,20 +679,14 @@
                 };
 
                 onMounted(() => { 
-                    let attempts = 0;
-                    const checkSdk = () => {
-                        if (window.tcbSdkLoaded && typeof cloudbase !== 'undefined') {
-                            initCloudBase();
-                        } else if (window.tcbSdkFailed || attempts > 50) { 
-                            state.isCloud = false; 
-                            state.isLoading = false;
-                            state.systemError = "网络限制导致云端驱动下载彻底超时！您的网络屏蔽了所需的公共CDN库，请尝试关闭去广告插件（如AdGuard）或切换手机热点。";
-                        } else {
-                            attempts++;
-                            setTimeout(checkSdk, 100);
-                        }
-                    };
-                    checkSdk();
+                    // 🌟 因为换成了同步阻塞加载，页面走到这里时，要么成功要么就是被硬性拦截死了，无需再轮询
+                    if (typeof cloudbase !== 'undefined') {
+                        initCloudBase();
+                    } else {
+                        state.isCloud = false; 
+                        state.isLoading = false;
+                        state.systemError = "严重网络拦截！您的浏览器开启了极严的【去广告/隐私防护插件】(如AdGuard、360拦截、夸克防护)，直接把腾讯云的基础服务给“杀”了。请务必【暂时关闭这些插件】，或者换一个纯净的浏览器(如Edge/Chrome)打开本网页！";
+                    }
                 });
 
                 const saveToDb = async (colName, id, data) => {
