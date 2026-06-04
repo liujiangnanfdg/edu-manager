@@ -10,18 +10,10 @@
     <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 🌟 终极路径修复：明确指定浏览器版本的 cloudbase.full.js 文件，并使用最稳定的 2.4.0 版本 -->
-    <script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/2.4.0/cloudbase.full.js"></script>
-    <script>
-        if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.4.0/cloudbase.full.js"><\/script>');
-        }
-    </script>
-    <script>
-        if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://unpkg.com/@cloudbase/js-sdk@2.4.0/cloudbase.full.js"><\/script>');
-        }
-    </script>
+    <!-- 🌟 终极路径修复：直接锁定官方最经典的 2.3.0 骨干版本，并使用硬核顺序加载，彻底杜绝 404 和拦截！ -->
+    <script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/2.3.0/cloudbase.full.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.3.0/cloudbase.full.js"></script>
+    <script src="https://unpkg.com/@cloudbase/js-sdk@2.3.0/cloudbase.full.js"></script>
     
     <script>
         // ==========================================
@@ -686,10 +678,10 @@
                     const checkSdk = () => {
                         if (typeof cloudbase !== 'undefined') {
                             initCloudBase();
-                        } else if (attempts > 80) { 
+                        } else if (attempts > 100) { 
                             state.isCloud = false; 
                             state.isLoading = false;
-                            state.systemError = "SDK 文件加载失败！这通常是因为加载的公共 CDN 节点发生异常。请尝试【清除浏览器缓存】或刷新重试。";
+                            state.systemError = "SDK 文件加载失败！官方库文件未正常下载，这通常是代理节点(v2ray)路由拦截所致。建议短暂关闭代理，或切换至全局模式刷新本页。";
                         } else {
                             attempts++;
                             setTimeout(checkSdk, 100);
