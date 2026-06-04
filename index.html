@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>培训机构管理系统 (腾讯云版)</title>
+    <!-- 引入基础依赖 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- 引入腾讯云开发 Web SDK -->
+    <script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
+    
+    <script>
+        // ==========================================
+        // 🚀 腾讯云开发 (TCB) 配置区
+        // ==========================================
+        // 请在此处填入您在腾讯云控制台获取的 环境 ID
+        const TCB_ENV_ID = "edu-manager-d5gx9trle5f2bc2d0"; 
+        // ==========================================
+    </script>
+    
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        .slide-up-enter-active { transition: all 0.3s ease-out; }
+        .slide-up-leave-active { transition: all 0.2s ease-in; }
+        .slide-up-enter-from { opacity: 0; transform: translateY(20px); }
+        .slide-up-leave-to { opacity: 0; transform: translateY(20px); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        [v-cloak] { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-gray-800 overflow-hidden">
+    <div id="app" class="h-screen w-screen flex" v-cloak>
+
+        <!-- 加载中遮罩 -->
+        <div v-if="state.isLoading" class="fixed inset-0 z-[999] bg-white flex flex-col items-center justify-center">
+            <i class="ph ph-spinner-gap text-5xl text-blue-600 animate-spin mb-4"></i>
+            <p class="text-gray-600 font-medium tracking-widest">正在连接腾讯云底层数据库...</p>
+        </div>
+
+        <!-- Login Screen -->
+        <div v-if="!state.currentUser" class="min-h-screen w-full bg-slate-100 flex items-center justify-center p-4 relative">
+            <div class="absolute top-4 right-4 bg-white/80 px-3 py-1.5 rounded-full shadow-sm text-xs font-bold border flex items-center">
+                <div :class="['w-2 h-2 rounded-full mr-2 animate-pulse', state.isCloud ? 'bg-green-500' : 'bg-orange-500']"></div>
+                {{ state.isCloud ? '腾讯云端直连模式' : '本地单机预览模式' }}
+            </div>
+
+            <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="ph ph-book-open-text text-4xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">{{ state.systemName }}</h1>
+                    <p class="text-sm text-gray-500 mt-2">请输入账号密码登录系统</p>
+                </div>
+                <form @submit.prevent="handleLogin" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">账号</label>
+                        <div class="relative">
+                            <i class="ph ph-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" required v-model="state.loginForm.username" class="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="请输入用户名" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        <div class="relative">
+                            <i class="ph ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="password" required v-model="state.loginForm.password" class="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="请输入密码" />
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-md transition-colors flex justify-center items-center">
+                        登 录 <i class="ph ph-arrow-right ml-2"></i>
+                    </button>
+                </form>
+                <div class="mt-8 bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs text-slate-500">
+                    <p class="font-bold text-slate-700 mb-2"><i class="ph ph-info mr-1"></i>预设测试账号：</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <span>超管: superadmin</span><span>密码: 123456</span>
+                        <span>校长: admin</span><span>密码: 123456</span>
+                        <span>老师: teacher1</span><span>密码: 123456</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <template v-else>
+            <!-- 侧边栏 -->
+            <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-20 flex-shrink-0">
+                <div class="p-5 flex items-center justify-center space-x-3 border-b border-slate-800">
+                    <i class="ph ph-book-open-text text-2xl text-blue-400"></i>
+                    <span class="text-lg font-bold text-white truncate">{{ state.systemName }}</span>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto no-scrollbar py-4 px-3 space-y-1">
+                    <button @click="switchTab('dashboard')" :class="['w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all', state.activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white']">
+                        <i class="ph ph-squares-four text-xl"></i><span>首页概览</span>
+                    </button>
+                    
+                    <button v-if="isAdminOrSuper" @click="switchTab('teachers')" :class="['w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all', state.activeTab === 'teachers' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white']">
+                        <i class="ph ph-users-three text-xl"></i><span>{{ isSuperadmin ? '系统账号管理' : '教师管理' }}</span>
+                    </button>
+                    
+                    <button @click="switchTab('classes')" :class="['w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all', state.activeTab === 'classes' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white']">
+                        <i class="ph ph-chalkboard-teacher text-xl"></i><span>{{ isTeacher ? '我的班级' : '班级与排课' }}</span>
+                    </button>
+                    
+                    <button @click="switchTab('students')" :class="['w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all', state.activeTab === 'students' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white']">
+                        <i class="ph ph-student text-xl"></i><span>{{ isTeacher ? '打卡与学员' : '学员与档案' }}</span>
+                    </button>
+                    
+                    <button @click="switchTab('records')" :class="['w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all', state.activeTab === 'records' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white']">
+                        <i class="ph ph-clock-counter-clockwise text-xl"></i><span>操作与签到流水</span>
+                    </button>
+                </div>
+
+                <div class="p-4 bg-slate-950 border-t border-slate-800">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-inner">
+                            {{ state.currentUser.name.charAt(0) }}
+                        </div>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="text-white font-medium truncate">{{ state.currentUser.name }}</p>
+                            <p class="text-xs text-slate-400">{{ isSuperadmin ? '系统超管' : isAdmin ? '校区负责人' : '任课讲师' }}</p>
+                        </div>
+                    </div>
+                    <button @click="handleLogout" class="w-full flex items-center justify-center space-x-2 py-2 bg-slate-800 hover:bg-red-500 hover:text-white rounded-lg transition-colors text-sm">
+                        <i class="ph ph-sign-out"></i><span>退出登录</span>
+                    </button>
+                </div>
+            </aside>
+
+            <main class="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 relative">
+                <!-- 超管安全提示条 -->
+                <div v-if="isSuperadmin" class="bg-orange-100 border-b border-orange-200 px-6 py-2.5 flex items-center text-orange-800 text-sm shadow-sm flex-shrink-0">
+                    <i class="ph ph-shield-warning text-lg mr-2"></i>
+                    系统超级管理员已登录。拥有底层最高权限，可进行隐形高级修改，操作请谨慎。
+                </div>
+
+                <!-- 滚动内容区 -->
+                <div class="flex-1 overflow-y-auto p-6 md:p-8">
+                    
+                    <!-- Dashboard -->
+                    <div v-if="state.activeTab === 'dashboard'" class="space-y-6">
+                        <div class="flex justify-between items-end">
+                            <h1 class="text-2xl font-bold text-slate-800">欢迎回来，{{ state.currentUser.name }} </h1>
+                            <div v-if="state.isCloud" class="flex items-center text-xs font-bold text-green-600 bg-green-100 px-3 py-1 rounded-full"><div class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div> 腾讯云数据库已连接同步</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div v-if="isAdminOrSuper" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between relative overflow-hidden group">
+                                <div class="absolute -right-4 -top-4 text-blue-50 opacity-50 group-hover:scale-110 transition-transform"><i class="ph ph-users-three text-9xl"></i></div>
+                                <h3 class="text-slate-500 text-sm font-medium z-10">在职老师</h3>
+                                <p class="text-4xl font-bold mt-3 text-slate-800 z-10">{{ teachersCount }} <span class="text-base font-normal text-slate-400">人</span></p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between relative overflow-hidden group">
+                                <div class="absolute -right-4 -top-4 text-indigo-50 opacity-50 group-hover:scale-110 transition-transform"><i class="ph ph-chalkboard-teacher text-9xl"></i></div>
+                                <h3 class="text-slate-500 text-sm font-medium z-10">{{ isTeacher ? '我带的班级' : '机构总班级' }}</h3>
+                                <p class="text-4xl font-bold mt-3 text-indigo-600 z-10">{{ myClassesCount }} <span class="text-base font-normal text-indigo-400">个</span></p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between relative overflow-hidden group">
+                                <div class="absolute -right-4 -top-4 text-emerald-50 opacity-50 group-hover:scale-110 transition-transform"><i class="ph ph-student text-9xl"></i></div>
+                                <h3 class="text-slate-500 text-sm font-medium z-10">{{ isTeacher ? '名下总人次' : '建档学员总数' }}</h3>
+                                <p class="text-4xl font-bold mt-3 text-emerald-600 z-10">{{ myStudentsCount }} <span class="text-base font-normal text-emerald-400">人</span></p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between relative overflow-hidden group">
+                                <div class="absolute -right-4 -top-4 text-orange-50 opacity-50 group-hover:scale-110 transition-transform"><i class="ph ph-clock-counter-clockwise text-9xl"></i></div>
+                                <h3 class="text-slate-500 text-sm font-medium z-10">今日动态流水</h3>
+                                <p class="text-4xl font-bold mt-3 text-orange-500 z-10">{{ todayRecordsCount }} <span class="text-base font-normal text-orange-300">条</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 教师管理 -->
+                    <div v-if="state.activeTab === 'teachers'" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="ph ph-users-three text-blue-600 mr-2 text-2xl"></i>账号管理</h2>
+                            <button @click="openModal('addTeacher')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center text-sm font-medium shadow-sm transition-colors">
+                                <i class="ph ph-plus mr-1.5"></i> 添加新账号
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
+                                        <th class="p-4 font-medium">姓名</th>
+                                        <th class="p-4 font-medium">登录账号</th>
+                                        <th class="p-4 font-medium">权限角色</th>
+                                        <th class="p-4 font-medium text-right">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-sm">
+                                    <tr v-for="user in visibleTeachers" :key="user.id" class="hover:bg-slate-50 transition-colors">
+                                        <td class="p-4 font-medium text-slate-800">{{ user.name }}</td>
+                                        <td class="p-4 text-slate-500">{{ user.username }}</td>
+                                        <td class="p-4">
+                                            <span :class="['px-2.5 py-1 rounded-full text-xs font-medium', user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700']">
+                                                {{ user.role === 'admin' ? '校区负责人' : '任课老师' }}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-right">
+                                            <button @click="triggerDeleteUser(user.id)" class="text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"><i class="ph ph-trash mr-1"></i>删除</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 班级列表页 -->
+                    <div v-if="state.activeTab === 'classes'" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="ph ph-chalkboard-teacher text-indigo-500 mr-2 text-2xl"></i>{{ isTeacher ? '我的班级' : '所有班级排期' }}</h2>
+                            <button v-if="isAdminOrSuper" @click="openModal('addClass')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center text-sm font-medium shadow-sm transition-colors">
+                                <i class="ph ph-plus mr-1.5"></i> 开设新班级
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
+                                        <th class="p-4 font-medium">班级名称</th>
+                                        <th class="p-4 font-medium">科目</th>
+                                        <th class="p-4 font-medium">任课老师</th>
+                                        <th class="p-4 font-medium">上课排期</th>
+                                        <th class="p-4 font-medium text-right">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-sm">
+                                    <tr v-for="cls in visibleClasses" :key="cls.id" class="hover:bg-slate-50 transition-colors">
+                                        <td class="p-4 font-bold text-slate-800">{{ cls.name }}</td>
+                                        <td class="p-4"><span class="px-2.5 py-1 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">{{ cls.course }}</span></td>
+                                        <td class="p-4 text-slate-600 flex items-center"><i class="ph ph-user-circle text-lg text-slate-400 mr-1.5"></i>{{ getTeacherName(cls.teacherId) }}</td>
+                                        <td class="p-4 text-slate-500">{{ cls.schedule || '未配置' }}</td>
+                                        <td class="p-4 text-right space-x-1">
+                                            <template v-if="isAdminOrSuper">
+                                                <button @click="triggerDeleteClass(cls.id)" class="text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors" title="解散班级">
+                                                    解散
+                                                </button>
+                                            </template>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="visibleClasses.length === 0">
+                                        <td colspan="5" class="p-8 text-center text-slate-400">暂无数据</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 学生主页/列表复用逻辑 -->
+                    <div v-if="state.activeTab === 'students'" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col h-full">
+                        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-800 flex items-center">
+                                    <i class="ph ph-student text-emerald-500 mr-2 text-2xl"></i>{{ isTeacher ? '我带的学员签到表' : '全校学员总表' }}
+                                </h2>
+                                <p class="text-xs text-slate-500 mt-1.5">打卡扣除的是该学员账户内的全局共享课时。</p>
+                            </div>
+                            <div class="flex space-x-3 items-center">
+                                <div class="relative hidden md:block">
+                                    <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input type="text" v-model="state.searchTerm" placeholder="搜索姓名/班级..." class="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none w-48" />
+                                </div>
+                                <button v-if="isAdminOrSuper" @click="openModal('addStudent')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center text-sm font-medium shadow-sm transition-colors whitespace-nowrap">
+                                    <i class="ph ph-plus mr-1.5"></i> 新生建档
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-y-auto flex-1 p-0">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm">
+                                    <tr class="text-slate-500 text-sm border-b border-slate-200">
+                                        <th class="p-4 font-medium">学员姓名</th>
+                                        <th class="p-4 font-medium">就读班级</th>
+                                        <th class="p-4 font-medium">全局剩余课时</th>
+                                        <th class="p-4 font-medium text-right bg-slate-50">常用操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-sm">
+                                    <tr v-for="record in filteredEnrollments" :key="record.enrollmentId" class="hover:bg-slate-50 transition-colors group">
+                                        <td class="p-4 font-bold text-slate-800 flex items-center"><i class="ph ph-user-circle text-3xl text-slate-300 mr-2"></i>{{ record.name }}</td>
+                                        <td class="p-4 text-slate-600">
+                                            <template v-if="record.classId">
+                                                <span class="font-medium">{{ getClassName(record.classId) }}</span>
+                                            </template>
+                                            <span v-else class="text-slate-400 italic">尚未分班</span>
+                                        </td>
+                                        <td class="p-4">
+                                            <span :class="['px-3 py-1 rounded-full text-xs font-bold border', record.remainingHours <= 3 ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' : 'bg-green-50 text-green-700 border-green-200']">
+                                                {{ record.remainingHours }} 节
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-right space-x-2">
+                                            <!-- 上课签到/请假按钮 -->
+                                            <template v-if="isTeacher && record.classId">
+                                                <button v-if="hasAttendedToday(record.id, record.classId) === 'none'" @click="openAttendanceModal(record, getClassObj(record.classId))" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded shadow-sm text-xs font-medium transition-colors">
+                                                    <i class="ph ph-check-square-offset mr-1"></i>签到/请假
+                                                </button>
+                                                <button v-else disabled :class="['px-3 py-1.5 rounded shadow-sm text-xs font-medium transition-colors cursor-not-allowed border', hasAttendedToday(record.id, record.classId) === 'present' ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-amber-50 text-amber-600 border-amber-200']">
+                                                    <i :class="['mr-1', hasAttendedToday(record.id, record.classId) === 'present' ? 'ph ph-check-circle' : 'ph ph-calendar-x']"></i>
+                                                    {{ hasAttendedToday(record.id, record.classId) === 'present' ? '今日已签到' : '今日已请假' }}
+                                                </button>
+                                            </template>
+
+                                            <!-- 校长专属操作 -->
+                                            <template v-if="isAdminOrSuper">
+                                                <button @click="openRenewModal(record)" class="text-blue-600 hover:text-blue-800 font-medium px-2 py-1.5 rounded hover:bg-blue-50 transition-colors text-xs border border-transparent hover:border-blue-100">
+                                                    续费充值
+                                                </button>
+                                                <button v-if="record.classId" @click="triggerDropClass(record.id, record.classId)" class="text-red-400 hover:text-red-600 font-medium p-1.5 rounded hover:bg-red-50 transition-colors" title="将该生移出此班级">
+                                                    退班
+                                                </button>
+                                                <button v-if="isSuperadmin" @click="triggerDeleteProfile(record.id)" class="text-red-600 hover:text-red-800 font-medium p-1.5 ml-2">删档</button>
+                                            </template>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="filteredEnrollments.length === 0">
+                                        <td colspan="4" class="p-8 text-center text-slate-400">没有找到相关学员数据</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 全站流水 -->
+                    <div v-if="state.activeTab === 'records'" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col h-full">
+                        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="ph ph-clock-counter-clockwise text-orange-500 mr-2 text-2xl"></i>系统全量流水表</h2>
+                            <div class="relative w-80">
+                                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" v-model="state.searchTerm" placeholder="搜姓名、日期、请假、签到..." class="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none w-full bg-white shadow-sm" />
+                            </div>
+                        </div>
+                        <div class="overflow-y-auto flex-1">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 bg-slate-50 shadow-sm">
+                                    <tr class="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                                        <th class="p-4 font-medium">产生时间</th>
+                                        <th class="p-4 font-medium">受影响学员</th>
+                                        <th class="p-4 font-medium">关联班级</th>
+                                        <th class="p-4 font-medium">操作类型</th>
+                                        <th class="p-4 font-medium">附加备注</th>
+                                        <th class="p-4 font-medium">操作执行人</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-sm">
+                                    <tr v-for="rec in filteredGlobalRecords" :key="rec.id" class="hover:bg-slate-50 transition-colors">
+                                        <td class="p-4 text-slate-500 whitespace-nowrap">{{ rec.date }}</td>
+                                        <td class="p-4 font-bold text-slate-800">{{ rec.studentName }}</td>
+                                        <td class="p-4 text-slate-600">{{ rec.className || '-' }}</td>
+                                        <td class="p-4">
+                                            <span :class="['px-2.5 py-1 rounded text-xs font-bold border', 
+                                                rec.type.includes('请假') ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                rec.type.includes('签到') ? 'bg-orange-50 text-orange-600 border-orange-200' : 
+                                                rec.type.includes('覆写') ? 'bg-purple-50 text-purple-700 border-purple-200' : 
+                                                'bg-blue-50 text-blue-600 border-blue-200']">
+                                                {{ rec.type }}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-slate-500 italic max-w-[200px] truncate" :title="rec.remark">{{ rec.remark || '-' }}</td>
+                                        <td class="p-4 text-slate-600 flex items-center"><i class="ph ph-user-circle mr-1 text-slate-400"></i>{{ rec.operatorName }}</td>
+                                    </tr>
+                                    <tr v-if="filteredGlobalRecords.length === 0">
+                                        <td colspan="6" class="p-8 text-center text-slate-400">没有搜索到任何记录</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </template>
+
+        <!-- 全局弹窗模态框 -->
+        <transition name="fade">
+            <div v-if="state.showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                <transition name="slide-up" appear>
+                    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative" @click.stop>
+                        
+                        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h3 class="text-xl font-bold text-slate-800 flex items-center">
+                                <i :class="modalIconClass + ' mr-2 text-2xl'"></i> {{ modalTitle }}
+                            </h3>
+                            <button @click="closeModal" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
+                                <i class="ph ph-x text-xl"></i>
+                            </button>
+                        </div>
+
+                        <div class="p-6 overflow-y-auto flex-1 no-scrollbar bg-white">
+                            
+                            <!-- 签到请假弹窗 -->
+                            <form v-if="state.showModal === 'attendance'" @submit.prevent="submitAttendance" class="space-y-6">
+                                <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex items-center space-x-4">
+                                    <div class="w-12 h-12 rounded-full overflow-hidden bg-white shadow-sm border border-slate-200">
+                                        <i class="ph ph-user text-3xl text-slate-300 m-auto mt-2 block text-center"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-lg text-slate-800">{{ state.attendanceForm.student.name }} <span class="font-normal text-sm text-slate-500 ml-2">剩余全局课时: <strong class="text-green-600">{{ state.attendanceForm.student.remainingHours }} 节</strong></span></p>
+                                        <p class="text-sm text-blue-600 mt-0.5"><i class="ph ph-chalkboard-teacher mr-1"></i>正在登记：{{ state.attendanceForm.classObj.name }}</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-3">请选择本次登记类型 <span class="text-red-500">*</span></label>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <label :class="['border-2 rounded-xl p-4 cursor-pointer transition-all flex flex-col items-center text-center', state.attendanceForm.type === 'present' ? 'border-green-500 bg-green-50' : 'border-slate-200 hover:border-green-300']">
+                                            <input type="radio" v-model="state.attendanceForm.type" value="present" class="hidden" />
+                                            <i class="ph ph-check-circle text-3xl mb-2 text-green-500"></i>
+                                            <span class="font-bold text-green-800">正常出勤上课</span>
+                                            <span class="text-xs text-green-600 mt-1">系统将自动扣除 1 节课时</span>
+                                        </label>
+                                        <label :class="['border-2 rounded-xl p-4 cursor-pointer transition-all flex flex-col items-center text-center', state.attendanceForm.type === 'leave' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:border-amber-300']">
+                                            <input type="radio" v-model="state.attendanceForm.type" value="leave" class="hidden" />
+                                            <i class="ph ph-calendar-x text-3xl mb-2 text-amber-500"></i>
+                                            <span class="font-bold text-amber-800">学员请假不扣课</span>
+                                            <span class="text-xs text-amber-600 mt-1">仅记录流水，不扣除可用课时</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1">随堂备注说明 (选填)</label>
+                                    <textarea v-model="state.attendanceForm.remark" rows="3" class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="例如：孩子今天感冒发烧请假；或者：上课表现非常积极..."></textarea>
+                                </div>
+
+                                <div class="flex justify-end pt-4 border-t border-slate-100">
+                                    <button type="button" @click="closeModal" class="px-5 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg mr-3 transition-colors">取消</button>
+                                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors">确认登记</button>
+                                </div>
+                            </form>
+
+                            <!-- 续费 -->
+                            <form v-if="state.showModal === 'renewStudent'" @submit.prevent="submitRenew" class="space-y-5">
+                                <div class="bg-blue-50/50 p-4 rounded-xl text-sm border border-blue-100">
+                                    <p class="text-slate-600 mb-1">正在为学员 <strong class="text-blue-700 text-lg mx-1">{{ state.renewForm.student.name }}</strong> 办理全局续费充值。</p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="block text-sm font-bold mb-1">新增正课 (节) <span class="text-red-500">*</span></label><input type="number" min="1" required v-model.number="state.renewForm.hours" class="w-full px-4 py-2 border rounded-xl" /></div>
+                                    <div><label class="block text-sm font-bold mb-1">新增赠课 (节)</label><input type="number" min="0" v-model.number="state.renewForm.bonus" class="w-full px-4 py-2 border rounded-xl" placeholder="默认为 0" /></div>
+                                </div>
+                                <div><label class="block text-sm font-bold mb-1">实付金额 (元) <span class="text-red-500">*</span></label><input type="number" min="0" step="0.01" required v-model.number="state.renewForm.payment" class="w-full px-4 py-2 border rounded-xl" /></div>
+                                <div><label class="block text-sm font-bold mb-1">收费备注说明 (选填)</label><textarea v-model="state.renewForm.remark" rows="2" class="w-full px-4 py-2 border rounded-xl" placeholder="例如：微信转账，参加双十一立减活动..."></textarea></div>
+                                
+                                <div class="flex justify-end pt-4 border-t border-slate-100">
+                                    <button type="button" @click="closeModal" class="px-5 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg mr-3 transition-colors">取消</button>
+                                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors">确认收银充值</button>
+                                </div>
+                            </form>
+
+                            <!-- 班级表单 -->
+                            <form v-if="state.showModal === 'addClass'" @submit.prevent="submitClass" class="space-y-5">
+                                <div><label class="block text-sm font-bold mb-1">班级全称 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.name" class="w-full px-4 py-2 border rounded-xl" placeholder="如：英语秋季班" /></div>
+                                <div><label class="block text-sm font-bold mb-1">课程科目 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.course" class="w-full px-4 py-2 border rounded-xl" placeholder="如：英语" /></div>
+                                <div><label class="block text-sm font-bold mb-1">上课排期 <span class="text-slate-400 font-normal text-xs ml-2">(选填)</span></label>
+                                    <div class="relative"><i class="ph ph-clock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" v-model="state.classForm.schedule" class="pl-10 w-full px-4 py-2 border rounded-xl" placeholder="如：每周六 14:00 - 16:00" /></div>
+                                </div>
+                                <div><label class="block text-sm font-bold mb-1">指派初始任课老师 <span class="text-red-500">*</span></label>
+                                    <select required v-model.number="state.classForm.teacherId" class="w-full px-4 py-2 border rounded-xl bg-white"><option value="" disabled>请选择...</option><option v-for="t in teachersOnly" :key="t.id" :value="t.id">{{t.name}}</option></select>
+                                </div>
+                                <div class="flex justify-end pt-4 border-t border-slate-100"><button type="button" @click="closeModal" class="px-5 py-2 hover:bg-slate-100 rounded-lg mr-3">取消</button><button type="submit" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md">保存</button></div>
+                            </form>
+
+                            <!-- 添加学员 -->
+                            <form v-if="state.showModal === 'addStudent'" @submit.prevent="submitStudent" class="space-y-6">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="block text-sm font-bold mb-1">学生姓名*</label><input type="text" required v-model="state.studentForm.name" class="w-full px-3 py-2 border rounded-xl" /></div>
+                                    <div><label class="block text-sm font-bold mb-1">联系电话</label><input type="tel" v-model="state.studentForm.contact" class="w-full px-3 py-2 border rounded-xl" /></div>
+                                </div>
+                                
+                                <div class="pt-4 border-t border-slate-100">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div><label class="block text-sm font-bold mb-1">首期买课实付(元)</label><input type="number" step="0.01" v-model.number="state.studentForm.payment" class="w-full px-3 py-2 border rounded-xl" /></div>
+                                        <div class="flex space-x-2">
+                                            <div class="flex-1"><label class="block text-sm font-bold mb-1">正课*</label><input type="number" required min="1" v-model.number="state.studentForm.hours" class="w-full px-3 py-2 border rounded-xl" /></div>
+                                            <div class="flex-1"><label class="block text-sm font-bold mb-1">赠课</label><input type="number" min="0" v-model.number="state.studentForm.bonus" class="w-full px-3 py-2 border rounded-xl" /></div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4"><label class="block text-sm font-bold mb-1">操作备注 (选填)</label><input type="text" v-model="state.studentForm.remark" class="w-full px-3 py-2 border rounded-xl" placeholder="如：家长转账，无赠送..." /></div>
+                                </div>
+
+                                <div class="pt-4 border-t border-slate-100">
+                                    <h4 class="text-sm font-bold text-slate-700 mb-3">将学员分配至初始班级</h4>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div><label class="block text-sm font-bold mb-1">任课老师*</label><select required v-model.number="state.studentForm.teacherId" @change="state.studentForm.classId=''" class="w-full px-3 py-2 border rounded-xl"><option value="" disabled>先选老师</option><option v-for="t in teachersOnly" :value="t.id">{{t.name}}</option></select></div>
+                                        <div><label class="block text-sm font-bold mb-1">具体班级*</label><select required v-model.number="state.studentForm.classId" :disabled="!state.studentForm.teacherId" class="w-full px-3 py-2 border rounded-xl disabled:bg-slate-100"><option value="" disabled>再选班级</option><option v-for="c in state.classes.filter(cls=>cls.teacherId===state.studentForm.teacherId)" :value="c.id">{{c.name}}</option></select></div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end pt-4 border-t border-slate-100"><button type="button" @click="closeModal" class="px-5 py-2 mr-3 rounded-lg">取消</button><button type="submit" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md">确认建档</button></div>
+                            </form>
+
+                        </div>
+                    </div>
+                </transition>
+            </div>
+        </transition>
+
+        <!-- 二次危险确认框 -->
+        <transition name="fade">
+            <div v-if="state.confirmDialog" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-[slideUp_0.2s_ease-out]">
+                    <div class="p-6 text-center">
+                        <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-warning-circle text-4xl"></i></div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">{{ state.confirmDialog.title }}</h3>
+                        <p class="text-slate-500 text-sm">{{ state.confirmDialog.message }}</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
+                        <button @click="state.confirmDialog = null" class="flex-1 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 font-bold hover:bg-slate-50 transition-colors">取消放弃</button>
+                        <button @click="executeConfirm" class="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-bold shadow hover:bg-red-600 transition-colors">危险确认执行</button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <transition name="slide-up">
+            <div v-if="state.toast.show" :class="['fixed top-6 right-6 p-4 rounded-xl shadow-xl z-[200] flex items-center space-x-3 border max-w-sm', state.toast.type === 'error' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-slate-800 text-white border-slate-700']">
+                <i :class="[state.toast.type === 'error' ? 'ph ph-warning-circle text-red-500 text-2xl' : 'ph ph-check-circle text-green-400 text-2xl']"></i>
+                <span class="font-medium text-sm">{{ state.toast.message }}</span>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+        const { createApp, reactive, computed, watch, onMounted } = Vue;
+
+        // 生成准确的时间字符串
+        const formatDt = (d) => { return d.toLocaleString('zh-CN', { hour12: false }); };
+
+        createApp({
+            setup() {
+                const state = reactive({
+                    systemName: '教务管理系统',
+                    isLoading: true, // 初始显示加载，准备连接腾讯云
+                    isCloud: false,  // 标记当前是否处于云端同步模式
+                    
+                    currentUser: null,
+                    users: [],
+                    classes: [],
+                    students: [],
+                    records: [],
+                    
+                    activeTab: 'dashboard',
+                    searchTerm: '',
+                    showModal: null,
+                    toast: { show: false, message: '', type: 'success' },
+                    confirmDialog: null,
+                    
+                    loginForm: { username: '', password: '' },
+                    classForm: { id: null, name: '', course: '', schedule: '', teacherId: '' },
+                    studentForm: { existingId: '', name: '', contact: '', payment: 0, hours: '', bonus: 0, teacherId: '', classId: '', remark: '' },
+                    renewForm: { student: null, hours: '', bonus: 0, payment: '', remark: '' },
+                    attendanceForm: { student: null, classObj: null, type: 'present', remark: '' },
+                });
+
+                // 本地假数据（作为未配置腾讯云时的兜底展示）
+                const fallbackUsers = [
+                    { id: 1, username: 'superadmin', password: '123456', role: 'superadmin', name: '系统超管' },
+                    { id: 2, username: 'admin', password: '123456', role: 'admin', name: '王校长' },
+                    { id: 3, username: 'teacher1', password: '123456', role: 'teacher', name: '张老师' }
+                ];
+                const fallbackClasses = [{ id: 101, name: '演示强化班', course: '演示', teacherId: 3 }];
+                const fallbackStudents = [{ id: 1, name: '演示学员', remainingHours: 10, totalHours: 10, classIds: [101] }];
+
+                // --- 🚀 核心：初始化腾讯云开发底层连接 ---
+                let tcbDb = null;
+                const initCloudBase = async () => {
+                    if (TCB_ENV_ID === '您的腾讯云环境ID') {
+                        console.warn("您尚未配置腾讯云 EnvID，系统已自动降级为【本地单机演示模式】。");
+                        state.users = fallbackUsers; state.classes = fallbackClasses; state.students = fallbackStudents;
+                        state.isCloud = false; state.isLoading = false;
+                        return;
+                    }
+                    try {
+                        const app = cloudbase.init({ env: TCB_ENV_ID });
+                        const auth = app.auth();
+                        
+                        // 1. 尝试匿名登录获取全线访问权限
+                        const loginState = await auth.getLoginState();
+                        if (!loginState) {
+                            await auth.anonymousAuthProvider().signIn();
+                        }
+                        
+                        tcbDb = app.database();
+                        state.isCloud = true;
+
+                        // 2. 建立四张核心数据表的实时监听隧道 (WebSocket Watch)
+                        const setupWatcher = (colName, stateKey, sortDesc=false) => {
+                            tcbDb.collection(colName).watch({
+                                onChange: (snapshot) => {
+                                    let docs = snapshot.docs.map(d => ({ ...d, id: parseInt(d._id) || d.id }));
+                                    if(sortDesc) docs.sort((a,b) => b.id - a.id);
+                                    state[stateKey] = docs;
+                                },
+                                onError: (err) => console.error(`Watch Error on ${colName}`, err)
+                            });
+                        };
+
+                        // 检查初始化种子数据（防全新数据库空白无法登录）
+                        const uRes = await tcbDb.collection('users').limit(1).get();
+                        if (uRes.data.length === 0) {
+                            await tcbDb.collection('users').doc("1").set({ ...fallbackUsers[0], _id: "1" });
+                        }
+
+                        setupWatcher('users', 'users');
+                        setupWatcher('classes', 'classes');
+                        setupWatcher('students', 'students');
+                        setupWatcher('records', 'records', true); // 记录按时间倒序
+
+                    } catch (e) {
+                        console.error("腾讯云初始化失败：", e);
+                        showToast("云端连接失败，请检查网络或控制台配置", "error");
+                        state.isCloud = false; // 降级本地
+                    } finally {
+                        state.isLoading = false;
+                    }
+                };
+
+                onMounted(() => { initCloudBase(); });
+
+                // --- 统一的云端/本地 写入路由网关 ---
+                const saveToDb = async (colName, id, data) => {
+                    if (state.isCloud && tcbDb) {
+                        await tcbDb.collection(colName).doc(id.toString()).set({ ...data, _id: id.toString() });
+                    } else {
+                        // 本地模式直接操作数组
+                        const arr = state[colName];
+                        const idx = arr.findIndex(x => x.id === id);
+                        if (idx > -1) arr[idx] = data; else arr.push(data);
+                    }
+                };
+                const delFromDb = async (colName, id) => {
+                    if (state.isCloud && tcbDb) {
+                        await tcbDb.collection(colName).doc(id.toString()).remove();
+                    } else {
+                        state[colName] = state[colName].filter(x => x.id !== id);
+                    }
+                };
+
+                // --- 计算属性与辅助 ---
+                const isSuperadmin = computed(() => state.currentUser?.role === 'superadmin');
+                const isAdmin = computed(() => state.currentUser?.role === 'admin');
+                const isTeacher = computed(() => state.currentUser?.role === 'teacher');
+                const isAdminOrSuper = computed(() => isSuperadmin.value || isAdmin.value);
+
+                const teachersOnly = computed(() => state.users.filter(u => u.role === 'teacher'));
+                const visibleTeachers = computed(() => isSuperadmin.value ? state.users.filter(u => u.role !== 'superadmin') : teachersOnly.value);
+                const visibleClasses = computed(() => isTeacher.value ? state.classes.filter(c => c.teacherId === state.currentUser.id) : state.classes);
+                
+                const teachersCount = computed(() => teachersOnly.value.length);
+                const myClassesCount = computed(() => visibleClasses.value.length);
+                const myStudentsCount = computed(() => {
+                    if (isTeacher.value) {
+                        const tc = visibleClasses.value.map(c => c.id);
+                        return state.students.filter(s => s.classIds && s.classIds.some(id => tc.includes(id))).length;
+                    }
+                    return state.students.length;
+                });
+                const todayRecordsCount = computed(() => {
+                    const todayStr = formatDt(new Date()).split(' ')[0];
+                    return state.records.filter(r => r.date.includes(todayStr) && (isSuperadmin.value || r.operatorRole !== 'superadmin')).length;
+                });
+
+                const filteredGlobalRecords = computed(() => {
+                    let recs = isTeacher.value ? state.records.filter(r => r.teacherId === state.currentUser.id) : state.records;
+                    if (!isSuperadmin.value) recs = recs.filter(r => r.operatorRole !== 'superadmin');
+                    if (!state.searchTerm) return recs;
+                    const st = state.searchTerm.toLowerCase();
+                    return recs.filter(r => (r.studentName||'').toLowerCase().includes(st) || (r.className||'').toLowerCase().includes(st) || (r.operatorName||'').toLowerCase().includes(st) || (r.type||'').toLowerCase().includes(st) || (r.remark||'').toLowerCase().includes(st) || (r.date||'').includes(st));
+                });
+
+                const filteredEnrollments = computed(() => {
+                    let all = state.students.reduce((acc, student) => {
+                        if (!student.classIds || student.classIds.length === 0) return [...acc, { ...student, classId: null, enrollmentId: `${student.id}-none` }];
+                        return [...acc, ...student.classIds.map(cid => ({ ...student, classId: cid, enrollmentId: `${student.id}-${cid}` }))];
+                    }, []);
+                    
+                    if (isTeacher.value) {
+                        const tc = visibleClasses.value.map(c => c.id);
+                        all = all.filter(e => tc.includes(e.classId));
+                    }
+                    if (!state.searchTerm) return all;
+                    const st = state.searchTerm.toLowerCase();
+                    return all.filter(e => e.name.toLowerCase().includes(st) || (e.classId && getClassName(e.classId).toLowerCase().includes(st)));
+                });
+
+                const modalTitle = computed(() => {
+                    const t = { addTeacher: '创建系统账号', addClass: '开设新班级排期', addStudent: '新生建档报课', renewStudent: '为学员全局续费', attendance: '上课/请假登记' };
+                    return t[state.showModal] || '';
+                });
+                const modalIconClass = computed(() => {
+                    const i = { addTeacher: 'ph-user-plus', addClass: 'ph-chalkboard-teacher', addStudent: 'ph-student', renewStudent: 'ph-coins', attendance: 'ph-calendar-check' };
+                    return i[state.showModal] || 'ph-app-window';
+                });
+
+                const showToast = (msg, type='success') => { state.toast = { show: true, message: msg, type }; setTimeout(() => state.toast.show = false, 3000); };
+                const switchTab = (tab) => { state.activeTab = tab; state.searchTerm = ''; };
+                const openModal = (m) => { state.showModal = m; };
+                const closeModal = () => { state.showModal = null; };
+                
+                const getTeacherName = (id) => state.users.find(u => u.id === parseInt(id))?.name || '未知';
+                const getClassName = (id) => state.classes.find(c => c.id === parseInt(id))?.name || '-';
+                const getStudentTeacherId = (classId) => state.classes.find(c => c.id === parseInt(classId))?.teacherId || null;
+                const getClassObj = (id) => state.classes.find(c => c.id === parseInt(id));
+
+                const hasAttendedToday = (studentId, classId) => {
+                    const todayDate = formatDt(new Date()).split(' ')[0];
+                    const rec = state.records.find(r => r.studentId === studentId && r.classId === classId && r.date.startsWith(todayDate) && (r.type.includes('签到') || r.type.includes('请假')));
+                    if (!rec) return 'none';
+                    return rec.type.includes('签到') ? 'present' : 'leave';
+                };
+
+                const handleLogin = () => {
+                    const u = state.users.find(x => x.username === state.loginForm.username && x.password === state.loginForm.password);
+                    if(u) { state.currentUser = u; state.loginForm = {username:'', password:''}; showToast(`登录成功，欢迎 ${u.name}`); }
+                    else { showToast('账号或密码错误', 'error'); }
+                };
+                const handleLogout = () => { state.currentUser = null; switchTab('dashboard'); };
+                const executeConfirm = () => { if(state.confirmDialog?.onConfirm) state.confirmDialog.onConfirm(); state.confirmDialog = null; };
+
+                // Delete Triggers
+                const triggerDeleteUser = (id) => {
+                    if (id === state.currentUser.id) return showToast('不可自杀', 'error');
+                    state.confirmDialog = { title: '删除账号', message: '将永久移除该员工账号。', onConfirm: () => { delFromDb('users', id); showToast('账号已移除'); }};
+                };
+                const triggerDeleteClass = (id) => {
+                    state.confirmDialog = { title: '解散班级', message: '解散后不可恢复。', onConfirm: () => { delFromDb('classes', id); showToast('班级解散完毕'); }};
+                };
+                const triggerDropClass = (sid, cid) => {
+                    state.confirmDialog = { title: '办理退班', message: `确定将其移出此班级吗？`, onConfirm: () => {
+                        const s = state.students.find(x=>x.id===sid);
+                        s.classIds = s.classIds.filter(id=>id!==cid);
+                        saveToDb('students', sid, s);
+                        addRecord(sid, s.name, cid, null, '退班操作', '已移出该班级人员名单');
+                        showToast('已办理退班');
+                    }};
+                };
+                const triggerDeleteProfile = (sid) => {
+                    state.confirmDialog = { title: '高危销毁', message: `将物理销毁该学员档，请三思。`, onConfirm: () => {
+                        delFromDb('students', sid); showToast('删除成功');
+                    }};
+                };
+
+                const addRecord = (studentId, studentName, classId, teacherId, typeStr, remarkStr='') => {
+                    const tid = teacherId || getStudentTeacherId(classId);
+                    const rid = Date.now();
+                    const newRec = {
+                        id: rid, studentId, studentName, classId, className: getClassName(classId),
+                        teacherId: tid, teacherName: getTeacherName(tid),
+                        operatorName: state.currentUser.name, operatorRole: state.currentUser.role,
+                        date: formatDt(new Date()), type: typeStr, remark: remarkStr
+                    };
+                    saveToDb('records', rid, newRec);
+                };
+
+                const submitTeacher = () => {
+                    if (state.users.some(u=>u.username===state.teacherForm.username)) return showToast('账号重复', 'error');
+                    const tid = Date.now();
+                    saveToDb('users', tid, { id: tid, ...state.teacherForm, password: state.teacherForm.password||'123456' });
+                    closeModal(); state.teacherForm = {name:'', username:'', password:'', role:'teacher'}; showToast('员工已入职');
+                };
+
+                const submitClass = () => {
+                    const cid = Date.now();
+                    saveToDb('classes', cid, { id: cid, ...state.classForm });
+                    showToast('新班级建立完毕'); closeModal(); state.classForm = {id:null, name:'', course:'', schedule:'', teacherId:''};
+                };
+
+                const submitStudent = () => {
+                    const sf = state.studentForm; const cid = parseInt(sf.classId);
+                    if (!cid) return showToast('必须指定去向班级', 'error');
+                    const total = (sf.hours||0) + (sf.bonus||0); const sid = Date.now();
+                    
+                    const newS = { id: sid, name: sf.name, contact: sf.contact, remainingHours: total, totalHours: total, paymentAmount: sf.payment, totalPayment: sf.payment, bonusHours: sf.bonus||0, classIds: [cid] };
+                    saveToDb('students', sid, newS);
+                    addRecord(sid, sf.name, cid, null, `首报建档 (+${sf.hours||0}正课, +${sf.bonus||0}赠课)`, `实付¥${sf.payment} | ` + sf.remark);
+                    closeModal(); showToast('学籍报单成功');
+                };
+
+                const openRenewModal = (studentObj) => { state.renewForm = { student: studentObj, hours: '', bonus: 0, payment: '', remark: '' }; state.showModal = 'renewStudent'; };
+                const submitRenew = () => {
+                    const rf = state.renewForm; const h = rf.hours||0; const b = rf.bonus||0; const p = rf.payment||0;
+                    const s = state.students.find(x=>x.id===rf.student.id);
+                    s.remainingHours += (h+b); s.totalHours += (h+b); s.bonusHours = (s.bonusHours||0) + b; s.totalPayment = (s.totalPayment||0) + p;
+                    saveToDb('students', s.id, s);
+                    addRecord(s.id, s.name, null, null, `充值全局户 (+${h}正课, +${b}赠课)`, `实收:¥${p} | ` + rf.remark);
+                    closeModal(); showToast('续费已到账');
+                };
+
+                const openAttendanceModal = (studentObj, classObj) => { state.attendanceForm = { student: studentObj, classObj: classObj, type: 'present', remark: '' }; state.showModal = 'attendance'; };
+                const submitAttendance = () => {
+                    const af = state.attendanceForm; const s = state.students.find(x=>x.id===af.student.id);
+                    if (hasAttendedToday(s.id, af.classObj.id) !== 'none') return showToast('该生今日在此班级已完成过考勤打卡！', 'error');
+
+                    if (af.type === 'present') {
+                        if (s.remainingHours <= 0) return showToast('可用课时已耗尽！', 'error');
+                        s.remainingHours -= 1; saveToDb('students', s.id, s);
+                        addRecord(s.id, s.name, af.classObj.id, af.classObj.teacherId, '正课签到 (库内-1课时)', af.remark);
+                        showToast('已扣除1节课时');
+                    } else {
+                        addRecord(s.id, s.name, af.classObj.id, af.classObj.teacherId, '事由请假 (不扣课时)', af.remark);
+                        showToast('已录入请假事由');
+                    }
+                    closeModal();
+                };
+
+                return {
+                    state, isSuperadmin, isAdmin, isTeacher, isAdminOrSuper,
+                    teachersOnly, visibleTeachers, visibleClasses,
+                    filteredGlobalRecords, filteredEnrollments,
+                    teachersCount, myClassesCount, myStudentsCount, todayRecordsCount,
+                    modalTitle, modalIconClass,
+                    switchTab, openModal, closeModal,
+                    handleLogin, handleLogout, executeConfirm,
+                    triggerDeleteUser, triggerDeleteClass, triggerDropClass, triggerDeleteProfile,
+                    submitTeacher, submitClass, submitStudent,
+                    openRenewModal, submitRenew,
+                    openAttendanceModal, submitAttendance,
+                    getTeacherName, getClassName, getStudentTeacherId, getClassObj, hasAttendedToday
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+```
+
+### 操作必读指南：
+1. 请您点击右上角的 `Preview` 先在沙盒环境体验纯网页版功能。
+2. 体验完毕后，您只需要在这个 HTML 文件里把第 15 行的 `const TCB_ENV_ID = "您的腾讯云环境ID";` 换成您自己真实注册的环境 ID。
+3. 把这个改好后的 HTML 文件直接扔到您的 GitHub 仓库的 `main` 分支上，开启 GitHub Pages。
+4. 全部的教职工只要打开您 GitHub 给的那个网址（手机电脑均可），只要有网，系统就会在腾讯云底层的加持下实现**自动的毫秒级数据多端同步！** 任何人请假、签到，大家都能瞬间看到！
