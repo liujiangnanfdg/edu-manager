@@ -9,14 +9,15 @@
     <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
+    <!-- 彻底移除老旧的 1.7.1 版本，全面锁定 2.8.2 版本，确保错误提示精准无误 -->
     <script>
         window.tcbSdkLoaded = false;
         window.tcbSdkFailed = false;
         (function() {
             var urls = [
                 "https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js",
-                "https://unpkg.zhimg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js",
-                "https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.7.1/cloudbase.full.js"
+                "https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js",
+                "https://unpkg.zhimg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"
             ];
             var i = 0;
             function loadNext() {
@@ -80,12 +81,13 @@
                     {{ state.systemError }}
                 </div>
                 <p class="text-gray-600 mb-6 text-sm text-left leading-relaxed">
-                    为了防止数据假写入丢失，系统已禁止降级进入本地模式。<br/><br/>
+                    为了防止数据假写入丢失，系统已禁止进入。<br/><br/>
                     <strong class="text-gray-800">修复指南：</strong><br/>
-                    请严格按照上方红色框内的提示，前往腾讯云控制台检查对应集合的<strong>权限设置</strong>，将其改为 <code>{"read":true,"write":true}</code> 并点击<strong>保存</strong>。
+                    1. 前往腾讯云控制台【登录授权】开启<strong>匿名登录</strong>。<br/>
+                    2. 确保 4 个集合的权限为 <code>{"read":true,"write":true}</code>。
                 </p>
                 <button @click="window.location.reload()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all w-full flex justify-center items-center">
-                    <i class="ph ph-arrows-clockwise text-xl mr-2"></i> 我已经修改并保存了权限，重新连接
+                    <i class="ph ph-arrows-clockwise text-xl mr-2"></i> 我已经修改并保存了配置，重新连接
                 </button>
             </div>
         </div>
@@ -561,7 +563,7 @@
                     isLoading: true,
                     loadingMsg: '正在安全连接云端数据库...', 
                     isCloud: false, 
-                    systemError: null, // 强制拦截致命报错
+                    systemError: null,
                     
                     currentUser: null,
                     users: [],
@@ -619,7 +621,15 @@
                         const auth = app.auth();
                         
                         const loginState = await auth.getLoginState();
-                        if (!loginState) await auth.anonymousAuthProvider().signIn();
+                        if (!loginState) {
+                            await auth.anonymousAuthProvider().signIn().catch(err => {
+                                // 精准识别匿名登录未开启错误
+                                if (err.message && (err.message.includes('ACCESS_TOKEN_DISABLED') || err.message.includes('not allow anonymous'))) {
+                                    throw new Error("【匿名登录未开启】请前往云开发控制台 -> 登录授权，开启『匿名登录』开关！");
+                                }
+                                throw new Error(`匿名登录失败: ${err.message}`);
+                            });
+                        }
                         
                         tcbDb = app.database();
                         state.isCloud = true;
@@ -640,13 +650,11 @@
                                     const exists = resData.find(r => parseInt(r.id) === defItem.id || parseInt(r._id) === defItem.id);
                                     if (!exists) {
                                         try {
-                                            // 【终极修复点】：剥离掉 _id 等所有被腾讯云严格禁止自带的主键字段，转化为纯净对象再发送
                                             const payload = JSON.parse(JSON.stringify(defItem));
                                             delete payload._id;
                                             
                                             const writeRes = await tcbDb.collection(col).doc(defItem.id.toString()).set(payload);
                                             
-                                            // 如果底层的写操作虽然执行了但是实际上返回了拦截错误码，手动抛出
                                             if (writeRes && writeRes.code && writeRes.code !== 'SUCCESS') {
                                                 throw new Error(writeRes.message || writeRes.code);
                                             }
@@ -674,15 +682,14 @@
                                 });
 
                             } catch (dbErr) {
-                                // 如果是自己主动 throw 出的权限错误，就直接往外抛
                                 if (dbErr.message && dbErr.message.includes('拦截了写入请求')) throw dbErr;
+                                if (dbErr.message && dbErr.message.includes('匿名登录未开启')) throw dbErr;
                                 
                                 throw new Error(`【${col}】集合访问失败！原因：腾讯云中没有创建 ${col} 集合，或者没有将其权限设置为 read:true。`);
                             }
                         }
 
                     } catch (e) {
-                        // 强制拒绝委屈求全的降级！直接抛出致命错误并封死系统
                         state.isCloud = false;
                         state.systemError = e.message;
                     } finally {
@@ -707,14 +714,13 @@
                     checkSdk();
                 });
 
-                // --- 🌟 强制剥离保留字段及严格拦截 ---
                 const saveToDb = async (colName, id, data) => {
                     if (!state.isCloud || !tcbDb) {
                         throw new Error("云端未连接，禁止写入！");
                     }
                     try {
                         const payload = JSON.parse(JSON.stringify(data));
-                        delete payload._id; // 强制剥离保留字，防止腾讯云服务器无声丢弃请求
+                        delete payload._id;
 
                         const res = await tcbDb.collection(colName).doc(id.toString()).set(payload);
                         
@@ -723,7 +729,7 @@
                         }
                     } catch (err) {
                         showToast(`🚫 严重报错: 云端【${colName}】集合读写失败！请检查权限。详情: ${err.message}`, 'error');
-                        throw err; // 彻底中断操作，防止UI假成功
+                        throw err; 
                     }
                     
                     const arr = state[colName];
