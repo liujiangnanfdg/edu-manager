@@ -6,22 +6,10 @@
     <title>培训机构管理系统 (腾讯云版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.min.js"></script>
+    <!-- 更换为全球通用节点，完美兼容 v2ray 等海外代理节点 -->
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <!-- 🌟 终极神级骨干节点：接入阿里淘宝官方镜像 (npmmirror)，拥有最新 2.8.2 版本且国内绝对不被拦截 -->
-    <script src="https://unpkg.npmmirror.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
-    <script>
-        // 如果阿里镜像波动，无缝备用官方主网和腾讯云内部地址
-        if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
-        }
-    </script>
-    <script>
-        if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/2.8.2/cloudbase.full.js"><\/script>');
-        }
-    </script>
+    <script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
     
     <script>
         // ==========================================
@@ -686,10 +674,10 @@
                     const checkSdk = () => {
                         if (typeof cloudbase !== 'undefined') {
                             initCloudBase();
-                        } else if (attempts > 50) { 
+                        } else if (attempts > 80) { 
                             state.isCloud = false; 
                             state.isLoading = false;
-                            state.systemError = "网络加载彻底超时！因为之前开启的去广告插件切断了云端骨干网络连接。即使您已关闭插件，浏览器可能仍有缓存。请尝试【清除浏览器缓存】或者【换一个纯净的浏览器(如Edge/Chrome)】再次打开！";
+                            state.systemError = "SDK加载彻底超时！由于您正在使用 v2ray 等海外代理，导致节点路由冲突阻断。解决方案：请将代理插件设置为【全局直连】或【PAC模式】，或者暂时关闭代理后刷新本页。";
                         } else {
                             attempts++;
                             setTimeout(checkSdk, 100);
