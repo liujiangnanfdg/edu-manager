@@ -9,17 +9,21 @@
     <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 🌟 彻底移除动态注入，改用最原始的静态标签+同步阻塞加载，完美绕过广告插件拦截 -->
+    <!-- 🌟 恢复标准脚本引入，辅以静默多节点备用，避免触发广告拦截 -->
     <script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
     <script>
-        if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
-        }
-    </script>
-    <script>
-        if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://unpkg.zhimg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
-        }
+        // 如果 1.5 秒后主节点因为网络波动还没下载完，静默注入国内高速备用节点，双管齐下
+        setTimeout(function() {
+            if (typeof cloudbase === 'undefined') {
+                var s1 = document.createElement('script');
+                s1.src = "https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js";
+                document.head.appendChild(s1);
+                
+                var s2 = document.createElement('script');
+                s2.src = "https://jsd.cdn.zzko.cn/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js";
+                document.head.appendChild(s2);
+            }
+        }, 1500); 
     </script>
     
     <script>
@@ -679,14 +683,21 @@
                 };
 
                 onMounted(() => { 
-                    // 🌟 因为换成了同步阻塞加载，页面走到这里时，要么成功要么就是被硬性拦截死了，无需再轮询
-                    if (typeof cloudbase !== 'undefined') {
-                        initCloudBase();
-                    } else {
-                        state.isCloud = false; 
-                        state.isLoading = false;
-                        state.systemError = "严重网络拦截！您的浏览器开启了极严的【去广告/隐私防护插件】(如AdGuard、360拦截、夸克防护)，直接把腾讯云的基础服务给“杀”了。请务必【暂时关闭这些插件】，或者换一个纯净的浏览器(如Edge/Chrome)打开本网页！";
-                    }
+                    // 🌟 核心修复：恢复“耐心轮询”机制！给网络和备用节点充足的下载时间（最高等待 8 秒）
+                    let attempts = 0;
+                    const checkSdk = () => {
+                        if (typeof cloudbase !== 'undefined') {
+                            initCloudBase();
+                        } else if (attempts > 80) { 
+                            state.isCloud = false; 
+                            state.isLoading = false;
+                            state.systemError = "网络加载彻底超时！您的浏览器可能开启了极严的【去广告/隐私防护插件】(如AdGuard、360拦截等)，把云端基础服务给切断了。请【暂时关闭这些插件】，或者换一个纯净的浏览器(如Edge/Chrome)尝试！";
+                        } else {
+                            attempts++;
+                            setTimeout(checkSdk, 100);
+                        }
+                    };
+                    checkSdk();
                 });
 
                 const saveToDb = async (colName, id, data) => {
