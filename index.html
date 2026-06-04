@@ -610,27 +610,41 @@
                         tcbDb = app.database();
                         state.isCloud = true;
 
-                        state.loadingMsg = '正在拉取云端核心数据表...';
+                        state.loadingMsg = '正在拉取与修复核心数据表...';
                         const collectionsToCheck = ['users', 'classes', 'students', 'records'];
                         for (const col of collectionsToCheck) {
                             try {
                                 const checkRes = await tcbDb.collection(col).limit(500).get();
-                                const resData = checkRes.data || (Array.isArray(checkRes) ? checkRes : []);
+                                let resData = checkRes.data || (Array.isArray(checkRes) ? checkRes : []);
                                 
-                                if (resData.length === 0) {
-                                    if (col === 'users') for (const u of fallbackUsers) await tcbDb.collection('users').doc(u.id.toString()).set({ ...u, _id: u.id.toString() });
-                                    if (col === 'classes') for (const c of fallbackClasses) await tcbDb.collection('classes').doc(c.id.toString()).set({ ...c, _id: c.id.toString() });
-                                    if (col === 'students') for (const s of fallbackStudents) await tcbDb.collection('students').doc(s.id.toString()).set({ ...s, _id: s.id.toString() });
+                                // 🌟 终极自愈修复：即使集合里有部分数据，也要确保缺失的测试账号/班级被自动补齐！
+                                let defaultData = [];
+                                if (col === 'users') defaultData = fallbackUsers;
+                                if (col === 'classes') defaultData = fallbackClasses;
+                                if (col === 'students') defaultData = fallbackStudents;
+
+                                for (const defItem of defaultData) {
+                                    // 精准核对，防止漏掉 admin 或 teacher
+                                    const exists = resData.find(r => parseInt(r.id) === defItem.id || parseInt(r._id) === defItem.id);
+                                    if (!exists) {
+                                        try {
+                                            await tcbDb.collection(col).doc(defItem.id.toString()).set({ ...defItem, _id: defItem.id.toString() });
+                                            resData.push({ ...defItem, _id: defItem.id.toString() });
+                                        } catch (writeErr) {
+                                            throw new Error(`写入【${col}】被拦截，请前往控制台确认权限包含 write:true`);
+                                        }
+                                    }
                                 }
 
-                                let docs = resData.map(d => ({ ...d, id: parseInt(d._id) || d.id }));
+                                // 安全提取正确ID，保证业务关联正常
+                                let docs = resData.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
                                 if (col === 'records') docs.sort((a,b) => b.id - a.id);
                                 state[col] = docs;
 
                                 tcbDb.collection(col).watch({
                                     onChange: (snapshot) => {
                                         if (snapshot && snapshot.docs) {
-                                            let wDocs = snapshot.docs.map(d => ({ ...d, id: parseInt(d._id) || d.id }));
+                                            let wDocs = snapshot.docs.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
                                             if (col === 'records') wDocs.sort((a,b) => b.id - a.id);
                                             state[col] = wDocs;
                                         }
@@ -639,14 +653,14 @@
                                 });
 
                             } catch (dbErr) {
-                                throw new Error(`集合【${col}】访问被拒绝！`);
+                                throw new Error(`读取【${col}】失败，请前往控制台确认权限包含 read:true`);
                             }
                         }
 
                     } catch (e) {
                         state.users = fallbackUsers; state.classes = fallbackClasses; state.students = fallbackStudents;
                         state.isCloud = false;
-                        showToast(`⚠️ 云端连接失败：${e.message}`, "error");
+                        showToast(`⚠️ 云端同步中止：${e.message}`, "error");
                     } finally {
                         state.isLoading = false;
                     }
