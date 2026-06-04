@@ -69,10 +69,10 @@
 <body class="bg-slate-50 text-gray-800 overflow-hidden">
     <div id="app" class="h-screen w-screen flex" v-cloak>
 
-        <!-- 加载中遮罩 -->
-        <div v-if="state.isLoading" class="fixed inset-0 z-[999] bg-white flex flex-col items-center justify-center">
+        <!-- 加载中遮罩 (增加了高斯模糊和动态提示文字) -->
+        <div v-if="state.isLoading" class="fixed inset-0 z-[999] bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
             <i class="ph ph-spinner-gap text-5xl text-blue-600 animate-spin mb-4"></i>
-            <p class="text-gray-600 font-medium tracking-widest">正在安全连接云端数据库...</p>
+            <p class="text-gray-700 font-bold tracking-widest">{{ state.loadingMsg }}</p>
         </div>
 
         <!-- Login Screen -->
@@ -568,6 +568,7 @@
                 const state = reactive({
                     systemName: '教务管理系统',
                     isLoading: true, // 初始显示加载，准备连接腾讯云
+                    loadingMsg: '正在安全连接云端数据库...', // 动态显示当前系统执行状态
                     isCloud: false,  // 标记当前是否处于云端同步模式
                     
                     currentUser: null,
@@ -603,6 +604,20 @@
                     setTimeout(() => state.toast.show = false, 6000); 
                 };
 
+                // --- 🌟 强制核验包装器：所有操作必须盖章确认 ---
+                const withLoading = async (msg, fn) => {
+                    state.loadingMsg = msg;
+                    state.isLoading = true;
+                    try {
+                        await fn();
+                    } catch (e) {
+                        // 防止报错不显示，统一接管报错提示
+                    } finally {
+                        state.isLoading = false;
+                        state.loadingMsg = '请稍候...';
+                    }
+                };
+
                 // --- 🚀 核心：初始化腾讯云开发底层连接 ---
                 let tcbDb = null;
                 const initCloudBase = async () => {
@@ -613,6 +628,7 @@
                         return;
                     }
                     try {
+                        state.loadingMsg = '正在校验云端访问凭证...';
                         const app = cloudbase.init({ 
                             env: TCB_ENV_ID,
                             region: 'ap-shanghai' 
@@ -629,11 +645,11 @@
                         tcbDb = app.database();
                         state.isCloud = true;
 
+                        state.loadingMsg = '正在拉取云端核心数据表...';
                         // 逐个校验 4 个核心数据集合的权限
                         const collectionsToCheck = ['users', 'classes', 'students', 'records'];
                         for (const col of collectionsToCheck) {
                             try {
-                                // 🌟 核心修复1：去掉 limit(1)，强制使用 HTTP 获取全部真实数据，彻底无视 WebSocket 拦截
                                 const checkRes = await tcbDb.collection(col).limit(500).get();
                                 const resData = checkRes.data || (Array.isArray(checkRes) ? checkRes : []);
                                 
@@ -659,7 +675,6 @@
                                     }
                                 }
 
-                                // 🌟 核心修复2：强行把刚才拿到的 HTTP 数据塞进系统，保证用户登录时绝对有账号可用！
                                 let docs = resData.map(d => ({ ...d, id: parseInt(d._id) || d.id }));
                                 if (col === 'records') docs.sort((a,b) => b.id - a.id);
                                 state[col] = docs;
@@ -678,7 +693,7 @@
 
                             } catch (dbErr) {
                                 console.error(`集合【${col}】数据库底层报错:`, dbErr);
-                                throw new Error(`访问集合【${col}】被拒绝！底层原始报错: ${dbErr.message || JSON.stringify(dbErr)}`);
+                                throw new Error(`集合【${col}】被拒绝！请前往腾讯云确认是否已创建此表，且权限已修改为读写完全开放！`);
                             }
                         }
 
@@ -715,21 +730,32 @@
                     checkSdk();
                 });
 
-                // --- 写入路由网关 ---
+                // --- 🌟 强制校验写入路由网关 ---
                 const saveToDb = async (colName, id, data) => {
                     if (state.isCloud && tcbDb) {
-                        await tcbDb.collection(colName).doc(id.toString()).set({ ...data, _id: id.toString() });
+                        try {
+                            await tcbDb.collection(colName).doc(id.toString()).set({ ...data, _id: id.toString() });
+                        } catch (err) {
+                            console.error(`云端存入 [${colName}] 失败:`, err);
+                            showToast(`🚫 保存失败: 您的腾讯云数据库中缺少【${colName}】集合，或该集合读写权限未开！请对照教程配置。`, 'error');
+                            throw err; // 中断操作，防止UI假成功
+                        }
                     }
-                    // 🌟 核心修复3：无论云端 WebSocket 是否瘫痪，强制瞬间更新本地界面
                     const arr = state[colName];
                     const idx = arr.findIndex(x => x.id === id);
                     if (idx > -1) arr[idx] = data; else arr.push(data);
                 };
+                
                 const delFromDb = async (colName, id) => {
                     if (state.isCloud && tcbDb) {
-                        await tcbDb.collection(colName).doc(id.toString()).remove();
+                        try {
+                            await tcbDb.collection(colName).doc(id.toString()).remove();
+                        } catch (err) {
+                            console.error(`云端删除 [${colName}] 失败:`, err);
+                            showToast(`🚫 删除失败: 您的腾讯云数据库中缺少【${colName}】集合，或该集合读写权限未开！`, 'error');
+                            throw err;
+                        }
                     }
-                    // 🌟 核心修复4：强制本地瞬间删除，不用死等云端通知
                     state[colName] = state[colName].filter(x => x.id !== id);
                 };
 
@@ -813,90 +839,116 @@
                 const handleLogout = () => { state.currentUser = null; switchTab('dashboard'); };
                 const executeConfirm = () => { if(state.confirmDialog?.onConfirm) state.confirmDialog.onConfirm(); state.confirmDialog = null; };
 
-                // Delete Triggers
+                // 🌟 所有操作接入防坑同步机制
                 const triggerDeleteUser = (id) => {
                     if (id === state.currentUser.id) return showToast('不可自杀', 'error');
-                    state.confirmDialog = { title: '删除账号', message: '将永久移除该员工账号。', onConfirm: () => { delFromDb('users', id); showToast('账号已移除'); }};
+                    state.confirmDialog = { title: '删除账号', message: '将永久移除该员工账号。', onConfirm: () => { 
+                        withLoading('正在从云端彻底删除该员工...', async () => {
+                            await delFromDb('users', id); showToast('账号已移除');
+                        });
+                    }};
                 };
                 const triggerDeleteClass = (id) => {
-                    state.confirmDialog = { title: '解散班级', message: '解散后不可恢复。', onConfirm: () => { delFromDb('classes', id); showToast('班级解散完毕'); }};
+                    state.confirmDialog = { title: '解散班级', message: '解散后不可恢复。', onConfirm: () => { 
+                        withLoading('正在解散云端班级数据...', async () => {
+                            await delFromDb('classes', id); showToast('班级解散完毕');
+                        });
+                    }};
                 };
                 const triggerDropClass = (sid, cid) => {
                     state.confirmDialog = { title: '办理退班', message: `确定将其移出此班级吗？`, onConfirm: () => {
                         const s = state.students.find(x=>x.id===sid);
-                        s.classIds = s.classIds.filter(id=>id!==cid);
-                        saveToDb('students', sid, s);
-                        addRecord(sid, s.name, cid, null, '退班操作', '已移出该班级人员名单');
-                        showToast('已办理退班');
+                        const newS = { ...s, classIds: s.classIds.filter(id=>id!==cid) };
+                        withLoading('正在处理云端退班手续...', async () => {
+                            await saveToDb('students', sid, newS);
+                            await addRecord(sid, s.name, cid, null, '退班操作', '已移出该班级人员名单');
+                            showToast('已办理退班');
+                        });
                     }};
                 };
                 const triggerDeleteProfile = (sid) => {
                     state.confirmDialog = { title: '高危销毁', message: `将物理销毁该学员档，请三思。`, onConfirm: () => {
-                        delFromDb('students', sid); showToast('删除成功');
+                        withLoading('正在从云端彻底抹除该学员档案...', async () => {
+                            await delFromDb('students', sid); showToast('删除成功');
+                        });
                     }};
                 };
 
-                const addRecord = (studentId, studentName, classId, teacherId, typeStr, remarkStr='') => {
+                const addRecord = async (studentId, studentName, classId, teacherId, typeStr, remarkStr='') => {
                     const tid = teacherId || getStudentTeacherId(classId);
-                    const rid = Date.now();
+                    const rid = Date.now() + Math.floor(Math.random() * 100); // 防止与并发id冲突
                     const newRec = {
                         id: rid, studentId, studentName, classId, className: getClassName(classId),
                         teacherId: tid, teacherName: getTeacherName(tid),
                         operatorName: state.currentUser.name, operatorRole: state.currentUser.role,
                         date: formatDt(new Date()), type: typeStr, remark: remarkStr
                     };
-                    saveToDb('records', rid, newRec);
+                    await saveToDb('records', rid, newRec);
                 };
 
                 const submitTeacher = () => {
                     if (state.users.some(u=>u.username===state.teacherForm.username)) return showToast('账号重复', 'error');
                     const tid = Date.now();
-                    saveToDb('users', tid, { id: tid, ...state.teacherForm, password: state.teacherForm.password||'123456' });
-                    closeModal(); state.teacherForm = {name:'', username:'', password:'', role:'teacher'}; showToast('员工已入职');
+                    withLoading('正在向云端分发教职工账号...', async () => {
+                        await saveToDb('users', tid, { id: tid, ...state.teacherForm, password: state.teacherForm.password||'123456' });
+                        closeModal(); state.teacherForm = {name:'', username:'', password:'', role:'teacher'}; showToast('员工已入职');
+                    });
                 };
 
                 const submitClass = () => {
                     const cid = Date.now();
-                    saveToDb('classes', cid, { id: cid, ...state.classForm });
-                    showToast('新班级建立完毕'); closeModal(); state.classForm = {id:null, name:'', course:'', schedule:'', teacherId:''};
+                    withLoading('正在组建云端班级数据库...', async () => {
+                        await saveToDb('classes', cid, { id: cid, ...state.classForm });
+                        showToast('新班级建立完毕'); closeModal(); state.classForm = {id:null, name:'', course:'', schedule:'', teacherId:''};
+                    });
                 };
 
                 const submitStudent = () => {
                     const sf = state.studentForm; const cid = parseInt(sf.classId);
                     if (!cid) return showToast('必须指定去向班级', 'error');
                     const total = (sf.hours||0) + (sf.bonus||0); const sid = Date.now();
-                    
                     const newS = { id: sid, name: sf.name, contact: sf.contact, remainingHours: total, totalHours: total, paymentAmount: sf.payment, totalPayment: sf.payment, bonusHours: sf.bonus||0, classIds: [cid] };
-                    saveToDb('students', sid, newS);
-                    addRecord(sid, sf.name, cid, null, `首报建档 (+${sf.hours||0}正课, +${sf.bonus||0}赠课)`, `实付¥${sf.payment} | ` + sf.remark);
-                    closeModal(); showToast('学籍报单成功');
+                    
+                    withLoading('正在将新生档案永久录入云端...', async () => {
+                        await saveToDb('students', sid, newS);
+                        await addRecord(sid, sf.name, cid, null, `首报建档 (+${sf.hours||0}正课, +${sf.bonus||0}赠课)`, `实付¥${sf.payment} | ` + sf.remark);
+                        closeModal(); showToast('学籍报单成功');
+                    });
                 };
 
                 const openRenewModal = (studentObj) => { state.renewForm = { student: studentObj, hours: '', bonus: 0, payment: '', remark: '' }; state.showModal = 'renewStudent'; };
                 const submitRenew = () => {
                     const rf = state.renewForm; const h = rf.hours||0; const b = rf.bonus||0; const p = rf.payment||0;
                     const s = state.students.find(x=>x.id===rf.student.id);
-                    s.remainingHours += (h+b); s.totalHours += (h+b); s.bonusHours = (s.bonusHours||0) + b; s.totalPayment = (s.totalPayment||0) + p;
-                    saveToDb('students', s.id, s);
-                    addRecord(s.id, s.name, null, null, `充值全局户 (+${h}正课, +${b}赠课)`, `实收:¥${p} | ` + rf.remark);
-                    closeModal(); showToast('续费已到账');
+                    const newS = { ...s }; // 确保克隆，防止因报错污染前端缓存
+                    newS.remainingHours += (h+b); newS.totalHours += (h+b); newS.bonusHours = (newS.bonusHours||0) + b; newS.totalPayment = (newS.totalPayment||0) + p;
+                    
+                    withLoading('正在进行云端续费充值操作...', async () => {
+                        await saveToDb('students', s.id, newS);
+                        await addRecord(s.id, s.name, null, null, `充值全局户 (+${h}正课, +${b}赠课)`, `实收:¥${p} | ` + rf.remark);
+                        closeModal(); showToast('续费已到账');
+                    });
                 };
 
                 const openAttendanceModal = (studentObj, classObj) => { state.attendanceForm = { student: studentObj, classObj: classObj, type: 'present', remark: '' }; state.showModal = 'attendance'; };
                 const submitAttendance = () => {
-                    const af = state.attendanceForm; const s = state.students.find(x=>x.id===af.student.id);
+                    const af = state.attendanceForm; 
+                    const s = state.students.find(x=>x.id===af.student.id);
                     if (hasAttendedToday(s.id, af.classObj.id) !== 'none') return showToast('该生今日在此班级已完成过考勤打卡！', 'error');
 
-                    if (af.type === 'present') {
-                        if (s.remainingHours <= 0) return showToast('可用课时已耗尽！', 'error');
-                        s.remainingHours -= 1; saveToDb('students', s.id, s);
-                        addRecord(s.id, s.name, af.classObj.id, af.classObj.teacherId, '正课签到 (库内-1课时)', af.remark);
-                        showToast('已扣除1节课时');
-                    } else {
-                        addRecord(s.id, s.name, af.classObj.id, af.classObj.teacherId, '事由请假 (不扣课时)', af.remark);
-                        showToast('已录入请假事由');
-                    }
-                    closeModal();
+                    withLoading('正在向云端递交考勤签到簿...', async () => {
+                        if (af.type === 'present') {
+                            if (s.remainingHours <= 0) { showToast('可用课时已耗尽！', 'error'); return; }
+                            const newS = { ...s, remainingHours: s.remainingHours - 1 };
+                            await saveToDb('students', s.id, newS);
+                            await addRecord(s.id, s.name, af.classObj.id, af.classObj.teacherId, '正课签到 (库内-1课时)', af.remark);
+                            showToast('已扣除1节课时');
+                        } else {
+                            await addRecord(s.id, s.name, af.classObj.id, af.classObj.teacherId, '事由请假 (不扣课时)', af.remark);
+                            showToast('已录入请假事由');
+                        }
+                        closeModal();
+                    });
                 };
 
                 return {
