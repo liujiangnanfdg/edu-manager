@@ -639,7 +639,8 @@
                                     await tcbDb.collection('users').doc("1").set({ ...fallbackUsers[0], _id: "1" });
                                 }
                             } catch (dbErr) {
-                                throw new Error(`集合【${col}】权限受限，请前往控制台将其安全规则修改为 read:true, write:true`);
+                                console.error(`集合【${col}】数据库底层报错:`, dbErr);
+                                throw new Error(`访问集合【${col}】被拒绝！底层原始报错: ${dbErr.message || JSON.stringify(dbErr)}`);
                             }
                         }
 
@@ -666,7 +667,7 @@
                         state.classes = fallbackClasses; 
                         state.students = fallbackStudents;
                         state.isCloud = false;
-                        showToast(`⚠️ 云端连接失败：${e.message}。系统已开启本地单机演示模式。`, "error");
+                        showToast(`⚠️ 云端连接失败：${e.message}`, "error");
                     } finally {
                         state.isLoading = false;
                     }
