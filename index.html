@@ -5,15 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>培训机构管理系统 (腾讯云版)</title>
     
-    <!-- 1. 替换为国内高速 CDN (Staticfile) -->
+    <!-- 1. 基础依赖 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.min.js"></script>
-    <!-- 图标库替换为饿了么国内镜像 -->
-    <script src="https://npm.elemecdn.com/@phosphor-icons/web@2.0.3/src/index.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 2. 核心修复：使用国内饿了么/阿里镜像直连腾讯云 SDK，彻底解决 unpkg 被墙导致的超时 -->
-    <script src="https://npm.elemecdn.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
-    <!-- 备用节点容灾：如果饿了么节点波动，瞬间切换到 jsdelivr 国内节点 -->
+    <!-- 2. 腾讯云 SDK 加载：三重顶级 CDN 容灾直连，确保万无一失 -->
+    <script src="https://fastly.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
+    <!-- 备用节点 1：如果 Fastly 波动，切换到 unpkg -->
+    <script>
+        if (typeof cloudbase === 'undefined') {
+            document.write('<script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
+        }
+    </script>
+    <!-- 备用节点 2：如果都失效，切换到 jsdelivr 主网 -->
     <script>
         if (typeof cloudbase === 'undefined') {
             document.write('<script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
@@ -635,16 +640,16 @@
                 };
 
                 onMounted(() => { 
-                    // 高级防御机制：后台轮询等待 CDN 脚本解析完成（最长等待 4 秒）
-                    let checkCount = 0;
+                    // 增加防白屏轮询机制：耐心等待长达 5 秒钟，让所有备用脚本有充足的时间下载
+                    let attempts = 0;
                     const checkSdk = () => {
                         if (typeof cloudbase !== 'undefined') {
-                            initCloudBase();
-                        } else if (checkCount < 40) { 
-                            checkCount++;
+                            initCloudBase(); // 只要检测到加载成功，立即启动系统
+                        } else if (attempts < 50) { 
+                            attempts++;
                             setTimeout(checkSdk, 100);
                         } else {
-                            alert("🔴 致命错误：核心组件下载超时！\n\n因为国内运营商的网络拦截，外网脚本库被屏蔽。\n系统已为您自动尝试了备用的国内饿了么/阿里节点，但依然未能连通。\n\n解决办法：\n1. 请刷新页面重新加载。\n2. 如果还不行，请暂时关闭浏览器上的【去广告拦截插件】(如AdGuard)或更换手机热点网络。");
+                            alert("🔴 致命错误：核心组件下载完全超时！\n\n系统已为您尝试了全球最强的三个备用节点，但您的网络依然未能成功下载云端驱动文件。\n\n解决办法：\n请尝试关闭所有的【去广告/网络拦截插件】(如AdGuard、360)，或尝试使用手机热点网络后刷新页面。");
                             state.isLoading = false;
                         }
                     };
