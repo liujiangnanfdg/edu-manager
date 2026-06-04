@@ -10,19 +10,39 @@
     <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 2. 腾讯云 SDK 加载：三重顶级 CDN 容灾直连，确保万无一失 -->
-    <script src="https://fastly.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
-    <!-- 备用节点 1：如果 Fastly 波动，切换到 unpkg -->
+    <!-- 2. 核心大修：终极网络容灾加载器，只用国内绝对可用的顶级节点 -->
     <script>
-        if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
-        }
-    </script>
-    <!-- 备用节点 2：如果都失效，切换到 jsdelivr 主网 -->
-    <script>
-        if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
-        }
+        window.tcbSdkLoaded = false;
+        window.tcbSdkFailed = false;
+        (function() {
+            var urls = [
+                // 节点1：jsDelivr 全球主网 (稳定)
+                "https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js",
+                // 节点2：知乎官方提供的未墙镜像 (国内极速)
+                "https://unpkg.zhimg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js",
+                // 节点3：腾讯云自带最原始骨干网节点 (V1.7.1，兼容我们使用的所有API，绝对不可能被墙或404)
+                "https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.7.1/cloudbase.full.js"
+            ];
+            var i = 0;
+            function loadNext() {
+                if (i >= urls.length) {
+                    window.tcbSdkFailed = true;
+                    return;
+                }
+                var script = document.createElement('script');
+                script.src = urls[i++];
+                script.onload = function() {
+                    if (typeof cloudbase !== 'undefined') {
+                        window.tcbSdkLoaded = true;
+                    } else {
+                        loadNext();
+                    }
+                };
+                script.onerror = loadNext;
+                document.head.appendChild(script);
+            }
+            loadNext();
+        })();
     </script>
     
     <script>
@@ -578,6 +598,11 @@
                 const fallbackClasses = [{ id: 101, name: '演示强化班', course: '演示', teacherId: 3 }];
                 const fallbackStudents = [{ id: 1, name: '演示学员', remainingHours: 10, totalHours: 10, classIds: [101] }];
 
+                const showToast = (msg, type='success') => { 
+                    state.toast = { show: true, message: msg, type }; 
+                    setTimeout(() => state.toast.show = false, 4000); 
+                };
+
                 // --- 🚀 核心：初始化腾讯云开发底层连接 ---
                 let tcbDb = null;
                 const initCloudBase = async () => {
@@ -588,7 +613,6 @@
                         return;
                     }
                     try {
-                        // 包含最关键的 region 修复
                         const app = cloudbase.init({ 
                             env: TCB_ENV_ID,
                             region: 'ap-shanghai' 
@@ -598,7 +622,7 @@
                         const loginState = await auth.getLoginState();
                         if (!loginState) {
                             await auth.anonymousAuthProvider().signIn().catch(err => {
-                                throw new Error("匿名登录尚未生效，请去腾讯云控制台确认【登录授权-匿名登录】已打勾。");
+                                throw new Error("匿名登录接口受限或未生效");
                             });
                         }
                         
@@ -611,7 +635,7 @@
                                 await tcbDb.collection('users').doc("1").set({ ...fallbackUsers[0], _id: "1" });
                             }
                         } catch (dbErr) {
-                            throw new Error("数据库被拦截！请确认腾讯云中 4 个集合的权限都改为了 {\"read\":true, \"write\":true}。");
+                            throw new Error("云数据库集合权限未完全开放");
                         }
 
                         const setupWatcher = (colName, stateKey, sortDesc=false) => {
@@ -631,26 +655,35 @@
                         setupWatcher('records', 'records', true);
 
                     } catch (e) {
-                        console.error("初始化失败：", e);
-                        alert("🔴 云端连接失败警告！\n\n原因：" + e.message);
+                        console.warn("云端环境暂不可用，切换至本地演示模式：", e);
+                        // 优雅降级到本地模式，不再使用崩溃性的 alert
+                        state.users = fallbackUsers; 
+                        state.classes = fallbackClasses; 
+                        state.students = fallbackStudents;
                         state.isCloud = false;
+                        showToast(`⚠️ 云端连接受限（${e.message}），已自动开启本地单机演示模式。`, "error");
                     } finally {
                         state.isLoading = false;
                     }
                 };
 
                 onMounted(() => { 
-                    // 增加防白屏轮询机制：耐心等待长达 5 秒钟，让所有备用脚本有充足的时间下载
+                    // 动态防白屏检测：等待直到 SDK 加载完成再进行初始化，否则降级
                     let attempts = 0;
                     const checkSdk = () => {
-                        if (typeof cloudbase !== 'undefined') {
-                            initCloudBase(); // 只要检测到加载成功，立即启动系统
-                        } else if (attempts < 50) { 
+                        if (window.tcbSdkLoaded && typeof cloudbase !== 'undefined') {
+                            initCloudBase();
+                        } else if (window.tcbSdkFailed || attempts > 50) { 
+                            // 下载完全超时，同样优雅降级
+                            state.users = fallbackUsers; 
+                            state.classes = fallbackClasses; 
+                            state.students = fallbackStudents;
+                            state.isCloud = false;
+                            state.isLoading = false;
+                            showToast("⚠️ 网络限制导致云端驱动下载超时，已自动开启本地单机演示模式。", "error");
+                        } else {
                             attempts++;
                             setTimeout(checkSdk, 100);
-                        } else {
-                            alert("🔴 致命错误：核心组件下载完全超时！\n\n系统已为您尝试了全球最强的三个备用节点，但您的网络依然未能成功下载云端驱动文件。\n\n解决办法：\n请尝试关闭所有的【去广告/网络拦截插件】(如AdGuard、360)，或尝试使用手机热点网络后刷新页面。");
-                            state.isLoading = false;
                         }
                     };
                     checkSdk();
@@ -730,7 +763,6 @@
                     return i[state.showModal] || 'ph-app-window';
                 });
 
-                const showToast = (msg, type='success') => { state.toast = { show: true, message: msg, type }; setTimeout(() => state.toast.show = false, 3000); };
                 const switchTab = (tab) => { state.activeTab = tab; state.searchTerm = ''; };
                 const openModal = (m) => { state.showModal = m; };
                 const closeModal = () => { state.showModal = null; };
