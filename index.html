@@ -10,10 +10,14 @@
     <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 🌟 终极路径修复：直接锁定官方最经典的 2.3.0 骨干版本，并使用硬核顺序加载，彻底杜绝 404 和拦截！ -->
-    <script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/2.3.0/cloudbase.full.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.3.0/cloudbase.full.js"></script>
-    <script src="https://unpkg.com/@cloudbase/js-sdk@2.3.0/cloudbase.full.js"></script>
+    <!-- 🌟 终极路径修复：使用腾讯云官方专门存放浏览器端压缩包的 static.cloudbase.net -->
+    <script src="https://static.cloudbase.net/cloudbase-js-sdk/2.28.6/cloudbase.full.js"></script>
+    <script>
+        // 容灾机制：尝试请求 latest 最新版
+        if (typeof cloudbase === 'undefined') {
+            document.write('<script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"><\/script>');
+        }
+    </script>
     
     <script>
         // ==========================================
@@ -681,7 +685,7 @@
                         } else if (attempts > 100) { 
                             state.isCloud = false; 
                             state.isLoading = false;
-                            state.systemError = "SDK 文件加载失败！官方库文件未正常下载，这通常是代理节点(v2ray)路由拦截所致。建议短暂关闭代理，或切换至全局模式刷新本页。";
+                            state.systemError = "SDK 文件加载失败！未能成功拉取腾讯云官方的 static.cloudbase.net 专用域名。这说明您的浏览器或代理未将其加入白名单，请短暂关闭代理或尝试【清除浏览器缓存】后重新刷新！";
                         } else {
                             attempts++;
                             setTimeout(checkSdk, 100);
