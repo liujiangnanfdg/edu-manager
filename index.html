@@ -69,7 +69,6 @@
             <p class="text-gray-700 font-bold tracking-widest">{{ state.loadingMsg }}</p>
         </div>
 
-        <!-- 🚨 致命错误拦截屏：强制拒绝假成功 -->
         <div v-if="state.systemError && !state.isLoading" class="fixed inset-0 z-[1000] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-6">
             <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full text-center border-t-8 border-red-500 animate-[slideUp_0.3s_ease-out]">
                 <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -77,7 +76,7 @@
                 </div>
                 <h1 class="text-2xl font-bold text-gray-800 mb-4">云端连接被拒绝</h1>
                 <div class="bg-red-50 text-red-800 p-4 rounded-xl text-sm text-left mb-6 font-mono break-words border border-red-100 shadow-inner">
-                    <p className="font-bold mb-1">拦截原因：</p>
+                    <p class="font-bold mb-1">拦截原因：</p>
                     {{ state.systemError }}
                 </div>
                 <p class="text-gray-600 mb-6 text-sm text-left leading-relaxed">
@@ -641,10 +640,20 @@
                                     const exists = resData.find(r => parseInt(r.id) === defItem.id || parseInt(r._id) === defItem.id);
                                     if (!exists) {
                                         try {
-                                            await tcbDb.collection(col).doc(defItem.id.toString()).set({ ...defItem, _id: defItem.id.toString() });
-                                            resData.push({ ...defItem, _id: defItem.id.toString() });
+                                            // 【终极修复点】：剥离掉 _id 等所有被腾讯云严格禁止自带的主键字段，转化为纯净对象再发送
+                                            const payload = JSON.parse(JSON.stringify(defItem));
+                                            delete payload._id;
+                                            
+                                            const writeRes = await tcbDb.collection(col).doc(defItem.id.toString()).set(payload);
+                                            
+                                            // 如果底层的写操作虽然执行了但是实际上返回了拦截错误码，手动抛出
+                                            if (writeRes && writeRes.code && writeRes.code !== 'SUCCESS') {
+                                                throw new Error(writeRes.message || writeRes.code);
+                                            }
+                                            
+                                            resData.push({ ...payload, _id: defItem.id.toString() });
                                         } catch (writeErr) {
-                                            throw new Error(`【${col}】集合拦截了写入请求！因为您的腾讯云数据库没有将 ${col} 的权限设置为 write:true`);
+                                            throw new Error(`【${col}】集合拦截了写入请求！因为您的腾讯云数据库没有将 ${col} 的权限设置为 write:true。错误详情：${writeErr.message || writeErr}`);
                                         }
                                     }
                                 }
@@ -666,7 +675,7 @@
 
                             } catch (dbErr) {
                                 // 如果是自己主动 throw 出的权限错误，就直接往外抛
-                                if (dbErr.message.includes('拦截了写入请求')) throw dbErr;
+                                if (dbErr.message && dbErr.message.includes('拦截了写入请求')) throw dbErr;
                                 
                                 throw new Error(`【${col}】集合访问失败！原因：腾讯云中没有创建 ${col} 集合，或者没有将其权限设置为 read:true。`);
                             }
@@ -698,17 +707,25 @@
                     checkSdk();
                 });
 
-                // --- 🌟 强制校验写入路由网关 ---
+                // --- 🌟 强制剥离保留字段及严格拦截 ---
                 const saveToDb = async (colName, id, data) => {
                     if (!state.isCloud || !tcbDb) {
                         throw new Error("云端未连接，禁止写入！");
                     }
                     try {
-                        await tcbDb.collection(colName).doc(id.toString()).set({ ...data, _id: id.toString() });
+                        const payload = JSON.parse(JSON.stringify(data));
+                        delete payload._id; // 强制剥离保留字，防止腾讯云服务器无声丢弃请求
+
+                        const res = await tcbDb.collection(colName).doc(id.toString()).set(payload);
+                        
+                        if (res && res.code && res.code !== 'SUCCESS') {
+                            throw new Error(`写入拒绝: ${res.message || res.code}`);
+                        }
                     } catch (err) {
-                        showToast(`🚫 保存失败: 云端【${colName}】集合读写权限未开启！`, 'error');
+                        showToast(`🚫 严重报错: 云端【${colName}】集合读写失败！请检查权限。详情: ${err.message}`, 'error');
                         throw err; // 彻底中断操作，防止UI假成功
                     }
+                    
                     const arr = state[colName];
                     const idx = arr.findIndex(x => x.id === id);
                     if (idx > -1) arr[idx] = data; else arr.push(data);
@@ -719,11 +736,15 @@
                         throw new Error("云端未连接，禁止删除！");
                     }
                     try {
-                        await tcbDb.collection(colName).doc(id.toString()).remove();
+                        const res = await tcbDb.collection(colName).doc(id.toString()).remove();
+                        if (res && res.code && res.code !== 'SUCCESS') {
+                            throw new Error(`删除拒绝: ${res.message || res.code}`);
+                        }
                     } catch (err) {
-                        showToast(`🚫 删除失败: 云端【${colName}】集合读写权限未开启！`, 'error');
+                        showToast(`🚫 删除失败: 云端【${colName}】删除被拦截！详情: ${err.message}`, 'error');
                         throw err;
                     }
+                    
                     state[colName] = state[colName].filter(x => x.id !== id);
                 };
 
