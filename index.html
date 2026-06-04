@@ -10,16 +10,16 @@
     <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 🌟 终极路径修复：移除错误的 NPM 内部路径，让 CDN 自动解析最新版 2.8.2 入口文件 -->
-    <script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2"></script>
+    <!-- 🌟 终极路径修复：明确指定浏览器版本的 cloudbase.full.js 文件，并使用最稳定的 2.4.0 版本 -->
+    <script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/2.4.0/cloudbase.full.js"></script>
     <script>
         if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2"><\/script>');
+            document.write('<script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.4.0/cloudbase.full.js"><\/script>');
         }
     </script>
     <script>
         if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/2.8.2/cloudbase.full.js"><\/script>');
+            document.write('<script src="https://unpkg.com/@cloudbase/js-sdk@2.4.0/cloudbase.full.js"><\/script>');
         }
     </script>
     
