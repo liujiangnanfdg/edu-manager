@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>培训机构管理系统 (腾讯云版)</title>
-    <!-- 引入基础依赖 CDN -->
+    <!-- 引入基础依赖 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <!-- 引入腾讯云开发 Web SDK -->
+    
+    <!-- 核心修复：用回最初正常工作的官方标准源，去除了导致超时的死链 -->
     <script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
     
     <script>
         // ==========================================
         // 🚀 腾讯云开发 (TCB) 配置区
         // ==========================================
-        // 请在此处填入您在腾讯云控制台获取的 环境 ID
         const TCB_ENV_ID = "edu-manager-d5gx9trle5f2bc2d0"; 
         // ==========================================
     </script>
@@ -39,7 +39,7 @@
         <!-- 加载中遮罩 -->
         <div v-if="state.isLoading" class="fixed inset-0 z-[999] bg-white flex flex-col items-center justify-center">
             <i class="ph ph-spinner-gap text-5xl text-blue-600 animate-spin mb-4"></i>
-            <p class="text-gray-600 font-medium tracking-widest">正在连接腾讯云底层数据库...</p>
+            <p class="text-gray-600 font-medium tracking-widest">正在安全连接云端数据库...</p>
         </div>
 
         <!-- Login Screen -->
@@ -556,7 +556,7 @@
                     attendanceForm: { student: null, classObj: null, type: 'present', remark: '' },
                 });
 
-                // 本地假数据（作为未配置腾讯云时的兜底展示）
+                // 本地假数据
                 const fallbackUsers = [
                     { id: 1, username: 'superadmin', password: '123456', role: 'superadmin', name: '系统超管' },
                     { id: 2, username: 'admin', password: '123456', role: 'admin', name: '王校长' },
@@ -569,25 +569,38 @@
                 let tcbDb = null;
                 const initCloudBase = async () => {
                     if (TCB_ENV_ID === '您的腾讯云环境ID') {
-                        console.warn("您尚未配置腾讯云 EnvID，系统已自动降级为【本地单机演示模式】。");
+                        console.warn("未配置EnvID，已降级演示模式。");
                         state.users = fallbackUsers; state.classes = fallbackClasses; state.students = fallbackStudents;
                         state.isCloud = false; state.isLoading = false;
                         return;
                     }
                     try {
-                        const app = cloudbase.init({ env: TCB_ENV_ID });
+                        // 包含最关键的 region 修复
+                        const app = cloudbase.init({ 
+                            env: TCB_ENV_ID,
+                            region: 'ap-shanghai' 
+                        });
                         const auth = app.auth();
                         
-                        // 1. 尝试匿名登录获取全线访问权限
                         const loginState = await auth.getLoginState();
                         if (!loginState) {
-                            await auth.anonymousAuthProvider().signIn();
+                            await auth.anonymousAuthProvider().signIn().catch(err => {
+                                throw new Error("匿名登录尚未生效，请去腾讯云控制台确认【登录授权-匿名登录】已打勾。");
+                            });
                         }
                         
                         tcbDb = app.database();
                         state.isCloud = true;
 
-                        // 2. 建立四张核心数据表的实时监听隧道 (WebSocket Watch)
+                        try {
+                            const uRes = await tcbDb.collection('users').limit(1).get();
+                            if (uRes.data.length === 0) {
+                                await tcbDb.collection('users').doc("1").set({ ...fallbackUsers[0], _id: "1" });
+                            }
+                        } catch (dbErr) {
+                            throw new Error("数据库被拦截！请确认腾讯云中 4 个集合的权限都改为了 {\"read\":true, \"write\":true}。");
+                        }
+
                         const setupWatcher = (colName, stateKey, sortDesc=false) => {
                             tcbDb.collection(colName).watch({
                                 onChange: (snapshot) => {
@@ -599,34 +612,35 @@
                             });
                         };
 
-                        // 检查初始化种子数据（防全新数据库空白无法登录）
-                        const uRes = await tcbDb.collection('users').limit(1).get();
-                        if (uRes.data.length === 0) {
-                            await tcbDb.collection('users').doc("1").set({ ...fallbackUsers[0], _id: "1" });
-                        }
-
                         setupWatcher('users', 'users');
                         setupWatcher('classes', 'classes');
                         setupWatcher('students', 'students');
-                        setupWatcher('records', 'records', true); // 记录按时间倒序
+                        setupWatcher('records', 'records', true);
 
                     } catch (e) {
-                        console.error("腾讯云初始化失败：", e);
-                        showToast("云端连接失败，请检查网络或控制台配置", "error");
-                        state.isCloud = false; // 降级本地
+                        console.error("初始化失败：", e);
+                        alert("🔴 云端连接失败警告！\n\n原因：" + e.message);
+                        state.isCloud = false;
                     } finally {
                         state.isLoading = false;
                     }
                 };
 
-                onMounted(() => { initCloudBase(); });
+                onMounted(() => { 
+                    // 确保官方基础库加载完成再运行
+                    if (typeof cloudbase === 'undefined') {
+                        alert("🔴 致命错误：腾讯云官方核心组件未成功加载，请刷新页面重试。");
+                        state.isLoading = false;
+                        return;
+                    }
+                    initCloudBase();
+                });
 
-                // --- 统一的云端/本地 写入路由网关 ---
+                // --- 写入路由网关 ---
                 const saveToDb = async (colName, id, data) => {
                     if (state.isCloud && tcbDb) {
                         await tcbDb.collection(colName).doc(id.toString()).set({ ...data, _id: id.toString() });
                     } else {
-                        // 本地模式直接操作数组
                         const arr = state[colName];
                         const idx = arr.findIndex(x => x.id === id);
                         if (idx > -1) arr[idx] = data; else arr.push(data);
@@ -826,10 +840,3 @@
     </script>
 </body>
 </html>
-```
-
-### 操作必读指南：
-1. 请您点击右上角的 `Preview` 先在沙盒环境体验纯网页版功能。
-2. 体验完毕后，您只需要在这个 HTML 文件里把第 15 行的 `const TCB_ENV_ID = "您的腾讯云环境ID";` 换成您自己真实注册的环境 ID。
-3. 把这个改好后的 HTML 文件直接扔到您的 GitHub 仓库的 `main` 分支上，开启 GitHub Pages。
-4. 全部的教职工只要打开您 GitHub 给的那个网址（手机电脑均可），只要有网，系统就会在腾讯云底层的加持下实现**自动的毫秒级数据多端同步！** 任何人请假、签到，大家都能瞬间看到！
