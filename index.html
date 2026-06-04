@@ -634,8 +634,12 @@
                         for (const col of collectionsToCheck) {
                             try {
                                 const checkRes = await tcbDb.collection(col).limit(1).get();
+                                
+                                // 🌟 核心修复：兼容老版本 SDK 1.7.1 的底层数据返回格式，防止 undefined 报错
+                                const resData = checkRes.data || (Array.isArray(checkRes) ? checkRes : []);
+                                
                                 // 如果是 users 且为空，说明是新数据库，顺便写入初始化种子数据
-                                if (col === 'users' && checkRes.data.length === 0) {
+                                if (col === 'users' && resData.length === 0) {
                                     await tcbDb.collection('users').doc("1").set({ ...fallbackUsers[0], _id: "1" });
                                 }
                             } catch (dbErr) {
