@@ -9,7 +9,19 @@
     <!-- 更换为全球通用节点，完美兼容 v2ray 等海外代理节点 -->
     <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
+    
+    <!-- 🌟 终极路径修复：移除错误的 NPM 内部路径，让 CDN 自动解析最新版 2.8.2 入口文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2"></script>
+    <script>
+        if (typeof cloudbase === 'undefined') {
+            document.write('<script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2"><\/script>');
+        }
+    </script>
+    <script>
+        if (typeof cloudbase === 'undefined') {
+            document.write('<script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/2.8.2/cloudbase.full.js"><\/script>');
+        }
+    </script>
     
     <script>
         // ==========================================
@@ -677,7 +689,7 @@
                         } else if (attempts > 80) { 
                             state.isCloud = false; 
                             state.isLoading = false;
-                            state.systemError = "SDK加载彻底超时！由于您正在使用 v2ray 等海外代理，导致节点路由冲突阻断。解决方案：请将代理插件设置为【全局直连】或【PAC模式】，或者暂时关闭代理后刷新本页。";
+                            state.systemError = "SDK 文件加载失败！这通常是因为加载的公共 CDN 节点发生异常。请尝试【清除浏览器缓存】或刷新重试。";
                         } else {
                             attempts++;
                             setTimeout(checkSdk, 100);
