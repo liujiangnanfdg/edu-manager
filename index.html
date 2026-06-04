@@ -14,11 +14,8 @@
         window.tcbSdkFailed = false;
         (function() {
             var urls = [
-                // 节点1：jsDelivr 全球主网 (稳定)
                 "https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js",
-                // 节点2：知乎官方提供的未墙镜像 (国内极速)
                 "https://unpkg.zhimg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js",
-                // 节点3：腾讯云自带最原始骨干网节点 (V1.7.1，兼容我们使用的所有API，绝对不可能被墙或404)
                 "https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.7.1/cloudbase.full.js"
             ];
             var i = 0;
@@ -67,20 +64,37 @@
 <body class="bg-slate-50 text-gray-800 overflow-hidden">
     <div id="app" class="h-screen w-screen flex flex-col" v-cloak>
 
-        <div v-if="!state.isCloud && !state.isLoading" class="bg-red-500 text-white flex items-center justify-center py-2.5 px-4 shadow-md z-[1000] flex-shrink-0 animate-pulse">
-            <i class="ph ph-warning-circle text-2xl mr-2"></i>
-            <span class="font-bold text-sm">危险提示：您当前处于【本地单机模式】！云端连接失败，添加的数据刷新后会消失。请前往腾讯云确认 4 个集合的权限都改为了 read:true, write:true 并保存！</span>
-        </div>
-
         <div v-if="state.isLoading" class="fixed inset-0 z-[999] bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
             <i class="ph ph-spinner-gap text-5xl text-blue-600 animate-spin mb-4"></i>
             <p class="text-gray-700 font-bold tracking-widest">{{ state.loadingMsg }}</p>
         </div>
 
-        <div v-if="!state.currentUser" class="flex-1 w-full bg-slate-100 flex items-center justify-center p-4 relative">
+        <!-- 🚨 致命错误拦截屏：强制拒绝假成功 -->
+        <div v-if="state.systemError && !state.isLoading" class="fixed inset-0 z-[1000] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-6">
+            <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full text-center border-t-8 border-red-500 animate-[slideUp_0.3s_ease-out]">
+                <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <i class="ph ph-shield-x text-5xl text-red-500"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-4">云端连接被拒绝</h1>
+                <div class="bg-red-50 text-red-800 p-4 rounded-xl text-sm text-left mb-6 font-mono break-words border border-red-100 shadow-inner">
+                    <p className="font-bold mb-1">拦截原因：</p>
+                    {{ state.systemError }}
+                </div>
+                <p class="text-gray-600 mb-6 text-sm text-left leading-relaxed">
+                    为了防止数据假写入丢失，系统已禁止降级进入本地模式。<br/><br/>
+                    <strong class="text-gray-800">修复指南：</strong><br/>
+                    请严格按照上方红色框内的提示，前往腾讯云控制台检查对应集合的<strong>权限设置</strong>，将其改为 <code>{"read":true,"write":true}</code> 并点击<strong>保存</strong>。
+                </p>
+                <button @click="window.location.reload()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all w-full flex justify-center items-center">
+                    <i class="ph ph-arrows-clockwise text-xl mr-2"></i> 我已经修改并保存了权限，重新连接
+                </button>
+            </div>
+        </div>
+
+        <div v-else-if="!state.currentUser && !state.isLoading" class="flex-1 w-full bg-slate-100 flex items-center justify-center p-4 relative">
             <div class="absolute top-4 right-4 bg-white/80 px-3 py-1.5 rounded-full shadow-sm text-xs font-bold border flex items-center">
-                <div :class="['w-2 h-2 rounded-full mr-2 animate-pulse', state.isCloud ? 'bg-green-500' : 'bg-orange-500']"></div>
-                {{ state.isCloud ? '腾讯云端直连模式' : '本地单机预览模式' }}
+                <div class="w-2 h-2 rounded-full mr-2 animate-pulse bg-green-500"></div>
+                腾讯云端直连模式
             </div>
 
             <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
@@ -113,7 +127,7 @@
             </div>
         </div>
 
-        <template v-else>
+        <template v-else-if="state.currentUser && !state.isLoading">
             <div class="flex-1 flex overflow-hidden">
                 <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-20 flex-shrink-0">
                     <div class="p-5 flex items-center justify-center space-x-3 border-b border-slate-800">
@@ -548,6 +562,7 @@
                     isLoading: true,
                     loadingMsg: '正在安全连接云端数据库...', 
                     isCloud: false, 
+                    systemError: null, // 强制拦截致命报错
                     
                     currentUser: null,
                     users: [],
@@ -595,7 +610,7 @@
                 let tcbDb = null;
                 const initCloudBase = async () => {
                     if (TCB_ENV_ID === '您的腾讯云环境ID') {
-                        state.users = fallbackUsers; state.classes = fallbackClasses; state.students = fallbackStudents;
+                        state.systemError = "未配置 EnvID！请在代码中填写您自己的环境ID。";
                         state.isCloud = false; state.isLoading = false;
                         return;
                     }
@@ -617,26 +632,23 @@
                                 const checkRes = await tcbDb.collection(col).limit(500).get();
                                 let resData = checkRes.data || (Array.isArray(checkRes) ? checkRes : []);
                                 
-                                // 🌟 终极自愈修复：即使集合里有部分数据，也要确保缺失的测试账号/班级被自动补齐！
                                 let defaultData = [];
                                 if (col === 'users') defaultData = fallbackUsers;
                                 if (col === 'classes') defaultData = fallbackClasses;
                                 if (col === 'students') defaultData = fallbackStudents;
 
                                 for (const defItem of defaultData) {
-                                    // 精准核对，防止漏掉 admin 或 teacher
                                     const exists = resData.find(r => parseInt(r.id) === defItem.id || parseInt(r._id) === defItem.id);
                                     if (!exists) {
                                         try {
                                             await tcbDb.collection(col).doc(defItem.id.toString()).set({ ...defItem, _id: defItem.id.toString() });
                                             resData.push({ ...defItem, _id: defItem.id.toString() });
                                         } catch (writeErr) {
-                                            throw new Error(`写入【${col}】被拦截，请前往控制台确认权限包含 write:true`);
+                                            throw new Error(`【${col}】集合拦截了写入请求！因为您的腾讯云数据库没有将 ${col} 的权限设置为 write:true`);
                                         }
                                     }
                                 }
 
-                                // 安全提取正确ID，保证业务关联正常
                                 let docs = resData.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
                                 if (col === 'records') docs.sort((a,b) => b.id - a.id);
                                 state[col] = docs;
@@ -653,14 +665,17 @@
                                 });
 
                             } catch (dbErr) {
-                                throw new Error(`读取【${col}】失败，请前往控制台确认权限包含 read:true`);
+                                // 如果是自己主动 throw 出的权限错误，就直接往外抛
+                                if (dbErr.message.includes('拦截了写入请求')) throw dbErr;
+                                
+                                throw new Error(`【${col}】集合访问失败！原因：腾讯云中没有创建 ${col} 集合，或者没有将其权限设置为 read:true。`);
                             }
                         }
 
                     } catch (e) {
-                        state.users = fallbackUsers; state.classes = fallbackClasses; state.students = fallbackStudents;
+                        // 强制拒绝委屈求全的降级！直接抛出致命错误并封死系统
                         state.isCloud = false;
-                        showToast(`⚠️ 云端同步中止：${e.message}`, "error");
+                        state.systemError = e.message;
                     } finally {
                         state.isLoading = false;
                     }
@@ -672,9 +687,9 @@
                         if (window.tcbSdkLoaded && typeof cloudbase !== 'undefined') {
                             initCloudBase();
                         } else if (window.tcbSdkFailed || attempts > 50) { 
-                            state.users = fallbackUsers; state.classes = fallbackClasses; state.students = fallbackStudents;
-                            state.isCloud = false; state.isLoading = false;
-                            showToast("⚠️ 网络限制导致云端驱动下载超时，已自动开启本地模式。", "error");
+                            state.isCloud = false; 
+                            state.isLoading = false;
+                            state.systemError = "网络限制导致云端驱动下载彻底超时！您的网络屏蔽了所需的公共CDN库，请尝试关闭去广告插件（如AdGuard）或切换手机热点。";
                         } else {
                             attempts++;
                             setTimeout(checkSdk, 100);
@@ -685,13 +700,14 @@
 
                 // --- 🌟 强制校验写入路由网关 ---
                 const saveToDb = async (colName, id, data) => {
-                    if (state.isCloud && tcbDb) {
-                        try {
-                            await tcbDb.collection(colName).doc(id.toString()).set({ ...data, _id: id.toString() });
-                        } catch (err) {
-                            showToast(`🚫 保存失败: 云端【${colName}】集合读写权限未开启！`, 'error');
-                            throw err; // 中断操作，防止UI假成功
-                        }
+                    if (!state.isCloud || !tcbDb) {
+                        throw new Error("云端未连接，禁止写入！");
+                    }
+                    try {
+                        await tcbDb.collection(colName).doc(id.toString()).set({ ...data, _id: id.toString() });
+                    } catch (err) {
+                        showToast(`🚫 保存失败: 云端【${colName}】集合读写权限未开启！`, 'error');
+                        throw err; // 彻底中断操作，防止UI假成功
                     }
                     const arr = state[colName];
                     const idx = arr.findIndex(x => x.id === id);
@@ -699,13 +715,14 @@
                 };
                 
                 const delFromDb = async (colName, id) => {
-                    if (state.isCloud && tcbDb) {
-                        try {
-                            await tcbDb.collection(colName).doc(id.toString()).remove();
-                        } catch (err) {
-                            showToast(`🚫 删除失败: 云端【${colName}】集合读写权限未开启！`, 'error');
-                            throw err;
-                        }
+                    if (!state.isCloud || !tcbDb) {
+                        throw new Error("云端未连接，禁止删除！");
+                    }
+                    try {
+                        await tcbDb.collection(colName).doc(id.toString()).remove();
+                    } catch (err) {
+                        showToast(`🚫 删除失败: 云端【${colName}】集合读写权限未开启！`, 'error');
+                        throw err;
                     }
                     state[colName] = state[colName].filter(x => x.id !== id);
                 };
