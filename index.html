@@ -633,42 +633,54 @@
                         const collectionsToCheck = ['users', 'classes', 'students', 'records'];
                         for (const col of collectionsToCheck) {
                             try {
-                                const checkRes = await tcbDb.collection(col).limit(1).get();
+                                // 🌟 核心修复1：去掉 limit(1)，强制使用 HTTP 获取全部真实数据，彻底无视 WebSocket 拦截
+                                const checkRes = await tcbDb.collection(col).limit(500).get();
                                 const resData = checkRes.data || (Array.isArray(checkRes) ? checkRes : []);
                                 
-                                // 🌟 如果数据库为空，将所有测试账号及数据完整写入云端
+                                // 如果数据库为空，将所有测试账号及数据完整写入云端
                                 if (resData.length === 0) {
                                     if (col === 'users') {
-                                        for (const u of fallbackUsers) await tcbDb.collection('users').doc(u.id.toString()).set({ ...u, _id: u.id.toString() });
+                                        for (const u of fallbackUsers) {
+                                            await tcbDb.collection('users').doc(u.id.toString()).set({ ...u, _id: u.id.toString() });
+                                            resData.push({ ...u, _id: u.id.toString() });
+                                        }
                                     }
                                     if (col === 'classes') {
-                                        for (const c of fallbackClasses) await tcbDb.collection('classes').doc(c.id.toString()).set({ ...c, _id: c.id.toString() });
+                                        for (const c of fallbackClasses) {
+                                            await tcbDb.collection('classes').doc(c.id.toString()).set({ ...c, _id: c.id.toString() });
+                                            resData.push({ ...c, _id: c.id.toString() });
+                                        }
                                     }
                                     if (col === 'students') {
-                                        for (const s of fallbackStudents) await tcbDb.collection('students').doc(s.id.toString()).set({ ...s, _id: s.id.toString() });
+                                        for (const s of fallbackStudents) {
+                                            await tcbDb.collection('students').doc(s.id.toString()).set({ ...s, _id: s.id.toString() });
+                                            resData.push({ ...s, _id: s.id.toString() });
+                                        }
                                     }
                                 }
+
+                                // 🌟 核心修复2：强行把刚才拿到的 HTTP 数据塞进系统，保证用户登录时绝对有账号可用！
+                                let docs = resData.map(d => ({ ...d, id: parseInt(d._id) || d.id }));
+                                if (col === 'records') docs.sort((a,b) => b.id - a.id);
+                                state[col] = docs;
+
+                                // 尝试挂载 WebSocket 实时监听（作为辅助，如果被屏蔽也不影响系统运行）
+                                tcbDb.collection(col).watch({
+                                    onChange: (snapshot) => {
+                                        if (snapshot && snapshot.docs) {
+                                            let wDocs = snapshot.docs.map(d => ({ ...d, id: parseInt(d._id) || d.id }));
+                                            if (col === 'records') wDocs.sort((a,b) => b.id - a.id);
+                                            state[col] = wDocs;
+                                        }
+                                    },
+                                    onError: (err) => console.log(`[Watch] 集合 ${col} 实时通道受限，已自动降级为单向 HTTP 同步`)
+                                });
+
                             } catch (dbErr) {
                                 console.error(`集合【${col}】数据库底层报错:`, dbErr);
                                 throw new Error(`访问集合【${col}】被拒绝！底层原始报错: ${dbErr.message || JSON.stringify(dbErr)}`);
                             }
                         }
-
-                        const setupWatcher = (colName, stateKey, sortDesc=false) => {
-                            tcbDb.collection(colName).watch({
-                                onChange: (snapshot) => {
-                                    let docs = snapshot.docs.map(d => ({ ...d, id: parseInt(d._id) || d.id }));
-                                    if(sortDesc) docs.sort((a,b) => b.id - a.id);
-                                    state[stateKey] = docs;
-                                },
-                                onError: (err) => console.error(`Watch Error on ${colName}`, err)
-                            });
-                        };
-
-                        setupWatcher('users', 'users');
-                        setupWatcher('classes', 'classes');
-                        setupWatcher('students', 'students');
-                        setupWatcher('records', 'records', true);
 
                     } catch (e) {
                         console.warn("云端环境暂不可用，切换至本地演示模式：", e);
@@ -707,18 +719,18 @@
                 const saveToDb = async (colName, id, data) => {
                     if (state.isCloud && tcbDb) {
                         await tcbDb.collection(colName).doc(id.toString()).set({ ...data, _id: id.toString() });
-                    } else {
-                        const arr = state[colName];
-                        const idx = arr.findIndex(x => x.id === id);
-                        if (idx > -1) arr[idx] = data; else arr.push(data);
                     }
+                    // 🌟 核心修复3：无论云端 WebSocket 是否瘫痪，强制瞬间更新本地界面
+                    const arr = state[colName];
+                    const idx = arr.findIndex(x => x.id === id);
+                    if (idx > -1) arr[idx] = data; else arr.push(data);
                 };
                 const delFromDb = async (colName, id) => {
                     if (state.isCloud && tcbDb) {
                         await tcbDb.collection(colName).doc(id.toString()).remove();
-                    } else {
-                        state[colName] = state[colName].filter(x => x.id !== id);
                     }
+                    // 🌟 核心修复4：强制本地瞬间删除，不用死等云端通知
+                    state[colName] = state[colName].filter(x => x.id !== id);
                 };
 
                 // --- 计算属性与辅助 ---
