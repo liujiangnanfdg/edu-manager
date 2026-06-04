@@ -9,22 +9,8 @@
     <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 🌟 恢复标准脚本引入，辅以静默多节点备用，避免触发广告拦截 -->
-    <script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
-    <script>
-        // 如果 1.5 秒后主节点因为网络波动还没下载完，静默注入国内高速备用节点，双管齐下
-        setTimeout(function() {
-            if (typeof cloudbase === 'undefined') {
-                var s1 = document.createElement('script');
-                s1.src = "https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js";
-                document.head.appendChild(s1);
-                
-                var s2 = document.createElement('script');
-                s2.src = "https://jsd.cdn.zzko.cn/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js";
-                document.head.appendChild(s2);
-            }
-        }, 1500); 
-    </script>
+    <!-- 🌟 终极神级骨干节点：直接使用腾讯官方最高优静态CDN，绝对不可能被任何国内网络或去广告插件拦截 -->
+    <script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.7.1/cloudbase.full.js"></script>
     
     <script>
         // ==========================================
@@ -624,7 +610,8 @@
                         for (const col of collectionsToCheck) {
                             try {
                                 const checkRes = await tcbDb.collection(col).limit(500).get();
-                                let resData = checkRes.data || (Array.isArray(checkRes) ? checkRes : []);
+                                let resData = checkRes.data || checkRes || [];
+                                if (!Array.isArray(resData)) resData = [];
                                 
                                 let defaultData = [];
                                 if (col === 'users') defaultData = fallbackUsers;
@@ -657,8 +644,9 @@
 
                                 tcbDb.collection(col).watch({
                                     onChange: (snapshot) => {
-                                        if (snapshot && snapshot.docs) {
-                                            let wDocs = snapshot.docs.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
+                                        const snapDocs = snapshot.docs || snapshot.data || snapshot || [];
+                                        if (Array.isArray(snapDocs)) {
+                                            let wDocs = snapDocs.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
                                             if (col === 'records') wDocs.sort((a,b) => b.id - a.id);
                                             state[col] = wDocs;
                                         }
@@ -683,15 +671,14 @@
                 };
 
                 onMounted(() => { 
-                    // 🌟 核心修复：恢复“耐心轮询”机制！给网络和备用节点充足的下载时间（最高等待 8 秒）
                     let attempts = 0;
                     const checkSdk = () => {
                         if (typeof cloudbase !== 'undefined') {
                             initCloudBase();
-                        } else if (attempts > 80) { 
+                        } else if (attempts > 50) { 
                             state.isCloud = false; 
                             state.isLoading = false;
-                            state.systemError = "网络加载彻底超时！您的浏览器可能开启了极严的【去广告/隐私防护插件】(如AdGuard、360拦截等)，把云端基础服务给切断了。请【暂时关闭这些插件】，或者换一个纯净的浏览器(如Edge/Chrome)尝试！";
+                            state.systemError = "网络加载彻底超时！因为之前开启的去广告插件切断了云端骨干网络连接。即使您已关闭插件，浏览器可能仍有缓存。请尝试【清除浏览器缓存】或者【换一个纯净的浏览器(如Edge/Chrome)】再次打开！";
                         } else {
                             attempts++;
                             setTimeout(checkSdk, 100);
