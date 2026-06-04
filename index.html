@@ -589,7 +589,7 @@
                     attendanceForm: { student: null, classObj: null, type: 'present', remark: '' },
                 });
 
-                // 本地假数据
+                // 本地假数据（现在也会作为云端的全量初始种子数据）
                 const fallbackUsers = [
                     { id: 1, username: 'superadmin', password: '123456', role: 'superadmin', name: '系统超管' },
                     { id: 2, username: 'admin', password: '123456', role: 'admin', name: '王校长' },
@@ -634,13 +634,19 @@
                         for (const col of collectionsToCheck) {
                             try {
                                 const checkRes = await tcbDb.collection(col).limit(1).get();
-                                
-                                // 🌟 核心修复：兼容老版本 SDK 1.7.1 的底层数据返回格式，防止 undefined 报错
                                 const resData = checkRes.data || (Array.isArray(checkRes) ? checkRes : []);
                                 
-                                // 如果是 users 且为空，说明是新数据库，顺便写入初始化种子数据
-                                if (col === 'users' && resData.length === 0) {
-                                    await tcbDb.collection('users').doc("1").set({ ...fallbackUsers[0], _id: "1" });
+                                // 🌟 如果数据库为空，将所有测试账号及数据完整写入云端
+                                if (resData.length === 0) {
+                                    if (col === 'users') {
+                                        for (const u of fallbackUsers) await tcbDb.collection('users').doc(u.id.toString()).set({ ...u, _id: u.id.toString() });
+                                    }
+                                    if (col === 'classes') {
+                                        for (const c of fallbackClasses) await tcbDb.collection('classes').doc(c.id.toString()).set({ ...c, _id: c.id.toString() });
+                                    }
+                                    if (col === 'students') {
+                                        for (const s of fallbackStudents) await tcbDb.collection('students').doc(s.id.toString()).set({ ...s, _id: s.id.toString() });
+                                    }
                                 }
                             } catch (dbErr) {
                                 console.error(`集合【${col}】数据库底层报错:`, dbErr);
@@ -666,7 +672,6 @@
 
                     } catch (e) {
                         console.warn("云端环境暂不可用，切换至本地演示模式：", e);
-                        // 优雅降级到本地模式，不再使用崩溃性的 alert
                         state.users = fallbackUsers; 
                         state.classes = fallbackClasses; 
                         state.students = fallbackStudents;
@@ -684,7 +689,6 @@
                         if (window.tcbSdkLoaded && typeof cloudbase !== 'undefined') {
                             initCloudBase();
                         } else if (window.tcbSdkFailed || attempts > 50) { 
-                            // 下载完全超时，同样优雅降级
                             state.users = fallbackUsers; 
                             state.classes = fallbackClasses; 
                             state.students = fallbackStudents;
