@@ -9,8 +9,14 @@
     <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 🌟 终极神级骨干节点：直接使用腾讯官方最高优静态CDN，绝对不可能被任何国内网络或去广告插件拦截 -->
-    <script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.7.1/cloudbase.full.js"></script>
+    <!-- 🌟 核心终极修复：必须使用 2.8.2 最新版（老版本会被腾讯云强行拒绝匿名登录）。采用纯静态写法，完全免疫去广告插件！ -->
+    <script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
+    <script>
+        // 如果 jsDelivr 波动，瞬间同步切换到国内知乎官方无敌镜像
+        if (typeof cloudbase === 'undefined') {
+            document.write('<script src="https://unpkg.zhimg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
+        }
+    </script>
     
     <script>
         // ==========================================
