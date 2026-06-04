@@ -600,7 +600,7 @@
 
                 const showToast = (msg, type='success') => { 
                     state.toast = { show: true, message: msg, type }; 
-                    setTimeout(() => state.toast.show = false, 4000); 
+                    setTimeout(() => state.toast.show = false, 6000); 
                 };
 
                 // --- 🚀 核心：初始化腾讯云开发底层连接 ---
@@ -629,13 +629,18 @@
                         tcbDb = app.database();
                         state.isCloud = true;
 
-                        try {
-                            const uRes = await tcbDb.collection('users').limit(1).get();
-                            if (uRes.data.length === 0) {
-                                await tcbDb.collection('users').doc("1").set({ ...fallbackUsers[0], _id: "1" });
+                        // 逐个校验 4 个核心数据集合的权限
+                        const collectionsToCheck = ['users', 'classes', 'students', 'records'];
+                        for (const col of collectionsToCheck) {
+                            try {
+                                const checkRes = await tcbDb.collection(col).limit(1).get();
+                                // 如果是 users 且为空，说明是新数据库，顺便写入初始化种子数据
+                                if (col === 'users' && checkRes.data.length === 0) {
+                                    await tcbDb.collection('users').doc("1").set({ ...fallbackUsers[0], _id: "1" });
+                                }
+                            } catch (dbErr) {
+                                throw new Error(`集合【${col}】权限受限，请前往控制台将其安全规则修改为 read:true, write:true`);
                             }
-                        } catch (dbErr) {
-                            throw new Error("云数据库集合权限未完全开放");
                         }
 
                         const setupWatcher = (colName, stateKey, sortDesc=false) => {
@@ -661,7 +666,7 @@
                         state.classes = fallbackClasses; 
                         state.students = fallbackStudents;
                         state.isCloud = false;
-                        showToast(`⚠️ 云端连接受限（${e.message}），已自动开启本地单机演示模式。`, "error");
+                        showToast(`⚠️ 云端连接失败：${e.message}。系统已开启本地单机演示模式。`, "error");
                     } finally {
                         state.isLoading = false;
                     }
