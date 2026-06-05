@@ -9,6 +9,7 @@
     <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
+    <!-- 稳定的云端组件，防假死防拦截 -->
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/2.28.6/cloudbase.full.js"></script>
     <script>
         if (typeof cloudbase === 'undefined') {
@@ -132,26 +133,26 @@
             z-index: 30;
         }
 
-        /* 表头：纯正高斯模糊，扒掉白底，展现极致通透 */
+        /* 表头：纯净滤镜流！无底色，全靠极限模糊和色彩粉碎 */
         th { 
             @apply text-xs font-bold text-gray-500 uppercase tracking-wider py-4 px-6 align-middle shadow-sm relative z-30; 
-            background: rgba(255, 255, 255, 0.05); /* 去除85%白底，只留5%微光 */
-            backdrop-filter: blur(40px) saturate(150%);
-            -webkit-backdrop-filter: blur(40px) saturate(150%);
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.02); /* 几乎完全透明 */
+            backdrop-filter: blur(80px) saturate(180%) brightness(1.15) contrast(0.7); /* 极限模糊 + 降低底层文字对比度 */
+            -webkit-backdrop-filter: blur(80px) saturate(180%) brightness(1.15) contrast(0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             transform: translateZ(0); 
         }
         th:first-child { 
             @apply rounded-l-[24px]; 
-            border-left: 1px solid rgba(255, 255, 255, 0.3);
+            border-left: 1px solid rgba(255, 255, 255, 0.4);
         }
         th:last-child { 
             @apply rounded-r-[24px]; 
-            border-right: 1px solid rgba(255, 255, 255, 0.3);
+            border-right: 1px solid rgba(255, 255, 255, 0.4);
         }
 
-        /* 数据行：极度透明，极高模糊 */
+        /* 数据行：保持极度透明 */
         td { @apply py-4 px-6 bg-white/20 backdrop-blur-[24px] border-y border-white/30 align-middle transition-colors duration-300; transform: translateZ(0); }
         td:first-child { @apply border-l border-white/30 rounded-l-[24px]; }
         td:last-child { @apply border-r border-white/30 rounded-r-[24px]; }
@@ -424,7 +425,7 @@
 
                         <!-- 教师管理 -->
                         <div v-if="state.activeTab === 'teachers' && !state.viewingStudent && !state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
-                            <div class="p-6 border-b border-white/40 flex justify-between items-center bg-white/20">
+                            <div class="p-6 border-b border-white/40 flex justify-between items-center bg-white/20 rounded-t-[36px]">
                                 <div>
                                     <h2 class="text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
                                         <div class="w-10 h-10 bg-blue-100/80 rounded-xl flex items-center justify-center text-blue-600 mr-3 border border-blue-200/50"><i class="ph ph-users-three text-2xl"></i></div>
@@ -441,7 +442,7 @@
                                         <tr>
                                             <th>姓名</th>
                                             <th>登录账号</th>
-                                            <th>权限角色</th>
+                                            <th>权限层级</th>
                                             <th>带班数量</th>
                                             <th class="text-right">操作</th>
                                         </tr>
@@ -716,7 +717,7 @@
                             </div>
 
                             <div class="glass-panel overflow-hidden bg-white/30">
-                                <div class="flex justify-between items-center p-6 bg-white/20 border-b border-white/40">
+                                <div class="flex justify-between items-center p-6 bg-white/20 border-b border-white/40 rounded-t-[36px]">
                                     <h3 class="text-xl font-black text-gray-800 flex items-center"><i class="ph ph-list-dashes mr-2 text-blue-500 text-2xl"></i>个人操作日志</h3>
                                 </div>
                                 <div class="overflow-x-auto p-4">
@@ -1111,7 +1112,7 @@
                                 </div>
                                 <div><label class="block text-sm font-bold text-gray-700 mb-2">账单备注 (选填)</label><textarea v-model="state.renewForm.remark" rows="2" class="glass-input w-full resize-none" placeholder="例如：微信收款..."></textarea></div>
                                 
-                                <div class="flex justify-end pt-6 border-t border-gray-100">
+                                <div class="flex justify-end pt-4 border-t border-gray-100">
                                     <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl mr-3 transition-colors">取消</button>
                                     <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 rounded-full text-lg">确认充值</button>
                                 </div>
@@ -1177,10 +1178,10 @@
 
                             <!-- 添加老师 -->
                             <form v-if="state.showModal === 'addTeacher'" @submit.prevent="submitTeacher" class="space-y-4">
-                                <div><label class="block text-sm font-bold mb-1">真实姓名</label><input type="text" required v-model="state.teacherForm.name" class="glass-input w-full font-bold" /></div>
-                                <div><label class="block text-sm font-bold mb-1">登录账号</label><input type="text" required v-model="state.teacherForm.username" class="glass-input w-full font-mono font-bold" /></div>
-                                <div><label class="block text-sm font-bold mb-1">初始密码 (默认123456)</label><input type="text" v-model="state.teacherForm.password" class="glass-input w-full font-bold" placeholder="123456"/></div>
-                                <div v-if="isSuperadmin"><label class="block text-sm font-bold mb-1">指派角色</label><select v-model="state.teacherForm.role" class="glass-input w-full bg-white font-bold"><option value="teacher">普通任课讲师</option><option value="admin">分校校长 (管理)</option></select></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">真实姓名</label><input type="text" required v-model="state.teacherForm.name" class="glass-input w-full font-bold" /></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">登录账号</label><input type="text" required v-model="state.teacherForm.username" class="glass-input w-full font-mono font-bold" /></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">初始密码 (默认123456)</label><input type="text" v-model="state.teacherForm.password" class="glass-input w-full font-bold" placeholder="123456"/></div>
+                                <div v-if="isSuperadmin"><label class="block text-sm font-bold text-gray-700 mb-2">指派角色</label><select v-model="state.teacherForm.role" class="glass-input w-full bg-white font-bold"><option value="teacher">普通任课讲师</option><option value="admin">分校校长 (管理)</option></select></div>
                                 <div class="flex justify-end pt-6 border-t border-gray-100"><button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100">取消</button><button type="submit" class="glass-button-primary rounded-full px-8">确认添加</button></div>
                             </form>
 
