@@ -922,7 +922,8 @@
                 <transition name="spring-up" appear>
                     <div class="glass-panel w-full max-w-2xl max-h-[90vh] flex flex-col relative !bg-white/70 !backdrop-blur-[60px] border-white" @click.stop>
                         
-                        <div class="px-8 py-5 border-b border-gray-200/50 flex justify-between items-center bg-white/50 backdrop-blur-md z-10">
+                        <!-- 🌟 针对弹窗头部加入强力圆角限定，封死漏角问题 -->
+                        <div class="px-8 py-5 border-b border-gray-200/50 flex justify-between items-center bg-white/50 backdrop-blur-md z-10 rounded-t-[36px]">
                             <h3 class="text-xl font-extrabold text-gray-800 flex items-center tracking-tight">
                                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
                                     <i :class="modalIconClass + ' text-blue-600 text-lg'"></i>
@@ -1208,9 +1209,10 @@
 
         <transition name="fade">
             <div v-if="state.confirmDialog" class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-                <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden animate-[springUp_0.4s_ease-out] border border-white/50">
+                <!-- 🌟 危险确认框也加入了抗溢出黑魔法 -->
+                <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden animate-[springUp_0.4s_ease-out] border border-white/50" style="-webkit-mask-image: -webkit-radial-gradient(white, black); transform: translateZ(0);">
                     <div class="p-8 text-center relative">
-                        <div class="absolute top-0 left-0 w-full h-1.5 bg-red-500"></div>
+                        <div class="absolute top-0 left-0 w-full h-1.5 bg-red-500 rounded-t-[32px]"></div>
                         <div class="w-20 h-20 bg-red-50 text-red-500 rounded-[24px] flex items-center justify-center mx-auto mb-6 shadow-inner border border-red-100"><i class="ph ph-warning-circle text-5xl drop-shadow-sm"></i></div>
                         <h3 class="text-2xl font-extrabold text-gray-800 mb-3 tracking-tight">{{ state.confirmDialog.title }}</h3>
                         <p class="text-gray-500 font-medium leading-relaxed">{{ state.confirmDialog.message }}</p>
