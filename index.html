@@ -9,7 +9,7 @@
     <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 🌟 恢复我们之前测试成功的无敌官方节点，覆盖掉离线模板里的旧节点 -->
+    <!-- 🌟 云端骨干组件 -->
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/2.28.6/cloudbase.full.js"></script>
     <script>
         if (typeof cloudbase === 'undefined') {
@@ -133,7 +133,6 @@
                             <i class="ph ph-clock-counter-clockwise text-xl"></i><span>操作与签到流水</span>
                         </button>
 
-                        <!-- 新增：系统设置与备份 -->
                         <div v-if="isAdminOrSuper" class="pt-4 mt-2 border-t border-slate-800 space-y-1">
                             <button @click="switchTab('database')" :class="['w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all', state.activeTab === 'database' ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white']">
                                 <i class="ph ph-database text-xl"></i><span>数据备份与恢复</span>
@@ -153,6 +152,10 @@
                                 <p class="text-white font-medium truncate">{{ state.currentUser.name }}</p>
                                 <p class="text-xs text-slate-400">{{ isSuperadmin ? '系统超级管理员' : isAdmin ? '校区负责人' : '任课讲师' }}</p>
                             </div>
+                            <!-- 自己修改自己的密码快捷入口 -->
+                            <button @click="openChangePasswordModal(state.currentUser)" class="text-slate-500 hover:text-blue-400 transition-colors p-1" title="修改我的密码">
+                                <i class="ph ph-key text-xl"></i>
+                            </button>
                         </div>
                         <button @click="handleLogout" class="w-full flex items-center justify-center space-x-2 py-2 bg-slate-800 hover:bg-red-500 hover:text-white rounded-lg transition-colors text-sm">
                             <i class="ph ph-sign-out"></i><span>退出登录</span>
@@ -204,7 +207,10 @@
                         <!-- 教师管理 -->
                         <div v-if="state.activeTab === 'teachers' && !state.viewingStudent && !state.viewingClass" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                                <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="ph ph-users-three text-blue-600 mr-2 text-2xl"></i>账号管理</h2>
+                                <div>
+                                    <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="ph ph-users-three text-blue-600 mr-2 text-2xl"></i>账号管理</h2>
+                                    <p v-if="isAdmin && !isSuperadmin" class="text-xs text-slate-500 mt-1">您在此处仅能查阅和管理任课老师的账号权限。</p>
+                                </div>
                                 <button @click="openModal('addTeacher')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center text-sm font-medium shadow-sm transition-colors">
                                     <i class="ph ph-plus mr-1.5"></i> 添加新账号
                                 </button>
@@ -217,7 +223,7 @@
                                             <th class="p-4 font-medium">登录账号</th>
                                             <th class="p-4 font-medium">权限角色</th>
                                             <th class="p-4 font-medium">带班数量</th>
-                                            <th class="p-4 font-medium text-right">操作</th>
+                                            <th class="p-4 font-medium text-right">操作管理</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 text-sm">
@@ -230,7 +236,11 @@
                                                 </span>
                                             </td>
                                             <td class="p-4 text-slate-500">{{ getTeacherClassCount(user.id) }} 个班级</td>
-                                            <td class="p-4 text-right">
+                                            <td class="p-4 text-right space-x-2">
+                                                <!-- 重置他人密码入口 (受高权限保护) -->
+                                                <button @click="openChangePasswordModal(user)" class="text-blue-500 hover:text-blue-700 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors">
+                                                    <i class="ph ph-key mr-1"></i>改密
+                                                </button>
                                                 <button @click="triggerDeleteUser(user.id)" class="text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors">
                                                     <i class="ph ph-trash mr-1"></i>删除
                                                 </button>
@@ -241,7 +251,7 @@
                             </div>
                         </div>
 
-                        <!-- 班级详情页 (名单) - 离线版特色功能保留 -->
+                        <!-- 班级详情页 (名单) -->
                         <div v-if="state.viewingClass" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                                 <div class="flex items-center">
@@ -373,14 +383,13 @@
                             </div>
                         </div>
 
-                        <!-- 🌟 学生个人主页 - 离线版特色功能完美复刻 -->
+                        <!-- 学生个人主页 -->
                         <div v-if="state.viewingStudent" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                             <div class="flex items-center justify-between mb-8 border-b border-slate-100 pb-4">
                                 <button @click="state.viewingStudent = null; state.searchTerm = ''" class="text-slate-400 hover:text-blue-600 flex items-center transition-colors font-medium">
                                     <i class="ph ph-arrow-left text-lg mr-1.5"></i> 返回名单
                                 </button>
                                 <div class="flex space-x-2" v-if="isSuperadmin">
-                                    <!-- 保留扩展性按钮 -->
                                     <button @click="triggerDeleteProfile(viewingStudentData.id)" class="flex items-center text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
                                         <i class="ph ph-trash mr-1.5"></i> 彻底销毁档案
                                     </button>
@@ -388,7 +397,6 @@
                             </div>
 
                             <div class="flex flex-col md:flex-row gap-8 mb-8">
-                                <!-- 基础档案卡片 -->
                                 <div class="w-full md:w-72 flex-shrink-0 bg-slate-50 rounded-2xl p-6 border border-slate-100 flex flex-col items-center relative overflow-hidden">
                                     <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-blue-400 to-indigo-600"></div>
                                     <div class="w-24 h-24 rounded-full border-4 border-white shadow-md relative z-10 bg-white flex items-center justify-center overflow-hidden mb-4 mt-8">
@@ -404,7 +412,6 @@
                                     </div>
                                 </div>
 
-                                <!-- 数据看板 -->
                                 <div class="flex-1 flex flex-col gap-6">
                                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                                         <div class="bg-green-50/80 border border-green-100 p-5 rounded-2xl relative overflow-hidden">
@@ -438,7 +445,6 @@
                                 </div>
                             </div>
 
-                            <!-- 个人独立流水 -->
                             <div>
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-lg font-bold text-slate-800">该生专属考勤与操作日志</h3>
@@ -622,7 +628,7 @@
                             </div>
                         </div>
 
-                        <!-- 🌟 备份与恢复中心 (新增功能区) -->
+                        <!-- 备份与恢复中心 -->
                         <div v-if="state.activeTab === 'database' && !state.viewingStudent" class="max-w-4xl mx-auto space-y-8 animate-[slideUp_0.3s_ease-out]">
                             <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
                                 <div class="mb-6 border-b border-slate-100 pb-4">
@@ -630,16 +636,12 @@
                                     <p class="text-sm text-slate-500 mt-2">全面掌控您的核心资产，支持一键将腾讯云的数据备份至本地，或从本地备份文件全量覆盖恢复到云端。</p>
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    
-                                    <!-- 导出 -->
                                     <div class="border border-blue-100 bg-blue-50/30 rounded-xl p-6 flex flex-col items-center text-center hover:bg-blue-50 transition-colors">
                                         <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-sm"><i class="ph ph-download-simple text-3xl"></i></div>
                                         <h3 class="text-lg font-bold text-slate-800 mb-2">导出全站数据 (云端 -> 本地)</h3>
                                         <p class="text-sm text-slate-600 mb-6 flex-1">将当前云端所有的老师档案、班级数据、学员名单及历史流水，打包生成安全的 <code>.json</code> 备份包下载到您的电脑。</p>
                                         <button @click="handleExportData" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all active:scale-95 flex items-center justify-center"><i class="ph ph-file-arrow-down mr-2 text-xl"></i>一键下载系统备份</button>
                                     </div>
-                                    
-                                    <!-- 导入 -->
                                     <div class="border border-orange-100 bg-orange-50/30 rounded-xl p-6 flex flex-col items-center text-center hover:bg-orange-50 transition-colors">
                                         <div class="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-4 shadow-sm"><i class="ph ph-upload-simple text-3xl"></i></div>
                                         <h3 class="text-lg font-bold text-slate-800 mb-2">导入备份包 (本地 -> 云端)</h3>
@@ -674,8 +676,39 @@
                             </button>
                         </div>
 
-                        <div class="p-6 overflow-y-auto flex-1 no-scrollbar bg-white">
+                        <div class="p-6 overflow-y-auto flex-1 no-scrollbar bg-white relative">
                             
+                            <!-- 🌟 新增：密码修改表单 -->
+                            <form v-if="state.showModal === 'changePassword'" @submit.prevent="submitChangePassword" class="space-y-5">
+                                <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                                    <p class="text-blue-900 font-medium mb-1">正在修改账号：<strong class="text-lg">{{ getTeacherName(state.passwordForm.targetId) }}</strong></p>
+                                    <p v-if="state.passwordForm.targetId !== state.currentUser.id" class="text-xs text-blue-600">
+                                        <i class="ph ph-shield-check mr-1"></i>您正在执行越权修改操作。为确保安全，此操作需验证<strong>您本人(操作者)</strong>的当前密码。
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold mb-1">验证当前密码 <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <i class="ph ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                        <input type="password" required v-model="state.passwordForm.currentPassword" class="w-full pl-10 pr-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" :placeholder="state.passwordForm.targetId !== state.currentUser.id ? '请输入您(操作者)自己的密码进行授权' : '请输入现在的密码'" />
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-bold mb-1">设置新密码 <span class="text-red-500">*</span></label>
+                                        <input type="password" required v-model="state.passwordForm.newPassword" class="w-full px-4 py-2 border rounded-xl" placeholder="至少6位" minlength="6" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold mb-1">确认新密码 <span class="text-red-500">*</span></label>
+                                        <input type="password" required v-model="state.passwordForm.confirmPassword" class="w-full px-4 py-2 border rounded-xl" placeholder="再次输入新密码" />
+                                    </div>
+                                </div>
+                                <div class="flex justify-end pt-4 border-t border-slate-100">
+                                    <button type="button" @click="closeModal" class="px-5 py-2 mr-3 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">取消</button>
+                                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 font-bold">验证并强制修改</button>
+                                </div>
+                            </form>
+
                             <!-- 签到/请假 -->
                             <form v-if="state.showModal === 'attendance'" @submit.prevent="submitAttendance" class="space-y-6">
                                 <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex items-center space-x-4">
@@ -741,7 +774,7 @@
                             <form v-if="state.showModal === 'addClass' || state.showModal === 'editClass'" @submit.prevent="submitClass" class="space-y-5">
                                 <div><label class="block text-sm font-bold mb-1">班级全称 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.name" class="w-full px-4 py-2 border rounded-xl" placeholder="如：新概念英语秋季周末班" /></div>
                                 <div><label class="block text-sm font-bold mb-1">课程科目 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.course" class="w-full px-4 py-2 border rounded-xl" placeholder="如：英语、少儿编程" /></div>
-                                <div><label class="block text-sm font-bold mb-1">上课具体时间 <span class="text-slate-400 font-normal text-xs ml-2">(选填，用于排课展示)</span></label>
+                                <div><label class="block text-sm font-bold mb-1">上课具体时间 <span class="text-slate-400 font-normal text-xs ml-2">(选填)</span></label>
                                     <div class="relative"><i class="ph ph-clock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" v-model="state.classForm.schedule" class="pl-10 w-full px-4 py-2 border rounded-xl" placeholder="如：每周六 14:00 - 16:00" /></div>
                                 </div>
                                 <div v-if="state.showModal === 'addClass'"><label class="block text-sm font-bold mb-1">指派初始任课老师 <span class="text-red-500">*</span></label>
@@ -753,7 +786,7 @@
                                 </div>
                             </form>
 
-                            <!-- 🌟 全局系统设置 (新增功能) -->
+                            <!-- 全局系统设置 -->
                             <form v-if="state.showModal === 'systemSettings'" @submit.prevent="submitSystemSettings" class="space-y-6">
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-3">机构系统 Logo 图标</label>
@@ -786,12 +819,12 @@
                             <form v-if="state.showModal === 'addTeacher'" @submit.prevent="submitTeacher" class="space-y-4">
                                 <div><label class="block text-sm font-bold mb-1">真实姓名</label><input type="text" required v-model="state.teacherForm.name" class="w-full px-4 py-2 border rounded-xl" /></div>
                                 <div><label class="block text-sm font-bold mb-1">登录账号</label><input type="text" required v-model="state.teacherForm.username" class="w-full px-4 py-2 border rounded-xl" /></div>
-                                <div><label class="block text-sm font-bold mb-1">密码 (默认123456)</label><input type="text" v-model="state.teacherForm.password" class="w-full px-4 py-2 border rounded-xl" placeholder="123456"/></div>
+                                <div><label class="block text-sm font-bold mb-1">初始密码 (默认123456)</label><input type="text" v-model="state.teacherForm.password" class="w-full px-4 py-2 border rounded-xl" placeholder="123456"/></div>
                                 <div v-if="isSuperadmin"><label class="block text-sm font-bold mb-1">指派角色</label><select v-model="state.teacherForm.role" class="w-full px-4 py-2 border rounded-xl"><option value="teacher">普通任课老师</option><option value="admin">分校校长 (业务管理)</option></select></div>
                                 <div class="flex justify-end pt-4 border-t border-slate-100"><button type="button" @click="closeModal" class="px-5 py-2 mr-3 rounded-lg">取消</button><button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md">确认添加至云端</button></div>
                             </form>
 
-                            <!-- 添加学生 (含拉老生逻辑) -->
+                            <!-- 🌟 添加学生 (带摄像头拍照与本地上传) -->
                             <form v-if="state.showModal === 'addStudent'" @submit.prevent="submitStudent" class="space-y-6">
                                 <div class="flex justify-center mb-4 space-x-2 bg-slate-100 p-1 rounded-xl w-max mx-auto">
                                     <button type="button" @click="state.addStudentMode='new'" :class="['px-6 py-1.5 rounded-lg text-sm font-bold transition-all', state.addStudentMode==='new'?'bg-white shadow text-blue-600':'text-slate-500']">全新录入建档</button>
@@ -799,6 +832,30 @@
                                 </div>
 
                                 <div v-if="state.addStudentMode === 'new'" class="space-y-4">
+                                    
+                                    <!-- 新增：头像采集区 -->
+                                    <div class="flex items-center space-x-5 mb-4 border-b border-slate-100 pb-5">
+                                        <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border border-slate-300 shadow-inner shrink-0 relative bg-black">
+                                            <video v-show="state.isCameraOpen" id="avatarVideo" autoplay playsinline class="w-full h-full object-cover transform -scale-x-100"></video>
+                                            <img v-show="!state.isCameraOpen && state.studentForm.avatar" :src="state.studentForm.avatar" class="w-full h-full object-cover bg-white" />
+                                            <i v-show="!state.isCameraOpen && !state.studentForm.avatar" class="ph ph-camera text-3xl text-slate-400"></i>
+                                        </div>
+                                        <div class="flex flex-col space-y-2.5">
+                                            <div v-if="state.isCameraOpen" class="flex space-x-2">
+                                                <button type="button" @click="takePhoto" class="px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded shadow-sm hover:bg-green-600"><i class="ph ph-aperture mr-1"></i> 立即拍摄</button>
+                                                <button type="button" @click="stopCamera" class="px-3 py-1.5 bg-slate-200 text-slate-700 text-xs font-bold rounded hover:bg-slate-300">取消</button>
+                                            </div>
+                                            <div v-else class="flex space-x-2">
+                                                <button type="button" @click="startCamera" class="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 text-xs font-bold rounded hover:bg-blue-100 transition-colors"><i class="ph ph-camera mr-1"></i> 打开摄像头采集</button>
+                                                <label class="px-3 py-1.5 bg-slate-50 text-slate-600 border border-slate-200 text-xs font-bold rounded hover:bg-slate-100 cursor-pointer transition-colors">
+                                                    <i class="ph ph-upload-simple mr-1"></i> 上传相册图片
+                                                    <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'studentAvatar')" class="hidden" />
+                                                </label>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400">为了节省空间，上传后系统将自动将其压缩裁剪</p>
+                                        </div>
+                                    </div>
+
                                     <div class="grid grid-cols-2 gap-4">
                                         <div><label class="block text-sm font-bold mb-1">学生姓名*</label><input type="text" required v-model="state.studentForm.name" class="w-full px-3 py-2 border rounded-xl" /></div>
                                         <div><label class="block text-sm font-bold mb-1">联系电话</label><input type="tel" v-model="state.studentForm.contact" class="w-full px-3 py-2 border rounded-xl" /></div>
@@ -872,7 +929,6 @@
         createApp({
             setup() {
                 const state = reactive({
-                    // 系统设置与云状态
                     systemName: '教务管理系统',
                     systemLogo: '',
                     isLoading: true,
@@ -880,14 +936,12 @@
                     isCloud: false, 
                     systemError: null,
                     
-                    // 数据库核心数据
                     currentUser: null,
                     users: [],
                     classes: [],
                     students: [],
                     records: [],
                     
-                    // UI状态
                     activeTab: 'dashboard',
                     viewingClass: null,
                     viewingStudent: null,
@@ -896,13 +950,16 @@
                     toast: { show: false, message: '', type: 'success' },
                     confirmDialog: null,
                     
-                    // 表单
+                    // 🌟 摄像头与修改密码状态
+                    isCameraOpen: false,
+                    passwordForm: { targetId: null, currentPassword: '', newPassword: '', confirmPassword: '' },
+
                     loginForm: { username: '', password: '' },
                     settingsForm: { name: '', logo: '' },
                     classForm: { id: null, name: '', course: '', schedule: '', teacherId: '' },
                     teacherForm: { name: '', username: '', password: '', role: 'teacher' },
                     addStudentMode: 'new',
-                    studentForm: { existingId: '', name: '', contact: '', payment: 0, hours: '', bonus: 0, teacherId: '', classId: '', remark: '', lockedClass: null },
+                    studentForm: { existingId: '', name: '', contact: '', payment: 0, hours: '', bonus: 0, teacherId: '', classId: '', remark: '', lockedClass: null, avatar: '' },
                     renewForm: { student: null, hours: '', bonus: 0, payment: '', remark: '' },
                     attendanceForm: { student: null, classObj: null, type: 'present', remark: '' },
                 });
@@ -949,7 +1006,6 @@
                         state.isCloud = true;
 
                         state.loadingMsg = '正在同步全站核心数据...';
-                        // 🌟 新增：增加检查 settings 集合
                         const collectionsToCheck = ['users', 'classes', 'students', 'records', 'settings'];
                         
                         for (const col of collectionsToCheck) {
@@ -978,7 +1034,6 @@
                                     }
                                 }
 
-                                // 安全挂载数据
                                 if (col === 'settings') {
                                     const sysData = resData.find(r => r.id === 'sys' || r._id === 'sys');
                                     if(sysData){ state.systemName = sysData.name; state.systemLogo = sysData.logo; }
@@ -988,7 +1043,6 @@
                                     state[col] = docs;
                                 }
 
-                                // 启动实时侦听
                                 tcbDb.collection(col).watch({
                                     onChange: (snapshot) => {
                                         const snapDocs = snapshot.docs || snapshot.data || snapshot || [];
@@ -1036,12 +1090,11 @@
                     checkSdk();
                 });
 
-                // --- 🌟 强制云端读写网关 ---
                 const saveToDb = async (colName, id, data, skipLocalUpdate=false) => {
                     if (!state.isCloud || !tcbDb) throw new Error("云端未连接");
                     try {
                         const payload = JSON.parse(JSON.stringify(data));
-                        delete payload._id; // 清洗非法主键
+                        delete payload._id; 
                         await tcbDb.collection(colName).doc(id.toString()).set(payload);
                         
                         if (!skipLocalUpdate && colName !== 'settings') {
@@ -1066,13 +1119,13 @@
                     }
                 };
 
-                // --- 计算属性与视图逻辑 ---
                 const isSuperadmin = computed(() => state.currentUser?.role === 'superadmin');
                 const isAdmin = computed(() => state.currentUser?.role === 'admin');
                 const isTeacher = computed(() => state.currentUser?.role === 'teacher');
                 const isAdminOrSuper = computed(() => isSuperadmin.value || isAdmin.value);
 
                 const teachersOnly = computed(() => state.users.filter(u => u.role === 'teacher'));
+                // 🌟 修改：可见老师列表 - 超管能看所有人除了自己(或者自己也可以看，这里过滤掉superadmin只让看下级，若要重置密码由顶部按钮完成)，校长只能看老师。
                 const visibleTeachers = computed(() => isSuperadmin.value ? state.users.filter(u => u.role !== 'superadmin') : teachersOnly.value);
                 const visibleClasses = computed(() => isTeacher.value ? state.classes.filter(c => c.teacherId === state.currentUser.id) : state.classes);
                 
@@ -1090,7 +1143,6 @@
                     return state.records.filter(r => r.date.includes(todayStr) && (isSuperadmin.value || r.operatorRole !== 'superadmin')).length;
                 });
 
-                // 🌟 新增：独立主页与详细名单的计算属性
                 const viewingClassStudents = computed(() => {
                     if (!state.viewingClass) return [];
                     return state.students.filter(s => s.classIds && s.classIds.includes(state.viewingClass.id));
@@ -1132,20 +1184,24 @@
                 });
 
                 const modalTitle = computed(() => {
-                    const t = { addTeacher: '创建系统账号', addClass: '开设新班级排期', editClass: '编辑班级信息', addStudent: '新生建档报课', renewStudent: '为学员全局续费', attendance: '上课/请假登记', systemSettings: '全局品牌与界面设置' };
+                    const t = { addTeacher: '创建系统账号', addClass: '开设新班级排期', editClass: '编辑班级信息', addStudent: '学员建档及分配', renewStudent: '为学员全局续费', attendance: '上课/请假登记', systemSettings: '全局品牌与界面设置', changePassword: '安全修改登录密码' };
                     return t[state.showModal] || '';
                 });
                 const modalIconClass = computed(() => {
-                    const i = { addTeacher: 'ph-user-plus', addClass: 'ph-chalkboard-teacher', editClass: 'ph-pencil-simple', addStudent: 'ph-student', renewStudent: 'ph-coins', attendance: 'ph-calendar-check', systemSettings: 'ph-gear' };
+                    const i = { addTeacher: 'ph-user-plus', addClass: 'ph-chalkboard-teacher', editClass: 'ph-pencil-simple', addStudent: 'ph-student', renewStudent: 'ph-coins', attendance: 'ph-calendar-check', systemSettings: 'ph-gear', changePassword: 'ph-key' };
                     return i[state.showModal] || 'ph-app-window';
                 });
 
+                // 🌟 新增：关闭 Modal 时自动停止摄像头
+                const closeModal = () => { 
+                    state.showModal = null; 
+                    stopCamera(); // 确保安全关闭硬件调用
+                };
                 const switchTab = (tab) => { state.activeTab = tab; state.viewingClass = null; state.viewingStudent = null; state.searchTerm = ''; };
                 const openModal = (m) => { 
                     state.showModal = m; 
                     if(m==='systemSettings') state.settingsForm = { name: state.systemName, logo: state.systemLogo };
                 };
-                const closeModal = () => { state.showModal = null; };
                 
                 const viewStudentProfile = (student) => { state.viewingStudent = student; state.viewingClass = null; state.searchTerm = ''; };
 
@@ -1172,7 +1228,40 @@
                 const handleLogout = () => { state.currentUser = null; switchTab('dashboard'); };
                 const executeConfirm = () => { if(state.confirmDialog?.onConfirm) state.confirmDialog.onConfirm(); state.confirmDialog = null; };
 
-                // 业务操作写入云端
+                // 🌟 新增：更改密码权限校验逻辑
+                const openChangePasswordModal = (user) => {
+                    state.passwordForm = { targetId: user.id, currentPassword: '', newPassword: '', confirmPassword: '' };
+                    state.showModal = 'changePassword';
+                };
+                
+                const submitChangePassword = async () => {
+                    // 1. 验证密码二次确认
+                    if (state.passwordForm.newPassword !== state.passwordForm.confirmPassword) {
+                        return showToast('两次输入的新密码不一致！', 'error');
+                    }
+                    if (state.passwordForm.newPassword.length < 6) {
+                        return showToast('为了账号安全，新密码至少需要 6 位', 'error');
+                    }
+                    // 2. 越权/本人修改的严密验证：必须提供操作者(currentUser)的正确密码
+                    if (state.passwordForm.currentPassword !== state.currentUser.password) {
+                        return showToast('验证失败！您输入的当前密码不正确，无法授权本次修改。', 'error');
+                    }
+
+                    withLoading('正在执行安全密码重置...', async () => {
+                        const targetUser = state.users.find(u => u.id === state.passwordForm.targetId);
+                        const updatedUser = { ...targetUser, password: state.passwordForm.newPassword };
+                        await saveToDb('users', updatedUser.id, updatedUser);
+                        
+                        // 如果改的是自己的密码，同步更新当前登录态缓存
+                        if (targetUser.id === state.currentUser.id) {
+                            state.currentUser.password = state.passwordForm.newPassword;
+                        }
+                        
+                        closeModal();
+                        showToast(`成功重置了【${targetUser.name}】的密码！`);
+                    });
+                };
+
                 const triggerDeleteUser = (id) => {
                     if (id === state.currentUser.id) return showToast('不可自杀', 'error');
                     if (getTeacherClassCount(id) > 0) return showToast('名下尚有班级，无法直接解雇', 'error');
@@ -1258,7 +1347,7 @@
 
                 const openAddStudentModal = (lockedClassObj=null, mode='new') => {
                     state.addStudentMode = mode;
-                    state.studentForm = { existingId: '', name: '', contact: '', payment: 0, hours: '', bonus: 0, teacherId: lockedClassObj?.teacherId||'', classId: lockedClassObj?.id||'', remark: '', lockedClass: lockedClassObj };
+                    state.studentForm = { existingId: '', name: '', contact: '', payment: 0, hours: '', bonus: 0, teacherId: lockedClassObj?.teacherId||'', classId: lockedClassObj?.id||'', remark: '', lockedClass: lockedClassObj, avatar: '' };
                     state.showModal = 'addStudent';
                 };
 
@@ -1276,7 +1365,12 @@
                             showToast('老生顺利插班');
                         } else {
                             const total = (sf.hours||0) + (sf.bonus||0); const sid = Date.now();
-                            const newS = { id: sid, name: sf.name, contact: sf.contact, remainingHours: total, totalHours: total, paymentAmount: sf.payment, totalPayment: sf.payment, bonusHours: sf.bonus||0, classIds: [cid], avatar: '', school: '', grade: '', parentName: '', parentRole: '' };
+                            const newS = { 
+                                id: sid, name: sf.name, contact: sf.contact, 
+                                remainingHours: total, totalHours: total, paymentAmount: sf.payment, totalPayment: sf.payment, bonusHours: sf.bonus||0, classIds: [cid], 
+                                avatar: sf.avatar || '', // 附带处理好的压缩头像
+                                school: '', grade: '', parentName: '', parentRole: '' 
+                            };
                             await saveToDb('students', sid, newS);
                             await addRecord(sid, sf.name, cid, null, `首报建档 (+${sf.hours||0}正课, +${sf.bonus||0}赠课)`, `实付¥${sf.payment} | ` + sf.remark);
                             showToast('新学员报单成功');
@@ -1320,7 +1414,6 @@
                     });
                 };
 
-                // 🌟 新增：导入导出恢复逻辑 (对接腾讯云完全覆盖)
                 const handleExportData = () => {
                     const data = { 
                         version: 'Cloud_v1.0', date: formatDt(new Date()), 
@@ -1348,14 +1441,13 @@
                                     const d = JSON.parse(evt.target.result); 
                                     if(d.users && d.records) { 
                                         await withLoading('警告：正在通过云端引擎强制洗库并恢复历史数据，请勿关闭页面...', async () => {
-                                            // 逐批次用新文件里的数据向云端执行 set 操作 (相当于覆盖)
                                             if (d.sys) await saveToDb('settings', 'sys', { id: 'sys', name: d.sys.name, logo: d.sys.logo }, true);
                                             
                                             const cols = ['users', 'classes', 'students', 'records'];
                                             for (const c of cols) {
                                                 if (d[c]) {
                                                     for (const item of d[c]) await saveToDb(c, item.id, item, true);
-                                                    state[c] = d[c]; // 更新本地
+                                                    state[c] = d[c]; 
                                                 }
                                             }
                                             if (d.sys) { state.systemName = d.sys.name; state.systemLogo = d.sys.logo; }
@@ -1368,16 +1460,75 @@
                             reader.readAsText(file);
                         }
                     }; 
-                    e.target.value = null; // 清空以便重复选同一个文件
+                    e.target.value = null; 
                 };
 
+                // 🌟 新增：图片智能压缩引擎，解决云端塞爆问题
+                const compressImage = (dataUrl, maxWidth, callback) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        // 计算按比例缩放后的宽高
+                        const ratio = img.height / img.width;
+                        canvas.width = maxWidth;
+                        canvas.height = maxWidth * ratio;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        // 输出高压缩比的 jpeg，控制体积在几十KB左右
+                        callback(canvas.toDataURL('image/jpeg', 0.7));
+                    };
+                    img.src = dataUrl;
+                };
+
+                // 🌟 新增：本地上传含自动压缩
                 const handleImageUpload = (e, field) => {
                     const file = e.target.files[0]; if(!file) return;
-                    // 为了简单起见，这里将小Logo转为 Base64 存在数据库的 Settings 表中
-                    if (file.size > 200 * 1024) return showToast('Logo图片请尽量小于200KB', 'error');
                     const reader = new FileReader();
-                    reader.onload = (evt) => { if(field === 'logo') state.settingsForm.logo = evt.target.result; };
+                    reader.onload = (evt) => { 
+                        // 将任何上传图片强制压缩到最宽 400px 以节省云数据库昂贵空间
+                        compressImage(evt.target.result, 400, (compressedBase64) => {
+                            if(field === 'logo') state.settingsForm.logo = compressedBase64;
+                            if(field === 'studentAvatar') state.studentForm.avatar = compressedBase64;
+                        });
+                    };
                     reader.readAsDataURL(file);
+                };
+
+                // 🌟 新增：硬件摄像头调用模块
+                let localStream = null;
+                const startCamera = async () => {
+                    try {
+                        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                        state.isCameraOpen = true;
+                        // 等待DOM更新后绑定流
+                        setTimeout(() => {
+                            const video = document.getElementById('avatarVideo');
+                            if (video) video.srcObject = localStream;
+                        }, 200);
+                    } catch (err) {
+                        showToast('无法访问摄像头，请检查浏览器权限设置！', 'error');
+                    }
+                };
+
+                const takePhoto = () => {
+                    const video = document.getElementById('avatarVideo');
+                    if (!video) return;
+                    const canvas = document.createElement('canvas');
+                    // 同样使用压缩比例 400px，防止拍照质量过高卡死服务器
+                    canvas.width = 400;
+                    canvas.height = Math.floor(400 * video.videoHeight / video.videoWidth);
+                    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    state.studentForm.avatar = canvas.toDataURL('image/jpeg', 0.8);
+                    stopCamera(); // 拍完立刻停止，防隐私泄露
+                };
+
+                const stopCamera = () => {
+                    if (localStream) {
+                        localStream.getTracks().forEach(track => track.stop());
+                        localStream = null;
+                    }
+                    state.isCameraOpen = false;
                 };
 
                 return {
@@ -1394,6 +1545,8 @@
                     openRenewModal, submitRenew,
                     openAttendanceModal, submitAttendance,
                     handleExportData, triggerImportData, handleImageUpload,
+                    startCamera, takePhoto, stopCamera, // 导出摄像头方法
+                    openChangePasswordModal, submitChangePassword, // 导出密码方法
                     getTeacherName, getClassName, getClassCourse, getStudentTeacherId, getTeacherClassCount, getClassStudentCount, getClassObj,
                     hasAttendedToday 
                 };
