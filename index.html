@@ -9,10 +9,13 @@
     <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 极速云端组件 -->
-    <script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/2.3.0/cloudbase.full.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.3.0/cloudbase.full.js"></script>
-    <script src="https://unpkg.com/@cloudbase/js-sdk@2.3.0/cloudbase.full.js"></script>
+    <!-- 🌟 恢复我们之前测试成功的无敌官方节点，覆盖掉离线模板里的旧节点 -->
+    <script src="https://static.cloudbase.net/cloudbase-js-sdk/2.28.6/cloudbase.full.js"></script>
+    <script>
+        if (typeof cloudbase === 'undefined') {
+            document.write('<script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"><\/script>');
+        }
+    </script>
     
     <script>
         // ==========================================
