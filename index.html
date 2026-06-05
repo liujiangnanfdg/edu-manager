@@ -9,17 +9,17 @@
     <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 腾讯云核心 SDK (保持不变) -->
-    <script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
+    <!-- 🌟 绝密修复：将 SDK 恢复为完美兼容 v2ray 代理的 2.28.6 顶级节点 -->
+    <script src="https://static.cloudbase.net/cloudbase-js-sdk/2.28.6/cloudbase.full.js"></script>
     <script>
         if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://unpkg.zhimg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
+            document.write('<script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"><\/script>');
         }
     </script>
+    
     <script>
-        if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.7.1/cloudbase.full.js"><\/script>');
-        }
+        // ==========================================
+        // 🚀 腾讯云开发 (TCB) 配置区
     </script>
     
     <script>
