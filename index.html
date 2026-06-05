@@ -9,10 +9,8 @@
     <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 云端骨干组件：三重容灾防白屏 -->
-    <script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"></script>
-    <script>if (typeof cloudbase === 'undefined') document.write('<script src="https://unpkg.zhimg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');</script>
-    <script>if (typeof cloudbase === 'undefined') document.write('<script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.7.1/cloudbase.full.js"><\/script>');</script>
+    <!-- 🌟 核心修复：彻底抛弃所有容易静默吞错的老版本，锁定唯一且最稳定的 2.28.6 官方节点 -->
+    <script src="https://static.cloudbase.net/cloudbase-js-sdk/2.28.6/cloudbase.full.js"></script>
     
     <script>
         tailwind.config = {
@@ -1223,7 +1221,7 @@
                 const state = reactive({
                     systemName: 'EduOS Liquid',
                     systemLogo: '',
-                    systemBgImage: '', // 🌟 新增：全局自定义背景
+                    systemBgImage: '',
                     isLoading: true,
                     loadingMsg: 'Initializing Engine...', 
                     isCloud: false, 
@@ -1249,7 +1247,7 @@
                     superEditForm: { targetId: null, remainingHours: 0, totalHours: 0, paymentAmount: 0 },
 
                     loginForm: { username: '', password: '' },
-                    settingsForm: { name: '', logo: '', bgImage: '' }, // 🌟 新增：背景图表单
+                    settingsForm: { name: '', logo: '', bgImage: '' },
                     classForm: { id: null, name: '', course: '', schedule: '', teacherId: '' },
                     teacherForm: { name: '', username: '', password: '', role: 'teacher' },
                     addStudentMode: 'new',
@@ -1276,6 +1274,9 @@
                     state.isLoading = true;
                     try {
                         await fn();
+                    } catch (err) {
+                        console.error("操作异常:", err);
+                        showToast(`执行中断: ${err.message}`, 'error');
                     } finally {
                         state.isLoading = false;
                         state.loadingMsg = 'Loading...';
@@ -1439,7 +1440,6 @@
                     return state.records.filter(r => r.date.includes(todayStr) && (isSuperadmin.value || r.operatorRole !== 'superadmin')).length;
                 });
 
-                // 🌟 新增课时不足预警名单 (≤3节的学员)
                 const lowHoursStudents = computed(() => {
                     let allS = state.students;
                     if (isTeacher.value) {
@@ -1752,7 +1752,7 @@
                             showToast('成功为学子核销1课时');
                         } else {
                             await addRecord(s.id, s.name, af.classObj.id, af.classObj.teacherId, '事由请假 (不扣课时)', af.remark);
-                            showToast('已录入免扣考勤事由');
+                            showToast('已录入请假事由');
                         }
                         closeModal();
                     });
@@ -1807,7 +1807,6 @@
                     e.target.value = null; 
                 };
 
-                // 🌟 核心修改：支持上传高分辨率的背景大图 (1920px压缩比)
                 const compressImage = (dataUrl, maxWidth, callback) => {
                     const img = new Image();
                     img.onload = () => {
@@ -1832,7 +1831,6 @@
                     const file = e.target.files[0]; if(!file) return;
                     const reader = new FileReader();
                     reader.onload = (evt) => { 
-                        // 背景图允许最大 1920px，其他头像/Logo 最大 400px
                         const maxW = field === 'bgImage' ? 1920 : 400;
                         compressImage(evt.target.result, maxW, (compressedBase64) => {
                             if(field === 'logo') state.settingsForm.logo = compressedBase64;
