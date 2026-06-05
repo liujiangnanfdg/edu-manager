@@ -52,7 +52,7 @@
             }
         }
     </script>
-    
+
     <script>
         // ==========================================
         // 🚀 腾讯云开发 (TCB) 配置区
@@ -61,7 +61,6 @@
         // ==========================================
     </script>
     
-    <!-- 🌟 核心修复：必须指定 type="text/tailwindcss" 才能让引擎正确解析 @apply 语法，否则会导致全站排版崩溃！ -->
     <style type="text/tailwindcss">
         /* iOS26 风格系统基础设定 */
         body { 
@@ -70,13 +69,14 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 动态弥散背景 */
+        /* 动态弥散背景/图片背景容器 */
         .ambient-bg {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: -1;
             overflow: hidden;
             background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            transition: background-image 0.5s ease;
         }
         .ambient-blob {
             position: absolute;
@@ -138,15 +138,18 @@
     </style>
 </head>
 <body class="text-gray-800 overflow-hidden selection:bg-blue-200 selection:text-blue-900">
-    <!-- 动态背景 -->
-    <div class="ambient-bg">
-        <div class="ambient-blob blob-1"></div>
-        <div class="ambient-blob blob-2"></div>
-        <div class="ambient-blob blob-3"></div>
+    <!-- 动态背景/自定义背景图片渲染层 -->
+    <div class="ambient-bg" :style="state.systemBgImage ? { backgroundImage: 'url(' + state.systemBgImage + ')', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {}">
+        <template v-if="!state.systemBgImage">
+            <div class="ambient-blob blob-1"></div>
+            <div class="ambient-blob blob-2"></div>
+            <div class="ambient-blob blob-3"></div>
+        </template>
+        <!-- 添加一个极其轻微的全局遮罩，保证自定义图片下字体依然可见 -->
+        <div v-if="state.systemBgImage" class="absolute inset-0 bg-white/20 backdrop-blur-[2px]"></div>
     </div>
 
-    <!-- 顶级应用容器，锁定全屏 -->
-    <div id="app" class="h-screen w-screen flex flex-col relative z-10 overflow-hidden" v-cloak>
+    <div id="app" class="h-screen w-screen flex flex-col relative z-10" v-cloak>
 
         <!-- 全局加载遮罩 -->
         <transition name="fade">
@@ -215,9 +218,8 @@
             </div>
         </transition>
 
-        <!-- 🌟 主系统框架：严格锁定为 flex-row 左右布局 -->
+        <!-- 主系统框架 -->
         <template v-if="state.currentUser && !state.isLoading && !state.systemError">
-            <!-- 这个容器保证左边是侧边栏，右边是主内容区 -->
             <div class="flex-1 flex flex-row overflow-hidden p-4 gap-4 w-full h-full min-h-0">
                 
                 <!-- 侧边栏 (玻璃浮岛) -->
@@ -274,7 +276,7 @@
                                 <p class="text-gray-800 font-bold truncate">{{ state.currentUser.name }}</p>
                                 <p class="text-xs text-blue-600 font-semibold truncate">{{ isSuperadmin ? 'System Root' : isAdmin ? 'Administrator' : 'Instructor' }}</p>
                             </div>
-                            <button @click="openChangePasswordModal(state.currentUser)" class="w-8 h-8 rounded-full bg-white/50 hover:bg-white flex items-center justify-center text-gray-500 hover:text-blue-600 transition-colors shadow-sm flex-shrink-0" title="修改密码">
+                            <button @click="openChangePasswordModal(state.currentUser)" class="w-8 h-8 rounded-full bg-white/50 hover:bg-white flex items-center justify-center text-gray-500 hover:text-blue-600 transition-colors shadow-sm flex-shrink-0" title="修改我的密码">
                                 <i class="ph ph-key text-lg"></i>
                             </button>
                         </div>
@@ -299,7 +301,7 @@
                     <!-- 右侧滚动内容 -->
                     <div class="flex-1 overflow-y-auto px-4 md:px-6 pb-6 no-scrollbar h-full w-full relative">
                         
-                        <!-- Dashboard -->
+                        <!-- Dashboard 首页概览 -->
                         <div v-if="state.activeTab === 'dashboard' && !state.viewingStudent && !state.viewingClass" class="space-y-8 animate-[springUp_0.6s_ease-out]">
                             <div class="flex justify-between items-end px-2 pt-2">
                                 <div>
@@ -359,6 +361,45 @@
                                         <p class="text-4xl font-extrabold text-gray-800 mb-1">{{ todayRecordsCount }}</p>
                                         <h3 class="text-gray-500 text-sm font-semibold">今日发生流水</h3>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- 🌟 新增：课时预警雷达 -->
+                            <div v-if="lowHourStudents.length > 0" class="glass-card p-6 relative overflow-hidden bg-gradient-to-r from-red-50/50 to-orange-50/30 border border-red-200/40">
+                                <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>
+                                <h3 class="text-lg font-bold text-red-600 flex items-center mb-5"><i class="ph ph-warning-circle text-2xl mr-2 animate-pulse"></i> 财务课时雷达预警 (剩余 ≤ 3 节)</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left">
+                                        <thead>
+                                            <tr>
+                                                <th class="py-2 px-4 text-xs font-semibold text-gray-500 bg-transparent border-b border-red-100">学员档案</th>
+                                                <th class="py-2 px-4 text-xs font-semibold text-gray-500 bg-transparent border-b border-red-100">紧急联系</th>
+                                                <th class="py-2 px-4 text-xs font-semibold text-gray-500 bg-transparent border-b border-red-100">余量警告</th>
+                                                <th class="py-2 px-4 text-right text-xs font-semibold text-gray-500 bg-transparent border-b border-red-100">快速业务</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="student in lowHourStudents" :key="student.id" class="border-b border-red-50/50 hover:bg-white/40 transition-colors">
+                                                <td class="py-3 px-4 font-bold text-gray-800 flex items-center">
+                                                    <div class="w-8 h-8 rounded-full bg-white mr-3 border border-red-100 shadow-sm flex items-center justify-center overflow-hidden">
+                                                        <img v-if="student.avatar" :src="student.avatar" class="w-full h-full object-cover" />
+                                                        <i v-else class="ph ph-user text-gray-400"></i>
+                                                    </div>
+                                                    {{ student.name }}
+                                                </td>
+                                                <td class="py-3 px-4 text-gray-600 font-mono text-sm">{{ student.contact || '未留存' }} <span class="text-xs text-gray-400 ml-1">({{student.parentName || '家长'}})</span></td>
+                                                <td class="py-3 px-4">
+                                                    <span class="bg-red-500 text-white shadow-[0_0_10px_rgba(239,68,68,0.4)] px-3 py-1 rounded-full text-xs font-bold animate-pulse">仅剩 {{ student.remainingHours }} 节</span>
+                                                </td>
+                                                <td class="py-3 px-4 text-right">
+                                                    <button v-if="isAdminOrSuper" @click="openRenewModal(student)" class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-4 py-2 rounded-[14px] text-xs font-bold shadow-md transition-all active:scale-95 flex items-center justify-end ml-auto">
+                                                        <i class="ph ph-wallet mr-1.5 text-sm"></i> 快速续费
+                                                    </button>
+                                                    <span v-else class="text-xs text-gray-400 font-medium italic">请提醒前台/校长续费</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -889,6 +930,55 @@
 
                         <div class="p-8 overflow-y-auto flex-1 no-scrollbar relative z-0">
                             
+                            <!-- 🌟 全局设置 (新增背景图上传) -->
+                            <form v-if="state.showModal === 'systemSettings'" @submit.prevent="submitSystemSettings" class="space-y-8">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">品牌 Logo 标识</label>
+                                    <div class="flex items-center space-x-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                        <div class="w-28 h-28 bg-white rounded-[28px] border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group transition-colors hover:border-blue-400">
+                                            <img v-if="state.settingsForm.logo" :src="state.settingsForm.logo" class="w-full h-full object-contain p-2" />
+                                            <i v-else class="ph ph-image text-5xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
+                                            <div class="absolute inset-0 bg-blue-600/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
+                                                <i class="ph ph-upload-simple text-blue-600 text-3xl font-bold"></i>
+                                            </div>
+                                            <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'logo')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" title="点击上传新Logo" />
+                                        </div>
+                                        <div class="text-sm text-gray-500 space-y-3 flex-1">
+                                            <p class="font-medium bg-white px-3 py-2 rounded-lg border inline-block shadow-sm"><i class="ph ph-info mr-1 text-blue-500"></i>推荐尺寸 1:1，支持 PNG/SVG 透明背景。</p>
+                                            <div><button type="button" @click="state.settingsForm.logo = ''" class="text-red-500 font-bold hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-red-100"><i class="ph ph-trash mr-1"></i>移除并使用默认</button></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="pt-4 border-t border-gray-100">
+                                    <label class="block text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">系统全局背景图</label>
+                                    <div class="flex items-center space-x-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                        <div class="w-40 h-24 bg-slate-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group transition-colors hover:border-blue-400">
+                                            <img v-if="state.settingsForm.bgImage" :src="state.settingsForm.bgImage" class="w-full h-full object-cover" />
+                                            <i v-else class="ph ph-image text-4xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
+                                            <div class="absolute inset-0 bg-blue-600/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
+                                                <i class="ph ph-upload-simple text-blue-600 text-3xl font-bold"></i>
+                                            </div>
+                                            <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'bgImage')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" title="点击上传新背景图" />
+                                        </div>
+                                        <div class="text-sm text-gray-500 space-y-3 flex-1">
+                                            <p class="font-medium bg-white px-3 py-2 rounded-lg border inline-block shadow-sm"><i class="ph ph-info mr-1 text-blue-500"></i>推荐比例 16:9，系统会自动压缩优化。</p>
+                                            <div><button type="button" @click="state.settingsForm.bgImage = ''" class="text-red-500 font-bold hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-red-100"><i class="ph ph-trash mr-1"></i>恢复默认动态光晕</button></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t border-gray-100">
+                                    <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">系统显示名称</label>
+                                    <input type="text" required v-model="state.settingsForm.name" class="glass-input w-full font-bold text-lg" placeholder="例如：新东方教育管理中枢" />
+                                </div>
+                                <div class="flex justify-end pt-6 border-t border-gray-100">
+                                    <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl mr-3 transition-colors">放弃更改</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 text-lg">保存并广播到所有终端</button>
+                                </div>
+                            </form>
+
+                            <!-- 其他表单同理... -->
                             <form v-if="state.showModal === 'editAvatar'" @submit.prevent="submitEditAvatar" class="space-y-6">
                                 <div class="flex flex-col items-center justify-center space-y-6 py-4">
                                     <div class="w-40 h-40 bg-gray-100 rounded-[40px] flex items-center justify-center overflow-hidden border-4 border-white shadow-liquid relative">
@@ -917,7 +1007,6 @@
                                 </div>
                             </form>
 
-                            <!-- 🌟 新增超管覆写弹窗 -->
                             <form v-if="state.showModal === 'superEditStudent'" @submit.prevent="submitSuperEditStudent" class="space-y-6">
                                 <div class="bg-orange-50/50 p-5 rounded-2xl border border-orange-200">
                                     <p class="text-orange-900 font-medium flex items-center"><i class="ph ph-shield-warning mr-2 text-xl"></i>底层数据强制覆写</p>
@@ -1060,34 +1149,6 @@
                                 </div>
                             </form>
 
-                            <form v-if="state.showModal === 'systemSettings'" @submit.prevent="submitSystemSettings" class="space-y-8">
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">品牌 Logo 标识</label>
-                                    <div class="flex items-center space-x-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                                        <div class="w-28 h-28 bg-white rounded-[28px] border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group transition-colors hover:border-blue-400">
-                                            <img v-if="state.settingsForm.logo" :src="state.settingsForm.logo" class="w-full h-full object-contain p-2" />
-                                            <i v-else class="ph ph-image text-5xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
-                                            <div class="absolute inset-0 bg-blue-600/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
-                                                <i class="ph ph-upload-simple text-blue-600 text-3xl font-bold"></i>
-                                            </div>
-                                            <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'logo')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" title="点击上传新Logo" />
-                                        </div>
-                                        <div class="text-sm text-gray-500 space-y-3 flex-1">
-                                            <p class="font-medium bg-white px-3 py-2 rounded-lg border inline-block shadow-sm"><i class="ph ph-info mr-1 text-blue-500"></i>推荐尺寸 1:1，支持 PNG/SVG 透明背景。</p>
-                                            <div><button type="button" @click="state.settingsForm.logo = ''" class="text-red-500 font-bold hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-red-100"><i class="ph ph-trash mr-1"></i>移除并使用默认</button></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="pt-2">
-                                    <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">系统显示名称</label>
-                                    <input type="text" required v-model="state.settingsForm.name" class="glass-input w-full font-bold text-lg" placeholder="例如：新东方教育管理中枢" />
-                                </div>
-                                <div class="flex justify-end pt-6 border-t border-gray-100">
-                                    <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl mr-3 transition-colors">放弃更改</button>
-                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 text-lg">保存并广播到所有终端</button>
-                                </div>
-                            </form>
-
                             <form v-if="state.showModal === 'addTeacher'" @submit.prevent="submitTeacher" class="space-y-4">
                                 <div><label class="block text-sm font-bold mb-1">真实姓名</label><input type="text" required v-model="state.teacherForm.name" class="glass-input w-full" /></div>
                                 <div><label class="block text-sm font-bold mb-1">登录账号</label><input type="text" required v-model="state.teacherForm.username" class="glass-input w-full" /></div>
@@ -1226,6 +1287,7 @@
                 const state = reactive({
                     systemName: 'EduOS Liquid',
                     systemLogo: '',
+                    systemBgImage: '', // 新增系统全局背景图
                     isLoading: true,
                     loadingMsg: 'Initializing Engine...', 
                     isCloud: false, 
@@ -1251,7 +1313,7 @@
                     superEditForm: { targetId: null, remainingHours: 0, totalHours: 0, paymentAmount: 0 },
 
                     loginForm: { username: '', password: '' },
-                    settingsForm: { name: '', logo: '' },
+                    settingsForm: { name: '', logo: '', bgImage: '' }, // 新增背景图字段
                     classForm: { id: null, name: '', course: '', schedule: '', teacherId: '' },
                     teacherForm: { name: '', username: '', password: '', role: 'teacher' },
                     addStudentMode: 'new',
@@ -1314,7 +1376,7 @@
                                 if (col === 'users') defaultData = fallbackUsers;
                                 if (col === 'classes') defaultData = fallbackClasses;
                                 if (col === 'students') defaultData = fallbackStudents;
-                                if (col === 'settings') defaultData = [{ id: 'sys', name: 'EduOS Liquid', logo: '' }];
+                                if (col === 'settings') defaultData = [{ id: 'sys', name: 'EduOS Liquid', logo: '', bgImage: '' }];
 
                                 for (const defItem of defaultData) {
                                     const exists = resData.find(r => r.id == defItem.id || r._id == defItem.id);
@@ -1332,7 +1394,11 @@
 
                                 if (col === 'settings') {
                                     const sysData = resData.find(r => r.id === 'sys' || r._id === 'sys');
-                                    if(sysData){ state.systemName = sysData.name; state.systemLogo = sysData.logo; }
+                                    if(sysData){ 
+                                        state.systemName = sysData.name; 
+                                        state.systemLogo = sysData.logo; 
+                                        state.systemBgImage = sysData.bgImage || ''; // 渲染全局背景
+                                    }
                                 } else {
                                     let docs = resData.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
                                     if (col === 'records') docs.sort((a,b) => b.id - a.id);
@@ -1345,7 +1411,11 @@
                                         if (Array.isArray(snapDocs)) {
                                             if (col === 'settings') {
                                                 const sData = snapDocs.find(r => r.id === 'sys' || r._id === 'sys');
-                                                if(sData){ state.systemName = sData.name; state.systemLogo = sData.logo; }
+                                                if(sData){ 
+                                                    state.systemName = sData.name; 
+                                                    state.systemLogo = sData.logo; 
+                                                    state.systemBgImage = sData.bgImage || '';
+                                                }
                                             } else {
                                                 let wDocs = snapDocs.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
                                                 if (col === 'records') wDocs.sort((a,b) => b.id - a.id);
@@ -1438,6 +1508,16 @@
                     return state.records.filter(r => r.date.includes(todayStr) && (isSuperadmin.value || r.operatorRole !== 'superadmin')).length;
                 });
 
+                // 🌟 新增：课时不足预警名单 (剩余课时 <= 3节)
+                const lowHourStudents = computed(() => {
+                    let sList = state.students;
+                    if (isTeacher.value) {
+                        const tc = visibleClasses.value.map(c => c.id);
+                        sList = sList.filter(s => s.classIds && s.classIds.some(id => tc.includes(id)));
+                    }
+                    return sList.filter(s => s.remainingHours <= 3);
+                });
+
                 const viewingClassStudents = computed(() => {
                     if (!state.viewingClass) return [];
                     return state.students.filter(s => s.classIds && s.classIds.includes(state.viewingClass.id));
@@ -1479,7 +1559,7 @@
                 });
 
                 const modalTitle = computed(() => {
-                    const t = { addTeacher: '创建系统账号', addClass: '开设新班级排期', editClass: '编辑班级信息', addStudent: '学员建档及分配', renewStudent: '为学员全局续费', attendance: '上课/请假登记', systemSettings: '全局品牌与界面设置', changePassword: '安全修改登录密码', editAvatar: '更新学员头像资料', superEditStudent: '高级系统覆写' };
+                    const t = { addTeacher: '创建系统账号', addClass: '开设新班级排期', editClass: '编辑班级信息', addStudent: '学员建档及分配', renewStudent: '为学员全局续费', attendance: '上课/请假登记', systemSettings: '全局品牌与偏好设置', changePassword: '安全修改登录密码', editAvatar: '更新学员头像资料', superEditStudent: '高级系统覆写' };
                     return t[state.showModal] || '';
                 });
                 const modalIconClass = computed(() => {
@@ -1494,7 +1574,7 @@
                 const switchTab = (tab) => { state.activeTab = tab; state.viewingClass = null; state.viewingStudent = null; state.searchTerm = ''; };
                 const openModal = (m) => { 
                     state.showModal = m; 
-                    if(m==='systemSettings') state.settingsForm = { name: state.systemName, logo: state.systemLogo };
+                    if(m==='systemSettings') state.settingsForm = { name: state.systemName, logo: state.systemLogo, bgImage: state.systemBgImage };
                 };
                 
                 const viewStudentProfile = (student) => { state.viewingStudent = student; state.viewingClass = null; state.searchTerm = ''; };
@@ -1626,10 +1706,11 @@
 
                 const submitSystemSettings = () => {
                     withLoading('正在同步云端设置...', async () => {
-                        const payload = { id: 'sys', name: state.settingsForm.name, logo: state.settingsForm.logo };
+                        const payload = { id: 'sys', name: state.settingsForm.name, logo: state.settingsForm.logo, bgImage: state.settingsForm.bgImage };
                         await saveToDb('settings', 'sys', payload);
                         state.systemName = state.settingsForm.name;
                         state.systemLogo = state.settingsForm.logo;
+                        state.systemBgImage = state.settingsForm.bgImage;
                         closeModal(); showToast('全局界面设置已生效！');
                     });
                 };
@@ -1702,7 +1783,7 @@
                                 id: sid, name: sf.name, contact: sf.contact, 
                                 remainingHours: total, totalHours: total, paymentAmount: sf.payment, totalPayment: sf.payment, bonusHours: sf.bonus||0, classIds: [cid], 
                                 avatar: sf.avatar || '',
-                                school: sf.school || '', grade: sf.grade || '', parentName: sf.parentName || '', parentRole: sf.parentRole || '妈妈' 
+                                school: '', grade: '', parentName: '', parentRole: '' 
                             };
                             await saveToDb('students', sid, newS);
                             await addRecord(sid, sf.name, cid, null, `首报建档 (+${sf.hours||0}正课, +${sf.bonus||0}赠课)`, `实付¥${sf.payment} | ` + sf.remark);
@@ -1752,7 +1833,7 @@
                         version: 'Cloud_v1.0', date: formatDt(new Date()), 
                         users: state.users, classes: state.classes, 
                         students: state.students, records: state.records, 
-                        sys: { name: state.systemName, logo: state.systemLogo } 
+                        sys: { name: state.systemName, logo: state.systemLogo, bgImage: state.systemBgImage } 
                     };
                     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
@@ -1774,7 +1855,7 @@
                                     const d = JSON.parse(evt.target.result); 
                                     if(d.users && d.records) { 
                                         await withLoading('警告：正在通过云端引擎强制洗库并恢复历史数据，请勿关闭页面...', async () => {
-                                            if (d.sys) await saveToDb('settings', 'sys', { id: 'sys', name: d.sys.name, logo: d.sys.logo }, true);
+                                            if (d.sys) await saveToDb('settings', 'sys', { id: 'sys', name: d.sys.name, logo: d.sys.logo, bgImage: d.sys.bgImage }, true);
                                             
                                             const cols = ['users', 'classes', 'students', 'records'];
                                             for (const c of cols) {
@@ -1783,7 +1864,7 @@
                                                     state[c] = d[c]; 
                                                 }
                                             }
-                                            if (d.sys) { state.systemName = d.sys.name; state.systemLogo = d.sys.logo; }
+                                            if (d.sys) { state.systemName = d.sys.name; state.systemLogo = d.sys.logo; state.systemBgImage = d.sys.bgImage || ''; }
                                             showToast('时空线已被篡改，数据已全部恢复至云端！');
                                             switchTab('dashboard');
                                         });
@@ -1812,10 +1893,13 @@
 
                 const handleImageUpload = (e, field) => {
                     const file = e.target.files[0]; if(!file) return;
+                    // 全局背景图可以压缩得稍微大一点以保持清晰，头像和logo压得狠一点
+                    const maxWidth = field === 'bgImage' ? 1280 : 400;
                     const reader = new FileReader();
                     reader.onload = (evt) => { 
-                        compressImage(evt.target.result, 400, (compressedBase64) => {
+                        compressImage(evt.target.result, maxWidth, (compressedBase64) => {
                             if(field === 'logo') state.settingsForm.logo = compressedBase64;
+                            if(field === 'bgImage') state.settingsForm.bgImage = compressedBase64;
                             if(field === 'studentAvatar') state.studentForm.avatar = compressedBase64;
                             if(field === 'editStudentAvatar') state.editAvatarForm.avatar = compressedBase64;
                         });
@@ -1866,6 +1950,7 @@
                     state, isSuperadmin, isAdmin, isTeacher, isAdminOrSuper,
                     teachersOnly, visibleTeachers, visibleClasses, viewingClassStudents, viewingStudentData,
                     filteredGlobalRecords, filteredProfileRecords, filteredEnrollments,
+                    lowHourStudents, // 新增：预警数据
                     teachersCount, myClassesCount, myStudentsCount, todayRecordsCount,
                     modalTitle, modalIconClass,
                     switchTab, openModal, closeModal, viewStudentProfile,
