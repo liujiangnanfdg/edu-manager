@@ -123,7 +123,7 @@
             @apply bg-white/50 backdrop-blur-[20px] text-gray-700 rounded-2xl py-3 px-6 shadow-sm hover:bg-white/70 transition-all active:scale-95 border border-white/60 font-bold;
         }
 
-        /* 🌟 极致液态胶囊表格（修复版：厚毛玻璃表头防遮挡） */
+        /* 🌟 极致液态胶囊表格 */
         table { border-collapse: separate !important; border-spacing: 0 10px !important; }
         
         thead {
@@ -132,23 +132,23 @@
             z-index: 30;
         }
 
-        /* 表头：高通透白底厚材质，完美遮盖底部滚动文字 */
+        /* 表头：纯正高斯模糊，扒掉白底，展现极致通透 */
         th { 
             @apply text-xs font-bold text-gray-500 uppercase tracking-wider py-4 px-6 align-middle shadow-sm relative z-30; 
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(40px) saturate(200%);
-            -webkit-backdrop-filter: blur(40px) saturate(200%);
-            border-top: 1px solid rgba(255, 255, 255, 0.8);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.05); /* 去除85%白底，只留5%微光 */
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             transform: translateZ(0); 
         }
         th:first-child { 
             @apply rounded-l-[24px]; 
-            border-left: 1px solid rgba(255, 255, 255, 0.8);
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
         }
         th:last-child { 
             @apply rounded-r-[24px]; 
-            border-right: 1px solid rgba(255, 255, 255, 0.8);
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         /* 数据行：极度透明，极高模糊 */
@@ -183,6 +183,7 @@
             <div v-if="!state.systemBgImage" class="ambient-blob blob-1"></div>
             <div v-if="!state.systemBgImage" class="ambient-blob blob-2"></div>
             <div v-if="!state.systemBgImage" class="ambient-blob blob-3"></div>
+            <!-- 如果有背景图，则加一层薄薄的遮罩让文字更清晰 -->
             <div v-if="state.systemBgImage" class="absolute inset-0 bg-black/10 backdrop-blur-[2px]"></div>
         </div>
 
@@ -320,10 +321,12 @@
                     </div>
                 </aside>
 
+                <!-- 主视图区 -->
                 <main class="flex-1 flex flex-col overflow-hidden relative">
                     
+                    <!-- 顶部超管横幅 -->
                     <transition name="fade">
-                        <div v-if="isSuperadmin" class="mb-4 bg-orange-100/60 backdrop-blur-xl border border-orange-200/80 px-6 py-3.5 rounded-[24px] flex items-center text-orange-800 text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
+                        <div v-if="isSuperadmin" class="mb-4 bg-orange-100/50 backdrop-blur-xl border border-orange-200/80 px-6 py-3.5 rounded-[24px] flex items-center text-orange-800 text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
                             <i class="ph ph-shield-warning text-xl mr-3 relative z-10 text-orange-600"></i>
                             <span class="relative z-10 font-bold">超级管理员已登录。您拥有最高权限，可修改所有数据。</span>
                         </div>
@@ -338,7 +341,7 @@
                                     <p class="text-gray-500 font-bold mb-1 uppercase tracking-widest text-xs">Overview</p>
                                     <h1 class="text-4xl font-black text-gray-800 tracking-tight">你好, {{ state.currentUser.name }}</h1>
                                 </div>
-                                <div class="bg-white/60 backdrop-blur-xl border border-white/50 px-4 py-2 rounded-full shadow-sm flex items-center">
+                                <div class="bg-white/40 backdrop-blur-xl border border-white/50 px-4 py-2 rounded-full shadow-sm flex items-center">
                                     <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse mr-3 shadow-[0_0_8px_#22c55e]"></div>
                                     <span class="text-sm font-bold text-gray-700">云端节点正常</span>
                                 </div>
@@ -434,7 +437,7 @@
                             </div>
                             <div class="overflow-x-auto p-4">
                                 <table class="w-full text-left">
-                                    <thead>
+                                    <thead class="sticky top-0 z-10">
                                         <tr>
                                             <th>姓名</th>
                                             <th>登录账号</th>
@@ -493,7 +496,7 @@
 
                             <div class="overflow-x-auto p-4">
                                 <table class="w-full text-left">
-                                    <thead>
+                                    <thead class="sticky top-0 z-10">
                                         <tr>
                                             <th>学员档案</th>
                                             <th>背景信息</th>
@@ -577,7 +580,7 @@
                             </div>
                             <div class="overflow-x-auto p-4">
                                 <table class="w-full text-left">
-                                    <thead>
+                                    <thead class="sticky top-0 z-10">
                                         <tr>
                                             <th>班级名称</th>
                                             <th>课程科目</th>
@@ -718,7 +721,7 @@
                                 </div>
                                 <div class="overflow-x-auto p-4">
                                     <table class="w-full text-left">
-                                        <thead>
+                                        <thead class="sticky top-0 z-10">
                                             <tr>
                                                 <th>操作时间</th>
                                                 <th>关联班级</th>
@@ -823,7 +826,7 @@
                                                     </template>
 
                                                     <template v-if="isAdminOrSuper">
-                                                        <button @click="openRenewModal(record)" class="px-5 py-2.5 rounded-[16px] bg-blue-100/80 text-blue-700 font-bold hover:bg-blue-200/80 transition-all border border-blue-200/50 shadow-sm">
+                                                        <button @click="openRenewModal(record)" class="px-5 py-2.5 rounded-[16px] bg-blue-100/80 text-blue-700 font-bold hover:bg-blue-200/80 transition-all border border-blue-200/50 shadow-sm backdrop-blur-sm">
                                                             续费
                                                         </button>
                                                     </template>
@@ -1134,10 +1137,10 @@
                             <form v-if="state.showModal === 'systemSettings'" @submit.prevent="submitSystemSettings" class="space-y-8">
                                 <div>
                                     <label class="block text-sm font-black text-gray-700 mb-4 uppercase tracking-wider">系统全局背景图</label>
-                                    <div class="flex items-center space-x-6 p-6 bg-gray-50 rounded-[24px] border border-gray-200 shadow-sm">
-                                        <div class="w-40 h-24 bg-white rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group hover:border-blue-400 transition-colors">
+                                    <div class="flex items-center space-x-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                        <div class="w-28 h-28 bg-white rounded-[28px] border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group hover:border-blue-400 transition-colors">
                                             <img v-if="state.settingsForm.bgImage" :src="state.settingsForm.bgImage" class="w-full h-full object-cover" />
-                                            <i v-else class="ph ph-image text-4xl text-gray-300 group-hover:text-blue-400"></i>
+                                            <i v-else class="ph ph-image text-4xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
                                             <div class="absolute inset-0 bg-blue-600/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
                                                 <i class="ph ph-upload-simple text-blue-600 text-3xl font-bold"></i>
                                             </div>
@@ -1151,10 +1154,10 @@
                                 </div>
                                 <div class="border-t border-gray-100 pt-6">
                                     <label class="block text-sm font-black text-gray-700 mb-4 uppercase tracking-wider">品牌 Logo 标识</label>
-                                    <div class="flex items-center space-x-6 p-6 bg-gray-50 rounded-[24px] border border-gray-200 shadow-sm">
+                                    <div class="flex items-center space-x-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
                                         <div class="w-24 h-24 bg-white rounded-[24px] border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group hover:border-blue-400 transition-colors">
                                             <img v-if="state.settingsForm.logo" :src="state.settingsForm.logo" class="w-full h-full object-contain p-2" />
-                                            <i v-else class="ph ph-image text-4xl text-gray-300 group-hover:text-blue-400"></i>
+                                            <i v-else class="ph ph-image text-4xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
                                             <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'logo')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
                                         </div>
                                         <div class="text-sm flex-1">
@@ -1280,7 +1283,7 @@
         <!-- 危险确认框 -->
         <transition name="fade">
             <div v-if="state.confirmDialog" class="fixed inset-0 z-[200] flex items-center justify-center bg-darkglass-900 backdrop-blur-liquid-heavy p-4">
-                <div class="bg-white/90 backdrop-blur-md rounded-[36px] shadow-2xl w-full max-w-sm overflow-hidden animate-[springUp_0.4s_ease-out] border border-white/50" style="-webkit-mask-image: -webkit-radial-gradient(white, black);">
+                <div class="bg-white/90 backdrop-blur-md rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden animate-[springUp_0.4s_ease-out] border border-white/50">
                     <div class="p-8 text-center relative">
                         <div class="absolute top-0 left-0 w-full h-1.5 bg-red-500"></div>
                         <div class="w-20 h-20 bg-red-50 text-red-500 rounded-[24px] flex items-center justify-center mx-auto mb-6 shadow-inner border border-red-100"><i class="ph ph-warning-circle text-5xl drop-shadow-sm"></i></div>
@@ -1296,7 +1299,7 @@
         </transition>
 
         <transition name="spring-up">
-            <div v-if="state.toast.show" :class="['fixed top-8 right-8 p-4 rounded-2xl shadow-liquid border flex items-center space-x-3 z-[300] max-w-md backdrop-blur-liquid', state.toast.type === 'error' ? 'bg-red-50/90 text-red-800 border-red-200/50' : 'bg-glass-800 text-white border-white/20']">
+            <div v-if="state.toast.show" :class="['fixed top-8 right-8 p-4 rounded-2xl shadow-liquid border flex items-center space-x-3 z-[300] max-w-md backdrop-blur-liquid', state.toast.type === 'error' ? 'bg-red-50/90 text-red-800 border-red-200/50' : 'bg-glass-800 text-white border-white/40']">
                 <i :class="['text-3xl drop-shadow-sm', state.toast.type === 'error' ? 'ph ph-warning-circle text-red-500' : 'ph ph-check-circle text-green-400']"></i>
                 <span class="font-bold text-sm leading-tight">{{ state.toast.message }}</span>
             </div>
@@ -1823,10 +1826,10 @@
                                     const d = JSON.parse(evt.target.result); 
                                     if(d.users && d.records) { 
                                         await withLoading('强制重构时空中，切勿断电...', async () => {
-                                            if (d.sys) await saveToDb('settings', 'sys', { id: 'sys', name: d.sys.name, logo: d.sys.logo, bgImage: d.sys.bgImage }, true);
+                                            if (d.sys) await saveToDb('settings', 'sys', { id: 'sys', name: d.sys.name, logo: d.sys.logo, bgImage: d.sys.bgImage || '' }, true);
                                             const cols = ['users', 'classes', 'students', 'records'];
                                             for (const c of cols) { if (d[c]) { for (const item of d[c]) await saveToDb(c, item.id, item, true); state[c] = d[c]; } }
-                                            if (d.sys) { state.systemName = d.sys.name; state.systemLogo = d.sys.logo; state.systemBgImage = d.sys.bgImage; }
+                                            if (d.sys) { state.systemName = d.sys.name; state.systemLogo = d.sys.logo; state.systemBgImage = d.sys.bgImage || ''; }
                                             showToast('时空线跃迁完成'); switchTab('dashboard');
                                         });
                                     }
@@ -1838,7 +1841,6 @@
                     e.target.value = null; 
                 };
 
-                // 核心压缩算法，支持 1920px 高清背景压缩
                 const compressImage = (dataUrl, maxWidth, callback) => {
                     const img = new Image();
                     img.onload = () => {
@@ -1856,7 +1858,6 @@
                     const file = e.target.files[0]; if(!file) return;
                     const reader = new FileReader();
                     reader.onload = (evt) => { 
-                        // 背景给 1920 高清，其余给 400
                         const qWidth = field === 'bgImage' ? 1920 : 400;
                         compressImage(evt.target.result, qWidth, (compressedBase64) => {
                             if(field === 'logo') state.settingsForm.logo = compressedBase64;
