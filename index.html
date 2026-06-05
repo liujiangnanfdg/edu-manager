@@ -440,6 +440,9 @@
                                                     <button @click="viewStudentProfile(student)" class="w-11 h-11 rounded-xl bg-white/60 text-blue-600 hover:bg-blue-500 hover:text-white flex items-center justify-center transition-all shadow-sm border border-white/50" title="学员详细信息">
                                                         <i class="ph ph-identification-card text-2xl"></i>
                                                     </button>
+                                                    <button v-if="isAdminOrSuper" @click="triggerDropClass(student.id, state.viewingClass.id)" class="w-11 h-11 rounded-xl bg-white/60 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all shadow-sm border border-white/50" title="移出本班">
+                                                        <i class="ph ph-sign-out text-2xl"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -1053,7 +1056,7 @@
                                 <div><label class="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">上课时间 <span class="text-gray-400 font-medium text-xs ml-2">(选填)</span></label>
                                     <div class="relative"><i class="ph ph-clock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i><input type="text" v-model="state.classForm.schedule" class="glass-input pl-11 w-full font-medium" /></div>
                                 </div>
-                                <div v-if="state.showModal === 'addClass'"><label class="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">任课老师 <span class="text-red-500">*</span></label>
+                                <div><label class="block text-sm font-black text-gray-700 mb-2 uppercase tracking-wider">任课老师 <span class="text-red-500">*</span></label>
                                     <select required v-model.number="state.classForm.teacherId" class="glass-input w-full bg-white/50 font-bold"><option value="" disabled>请选择老师...</option><option v-for="t in teachersOnly" :key="t.id" :value="t.id">{{t.name}}</option></select>
                                 </div>
                                 <div class="flex justify-end pt-6 border-t border-gray-200/50">
@@ -1656,7 +1659,11 @@
                             await saveToDb('classes', cid, { id: cid, ...state.classForm });
                             showToast('班级建立完毕');
                         } else {
+                            const oldClass = state.classes.find(c => c.id === state.classForm.id);
                             await saveToDb('classes', state.classForm.id, { ...state.classForm });
+                            if (oldClass && oldClass.teacherId !== state.classForm.teacherId) {
+                                await addRecord(null, '-', state.classForm.id, state.classForm.teacherId, '更换任课老师', `从 ${getTeacherName(oldClass.teacherId)} 变更为 ${getTeacherName(state.classForm.teacherId)}`);
+                            }
                             showToast('信息修改完成');
                         }
                         closeModal(); state.classForm = {id:null, name:'', course:'', schedule:'', teacherId:''};
