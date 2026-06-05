@@ -93,42 +93,44 @@
 
         /* 🌟 液态玻璃核心属性 (加入了强行溢出裁切，彻底解决直角漏出问题) */
         .glass-panel {
-            @apply bg-white/40 backdrop-blur-liquid shadow-liquid rounded-[36px] border border-white/50;
+            @apply bg-white/30 backdrop-blur-[40px] shadow-liquid rounded-[36px] border border-white/40;
             overflow: hidden !important;
             -webkit-mask-image: -webkit-radial-gradient(white, black); /* 强行裁切内部元素的直角 */
         }
         .glass-card {
-            @apply bg-white/50 backdrop-blur-liquid shadow-liquid rounded-[28px] border border-white/60 transition-all duration-300;
+            @apply bg-white/40 backdrop-blur-[30px] shadow-liquid rounded-[28px] border border-white/50 transition-all duration-300;
             overflow: hidden !important;
             -webkit-mask-image: -webkit-radial-gradient(white, black);
         }
         .glass-card:hover {
-            @apply shadow-liquid-hover bg-white/60 -translate-y-1;
+            @apply shadow-liquid-hover bg-white/50 -translate-y-1;
         }
         .glass-input {
-            @apply bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:bg-white/70 transition-all placeholder-gray-400 text-gray-800 shadow-sm;
+            @apply bg-white/40 backdrop-blur-[20px] border border-white/50 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:bg-white/60 transition-all placeholder-gray-500 text-gray-800 shadow-sm;
         }
         .glass-button-primary {
             @apply bg-blue-600/90 backdrop-blur-md text-white rounded-2xl py-3 px-6 shadow-[0_8px_16px_rgba(37,99,235,0.2)] hover:bg-blue-600 hover:shadow-[0_12px_20px_rgba(37,99,235,0.3)] transition-all active:scale-95 border border-blue-400/30 font-bold;
         }
         .glass-button-secondary {
-            @apply bg-white/60 backdrop-blur-md text-gray-700 rounded-2xl py-3 px-6 shadow-sm hover:bg-white/80 transition-all active:scale-95 border border-white/80 font-bold;
+            @apply bg-white/50 backdrop-blur-[20px] text-gray-700 rounded-2xl py-3 px-6 shadow-sm hover:bg-white/70 transition-all active:scale-95 border border-white/60 font-bold;
         }
 
-        /* 悬浮胶囊表格（完美解决直角溢出） */
+        /* 🌟 极致液态胶囊表格（重构：极度通透，高模糊度） */
         table { border-collapse: separate !important; border-spacing: 0 10px !important; }
         
-        /* 🌟 修复滚动重叠：为表头添加独立的毛玻璃胶囊形态 */
-        th { @apply text-xs font-bold text-gray-500 uppercase tracking-wider py-4 px-6 bg-white/70 backdrop-blur-liquid border-y border-white/80 align-middle shadow-sm relative z-20; }
+        /* 表头：微透明，高模糊 */
+        th { @apply text-xs font-bold text-gray-500 uppercase tracking-wider py-4 px-6 bg-white/30 backdrop-blur-[30px] border-y border-white/40 align-middle shadow-sm relative z-20; }
         th:first-child { @apply border-l rounded-l-[24px]; }
         th:last-child { @apply border-r rounded-r-[24px]; }
 
-        td { @apply py-4 px-6 bg-white/40 backdrop-blur-md border-y border-white/60 align-middle; }
-        /* 左端圆角 */
+        /* 数据行：极度透明 (bg-white/20)，极高模糊 (backdrop-blur-[24px]) */
+        td { @apply py-4 px-6 bg-white/20 backdrop-blur-[24px] border-y border-white/30 align-middle transition-colors duration-300; }
         td:first-child { @apply border-l rounded-l-[24px]; }
-        /* 右端圆角 */
         td:last-child { @apply border-r rounded-r-[24px]; }
-        tbody tr { @apply shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5; }
+        
+        /* Hover 提亮发光效果 */
+        tbody tr { @apply shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-md hover:-translate-y-0.5; }
+        tbody tr:hover td { @apply bg-white/40; }
 
         /* 动画过渡 */
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -230,63 +232,63 @@
                 
                 <!-- 侧边栏 (玻璃浮岛) -->
                 <aside class="w-72 glass-panel flex flex-col z-20 flex-shrink-0">
-                    <div class="p-6 flex items-center space-x-4 border-b border-white/50">
-                        <div class="w-14 h-14 bg-white/80 rounded-[20px] flex items-center justify-center shadow-sm overflow-hidden border border-white">
+                    <div class="p-6 flex items-center space-x-4 border-b border-white/30">
+                        <div class="w-14 h-14 bg-white/60 backdrop-blur-md rounded-[20px] flex items-center justify-center shadow-sm overflow-hidden border border-white/50">
                             <img v-if="state.systemLogo" :src="state.systemLogo" class="w-full h-full object-contain p-1" />
                             <i v-else class="ph ph-planet text-3xl text-blue-600"></i>
                         </div>
                         <div class="overflow-hidden">
                             <span class="text-lg font-extrabold text-gray-800 block truncate tracking-tight">{{ state.systemName }}</span>
-                            <span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded uppercase tracking-wider">Cloud Workspace</span>
+                            <span class="text-[10px] bg-blue-100/80 text-blue-700 font-bold px-2 py-0.5 rounded uppercase tracking-wider backdrop-blur-sm">Cloud Workspace</span>
                         </div>
                     </div>
                     
                     <nav class="flex-1 overflow-y-auto no-scrollbar py-6 px-4 space-y-2">
-                        <button @click="switchTab('dashboard')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'dashboard' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/60 hover:shadow-sm']">
+                        <button @click="switchTab('dashboard')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'dashboard' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/40 hover:shadow-sm']">
                             <i class="ph ph-squares-four text-2xl"></i><span>仪表盘</span>
                         </button>
                         
-                        <button v-if="isAdminOrSuper" @click="switchTab('teachers')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'teachers' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/60 hover:shadow-sm']">
+                        <button v-if="isAdminOrSuper" @click="switchTab('teachers')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'teachers' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/40 hover:shadow-sm']">
                             <i class="ph ph-users-three text-2xl"></i><span>{{ isSuperadmin ? '账号权限' : '教职工' }}</span>
                         </button>
                         
-                        <button @click="switchTab('classes')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'classes' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/60 hover:shadow-sm']">
+                        <button @click="switchTab('classes')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'classes' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/40 hover:shadow-sm']">
                             <i class="ph ph-chalkboard-teacher text-2xl"></i><span>{{ isTeacher ? '我的班级' : '班级管理' }}</span>
                         </button>
                         
-                        <button @click="switchTab('students')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'students' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/60 hover:shadow-sm']">
+                        <button @click="switchTab('students')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'students' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/40 hover:shadow-sm']">
                             <i class="ph ph-student text-2xl"></i><span>{{ isTeacher ? '签到与学员' : '学员管理' }}</span>
                         </button>
                         
-                        <button @click="switchTab('records')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'records' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/60 hover:shadow-sm']">
+                        <button @click="switchTab('records')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'records' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/40 hover:shadow-sm']">
                             <i class="ph ph-clock-counter-clockwise text-2xl"></i><span>操作日志</span>
                         </button>
 
-                        <div v-if="isAdminOrSuper" class="pt-6 mt-4 border-t border-white/50 space-y-2">
+                        <div v-if="isAdminOrSuper" class="pt-6 mt-4 border-t border-white/30 space-y-2">
                             <p class="px-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">System</p>
-                            <button @click="switchTab('database')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'database' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/60 hover:shadow-sm']">
+                            <button @click="switchTab('database')" :class="['w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold', state.activeTab === 'database' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/40 hover:shadow-sm']">
                                 <i class="ph ph-database text-2xl"></i><span>数据备份与恢复</span>
                             </button>
-                            <button @click="openModal('systemSettings')" class="w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold text-gray-600 hover:bg-white/60 hover:shadow-sm">
+                            <button @click="openModal('systemSettings')" class="w-full flex items-center space-x-3 px-5 py-4 rounded-[24px] transition-all font-bold text-gray-600 hover:bg-white/40 hover:shadow-sm">
                                 <i class="ph ph-faders text-2xl"></i><span>偏好设置</span>
                             </button>
                         </div>
                     </nav>
 
-                    <div class="p-5 border-t border-white/50 bg-white/20">
+                    <div class="p-5 border-t border-white/30 bg-white/10">
                         <div class="flex items-center space-x-3 mb-5">
-                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-md border-2 border-white/80">
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-md border-2 border-white/50">
                                 {{ state.currentUser.name.charAt(0) }}
                             </div>
                             <div class="flex-1 overflow-hidden">
                                 <p class="text-gray-800 font-extrabold truncate">{{ state.currentUser.name }}</p>
                                 <p class="text-xs text-indigo-700 font-bold">{{ isSuperadmin ? '超级管理员' : isAdmin ? '分校校长' : '任课讲师' }}</p>
                             </div>
-                            <button @click="openChangePasswordModal(state.currentUser)" class="w-9 h-9 rounded-full bg-white/60 hover:bg-white flex items-center justify-center text-gray-500 hover:text-blue-600 transition-colors shadow-sm border border-white" title="修改密码">
+                            <button @click="openChangePasswordModal(state.currentUser)" class="w-9 h-9 rounded-full bg-white/40 hover:bg-white/60 flex items-center justify-center text-gray-600 hover:text-blue-600 transition-colors shadow-sm border border-white/50" title="修改密码">
                                 <i class="ph ph-key text-xl"></i>
                             </button>
                         </div>
-                        <button @click="handleLogout" class="w-full flex items-center justify-center space-x-2 py-3.5 bg-white/40 hover:bg-red-50 text-red-500 rounded-[20px] transition-all font-bold border border-white/50 hover:border-red-200">
+                        <button @click="handleLogout" class="w-full flex items-center justify-center space-x-2 py-3.5 bg-white/30 hover:bg-red-50 text-red-500 rounded-[20px] transition-all font-bold border border-white/40 hover:border-red-200 backdrop-blur-md">
                             <i class="ph ph-sign-out text-xl"></i><span>安全退出</span>
                         </button>
                     </div>
@@ -297,14 +299,13 @@
                     
                     <!-- 顶部超管横幅 -->
                     <transition name="fade">
-                        <div v-if="isSuperadmin" class="mx-6 mt-2 mb-4 bg-orange-500/20 backdrop-blur-md border border-orange-500/30 px-6 py-3 rounded-[20px] flex items-center text-orange-800 text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-r from-orange-400/10 to-transparent"></div>
-                            <i class="ph ph-shield-warning text-xl mr-3 relative z-10"></i>
-                            <span class="relative z-10 font-medium">Root Access Granted. 您拥有底层最高权限，可执行高危覆写操作，请谨慎处理数据。</span>
+                        <div v-if="isSuperadmin" class="mb-4 bg-orange-100/50 backdrop-blur-xl border border-orange-200/80 px-6 py-3.5 rounded-[24px] flex items-center text-orange-800 text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
+                            <i class="ph ph-shield-warning text-xl mr-3 relative z-10 text-orange-600"></i>
+                            <span class="relative z-10 font-bold">超级管理员已登录。您拥有最高权限，可修改所有数据。</span>
                         </div>
                     </transition>
 
-                    <div class="flex-1 overflow-y-auto p-2 md:px-6 md:pb-6 no-scrollbar">
+                    <div class="flex-1 overflow-y-auto pb-6 no-scrollbar">
                         
                         <!-- Dashboard -->
                         <div v-if="state.activeTab === 'dashboard' && !state.viewingStudent && !state.viewingClass" class="space-y-8 animate-[springUp_0.6s_ease-out]">
@@ -313,7 +314,7 @@
                                     <p class="text-gray-500 font-bold mb-1 uppercase tracking-widest text-xs">Overview</p>
                                     <h1 class="text-4xl font-black text-gray-800 tracking-tight">你好, {{ state.currentUser.name }}</h1>
                                 </div>
-                                <div class="bg-white/60 backdrop-blur-md border border-white px-4 py-2 rounded-full shadow-sm flex items-center">
+                                <div class="bg-white/40 backdrop-blur-xl border border-white/50 px-4 py-2 rounded-full shadow-sm flex items-center">
                                     <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse mr-3 shadow-[0_0_8px_#22c55e]"></div>
                                     <span class="text-sm font-bold text-gray-700">云端节点正常</span>
                                 </div>
@@ -322,70 +323,70 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                                 <div v-if="isAdminOrSuper" class="glass-card p-6 flex flex-col justify-between group">
                                     <div class="flex justify-between items-start mb-4">
-                                        <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 border border-blue-100">
+                                        <div class="w-12 h-12 rounded-2xl bg-blue-100/50 flex items-center justify-center text-blue-600 border border-blue-200/50">
                                             <i class="ph ph-users-three text-2xl"></i>
                                         </div>
                                     </div>
                                     <div>
                                         <p class="text-4xl font-black text-gray-800 mb-1">{{ teachersCount }}</p>
-                                        <h3 class="text-gray-500 text-sm font-bold">注册教职工</h3>
+                                        <h3 class="text-gray-600 text-sm font-bold">注册教职工</h3>
                                     </div>
                                 </div>
                                 
                                 <div class="glass-card p-6 flex flex-col justify-between group">
                                     <div class="flex justify-between items-start mb-4">
-                                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-500 border border-indigo-100">
+                                        <div class="w-12 h-12 rounded-2xl bg-indigo-100/50 flex items-center justify-center text-indigo-600 border border-indigo-200/50">
                                             <i class="ph ph-chalkboard-teacher text-2xl"></i>
                                         </div>
                                     </div>
                                     <div>
                                         <p class="text-4xl font-black text-gray-800 mb-1">{{ myClassesCount }}</p>
-                                        <h3 class="text-gray-500 text-sm font-bold">{{ isTeacher ? '负责班级数' : '机构总班级' }}</h3>
+                                        <h3 class="text-gray-600 text-sm font-bold">{{ isTeacher ? '负责班级数' : '机构总班级' }}</h3>
                                     </div>
                                 </div>
                                 
                                 <div class="glass-card p-6 flex flex-col justify-between group">
                                     <div class="flex justify-between items-start mb-4">
-                                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 border border-emerald-100">
+                                        <div class="w-12 h-12 rounded-2xl bg-emerald-100/50 flex items-center justify-center text-emerald-600 border border-emerald-200/50">
                                             <i class="ph ph-student text-2xl"></i>
                                         </div>
                                     </div>
                                     <div>
                                         <p class="text-4xl font-black text-gray-800 mb-1">{{ myStudentsCount }}</p>
-                                        <h3 class="text-gray-500 text-sm font-bold">{{ isTeacher ? '涉及学员总数' : '累计建档学员' }}</h3>
+                                        <h3 class="text-gray-600 text-sm font-bold">{{ isTeacher ? '涉及学员总数' : '累计建档学员' }}</h3>
                                     </div>
                                 </div>
                                 
-                                <div class="glass-card p-6 flex flex-col justify-between group bg-white/70">
+                                <div class="glass-card p-6 flex flex-col justify-between group bg-white/50">
                                     <div class="flex justify-between items-start mb-4">
-                                        <div class="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-500 border border-orange-100">
+                                        <div class="w-12 h-12 rounded-2xl bg-orange-100/50 flex items-center justify-center text-orange-600 border border-orange-200/50">
                                             <i class="ph ph-activity text-2xl"></i>
                                         </div>
                                     </div>
                                     <div>
                                         <p class="text-4xl font-black text-gray-800 mb-1">{{ todayRecordsCount }}</p>
-                                        <h3 class="text-gray-500 text-sm font-bold">今日发生流水</h3>
+                                        <h3 class="text-gray-600 text-sm font-bold">今日发生流水</h3>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- 🌟 新增：课时不足续费预警雷达 -->
-                            <div v-if="isAdminOrSuper && lowHoursStudents.length > 0" class="glass-panel p-6 border-red-200/50 relative overflow-hidden bg-white/50">
+                            <!-- 课时不足续费预警雷达 -->
+                            <div v-if="isAdminOrSuper && lowHoursStudents.length > 0" class="glass-panel p-6 border-red-200/40 relative overflow-hidden bg-white/40">
                                 <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-4 translate-y-4 pointer-events-none">
                                     <i class="ph ph-warning text-9xl text-red-500"></i>
                                 </div>
                                 <div class="flex items-center mb-6 relative z-10">
-                                    <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-red-500 mr-3 border border-red-200"><i class="ph ph-bell-ringing text-xl animate-bounce"></i></div>
+                                    <div class="w-10 h-10 bg-red-100/80 rounded-xl flex items-center justify-center text-red-600 mr-3 border border-red-200/50"><i class="ph ph-bell-ringing text-xl animate-bounce"></i></div>
                                     <h3 class="text-xl font-extrabold text-gray-800 tracking-tight">续费预警雷达 <span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-2 align-middle">{{ lowHoursStudents.length }} 人</span></h3>
                                 </div>
                                 <div class="overflow-x-auto relative z-10">
                                     <div class="flex space-x-4 pb-2">
-                                        <div v-for="student in lowHoursStudents" :key="'alert'+student.id" class="bg-white/80 rounded-[20px] p-4 min-w-[220px] border border-red-100 shadow-sm flex flex-col">
+                                        <div v-for="student in lowHoursStudents" :key="'alert'+student.id" class="bg-white/60 backdrop-blur-md rounded-[20px] p-4 min-w-[220px] border border-red-100/50 shadow-sm flex flex-col transition-transform hover:-translate-y-1">
                                             <div class="flex items-center justify-between mb-3">
                                                 <span class="font-bold text-gray-800">{{ student.name }}</span>
-                                                <span class="bg-red-50 text-red-600 text-xs font-bold px-2 py-1 rounded-md border border-red-100">剩 {{ student.remainingHours }} 节</span>
+                                                <span class="bg-red-50/80 text-red-600 text-xs font-bold px-2 py-1 rounded-md border border-red-100/50">剩 {{ student.remainingHours }} 节</span>
                                             </div>
-                                            <button @click="openRenewModal({id: student.id, name: student.name, remainingHours: student.remainingHours})" class="mt-auto w-full py-2 bg-red-500 text-white text-sm font-bold rounded-xl hover:bg-red-600 transition-colors shadow-sm">
+                                            <button @click="openRenewModal({id: student.id, name: student.name, remainingHours: student.remainingHours})" class="mt-auto w-full py-2 bg-red-500/90 hover:bg-red-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm border border-red-400/50">
                                                 快速续费
                                             </button>
                                         </div>
@@ -396,10 +397,10 @@
 
                         <!-- 教师管理 -->
                         <div v-if="state.activeTab === 'teachers' && !state.viewingStudent && !state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
-                            <div class="p-6 border-b border-white/50 flex justify-between items-center bg-white/30">
+                            <div class="p-6 border-b border-white/40 flex justify-between items-center bg-white/20">
                                 <div>
                                     <h2 class="text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
-                                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mr-3 border border-blue-200"><i class="ph ph-users-three text-2xl"></i></div>
+                                        <div class="w-10 h-10 bg-blue-100/80 rounded-xl flex items-center justify-center text-blue-600 mr-3 border border-blue-200/50"><i class="ph ph-users-three text-2xl"></i></div>
                                         账号权限
                                     </h2>
                                 </div>
@@ -423,16 +424,16 @@
                                             <td class="font-extrabold text-gray-800 text-lg">{{ user.name }}</td>
                                             <td class="text-gray-500 font-mono text-sm font-medium">{{ user.username }}</td>
                                             <td>
-                                                <span :class="['px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm inline-block', user.role === 'admin' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-green-100 text-green-700 border border-green-200']">
+                                                <span :class="['px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm inline-block border', user.role === 'admin' ? 'bg-purple-100/80 text-purple-700 border-purple-200/50' : 'bg-green-100/80 text-green-700 border-green-200/50']">
                                                     {{ user.role === 'admin' ? '分校校长' : '任课讲师' }}
                                                 </span>
                                             </td>
                                             <td class="text-gray-600 font-bold">{{ getTeacherClassCount(user.id) }} <span class="text-xs font-medium text-gray-400">个</span></td>
                                             <td class="text-right space-x-2">
-                                                <button @click="openChangePasswordModal(user)" class="w-10 h-10 rounded-[14px] bg-white/60 text-blue-600 hover:bg-white hover:shadow-sm transition-all border border-white" title="重置密码">
+                                                <button @click="openChangePasswordModal(user)" class="w-10 h-10 rounded-[14px] bg-white/40 text-blue-600 hover:bg-white/80 hover:shadow-sm transition-all border border-white/50" title="重置密码">
                                                     <i class="ph ph-key text-xl"></i>
                                                 </button>
-                                                <button @click="triggerDeleteUser(user.id)" class="w-10 h-10 rounded-[14px] bg-white/60 text-red-500 hover:bg-white hover:text-red-600 hover:shadow-sm transition-all border border-white" title="撤销权限">
+                                                <button @click="triggerDeleteUser(user.id)" class="w-10 h-10 rounded-[14px] bg-white/40 text-red-500 hover:bg-white/80 hover:text-red-600 hover:shadow-sm transition-all border border-white/50" title="撤销权限">
                                                     <i class="ph ph-trash text-xl"></i>
                                                 </button>
                                             </td>
@@ -444,20 +445,20 @@
 
                         <!-- 班级详情页 (名单) -->
                         <div v-if="state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
-                            <div class="p-6 border-b border-white/50 bg-white/40 flex justify-between items-center relative overflow-hidden">
+                            <div class="p-6 border-b border-white/40 bg-white/20 flex justify-between items-center relative overflow-hidden">
                                 <div class="flex items-center relative z-10">
-                                    <button @click="state.viewingClass = null" class="w-12 h-12 rounded-[18px] bg-white/60 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-white hover:shadow-sm mr-5 transition-all border border-white">
+                                    <button @click="state.viewingClass = null" class="w-12 h-12 rounded-[18px] bg-white/40 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-white/80 hover:shadow-sm mr-5 transition-all border border-white/50">
                                         <i class="ph ph-caret-left text-2xl font-bold"></i>
                                     </button>
                                     <div>
                                         <div class="flex items-center mb-1">
-                                            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-600 text-[10px] font-extrabold rounded-md uppercase tracking-wider shadow-sm mr-3 border border-indigo-200">{{ state.viewingClass.course }}</span>
+                                            <span class="px-2.5 py-1 bg-indigo-100/80 text-indigo-700 text-[10px] font-extrabold rounded-md uppercase tracking-wider shadow-sm mr-3 border border-indigo-200/50 backdrop-blur-sm">{{ state.viewingClass.course }}</span>
                                             <h2 class="text-2xl font-black text-gray-800 tracking-tight">{{ state.viewingClass.name }}</h2>
                                         </div>
                                         <p class="text-sm text-gray-600 font-bold flex items-center mt-2">
-                                            <i class="ph ph-chalkboard-teacher mr-1.5 text-indigo-400 text-lg"></i>讲师: {{ getTeacherName(state.viewingClass.teacherId) }} 
-                                            <span class="mx-3 text-gray-300">|</span> 
-                                            <i class="ph ph-clock mr-1.5 text-indigo-400 text-lg"></i>排期: {{ state.viewingClass.schedule || '未定' }}
+                                            <i class="ph ph-chalkboard-teacher mr-1.5 text-indigo-500 text-lg"></i>讲师: {{ getTeacherName(state.viewingClass.teacherId) }} 
+                                            <span class="mx-3 text-gray-400">|</span> 
+                                            <i class="ph ph-clock mr-1.5 text-indigo-500 text-lg"></i>排期: {{ state.viewingClass.schedule || '未定' }}
                                         </p>
                                     </div>
                                 </div>
@@ -481,7 +482,7 @@
                                         <tr v-for="student in viewingClassStudents" :key="student.id">
                                             <td>
                                                 <div class="flex items-center">
-                                                    <div class="w-12 h-12 rounded-[16px] border-2 border-white shadow-sm overflow-hidden mr-4 bg-gray-100 flex items-center justify-center">
+                                                    <div class="w-12 h-12 rounded-[16px] border-2 border-white/60 shadow-sm overflow-hidden mr-4 bg-white/40 flex items-center justify-center">
                                                         <img v-if="student.avatar" :src="student.avatar" class="w-full h-full object-cover" />
                                                         <i v-else class="ph ph-user text-2xl text-gray-400"></i>
                                                     </div>
@@ -501,26 +502,26 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <span :class="['px-4 py-2 rounded-[14px] text-base font-extrabold shadow-sm inline-block min-w-[60px] text-center border', student.remainingHours <= 3 ? 'bg-red-500 text-white animate-pulse border-red-400' : 'bg-green-100 text-green-700 border-green-200/50']">
+                                                <span :class="['px-4 py-2 rounded-[14px] text-base font-extrabold shadow-sm inline-block min-w-[60px] text-center border', student.remainingHours <= 3 ? 'bg-red-500/90 text-white animate-pulse border-red-400/50' : 'bg-green-100/80 text-green-700 border-green-200/50']">
                                                     {{ student.remainingHours }}
                                                 </span>
                                             </td>
                                             <td class="text-right">
                                                 <div class="flex justify-end items-center space-x-2">
                                                     <template v-if="isTeacher">
-                                                        <button v-if="hasAttendedToday(student.id, state.viewingClass.id) === 'none'" @click="openAttendanceModal(student, state.viewingClass)" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-[16px] shadow-sm text-sm font-bold transition-transform active:scale-95 flex items-center border border-emerald-400">
+                                                        <button v-if="hasAttendedToday(student.id, state.viewingClass.id) === 'none'" @click="openAttendanceModal(student, state.viewingClass)" class="bg-emerald-500/90 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-[16px] shadow-sm text-sm font-bold transition-transform active:scale-95 flex items-center border border-emerald-400/50 backdrop-blur-sm">
                                                             <i class="ph ph-hand-tap mr-1.5 text-lg"></i>打卡
                                                         </button>
-                                                        <div v-else :class="['px-5 py-2.5 rounded-[16px] shadow-sm text-sm font-bold flex items-center border', hasAttendedToday(student.id, state.viewingClass.id) === 'present' ? 'bg-white text-gray-400 border-white' : 'bg-amber-100 text-amber-700 border-amber-200']">
+                                                        <div v-else :class="['px-5 py-2.5 rounded-[16px] shadow-sm text-sm font-bold flex items-center border backdrop-blur-sm', hasAttendedToday(student.id, state.viewingClass.id) === 'present' ? 'bg-white/40 text-gray-500 border-white/50' : 'bg-amber-100/80 text-amber-700 border-amber-200/50']">
                                                             <i :class="['mr-1.5 text-lg', hasAttendedToday(student.id, state.viewingClass.id) === 'present' ? 'ph ph-check-circle' : 'ph ph-calendar-x']"></i>
                                                             {{ hasAttendedToday(student.id, state.viewingClass.id) === 'present' ? '已签' : '已假' }}
                                                         </div>
                                                     </template>
-                                                    <button @click="viewStudentProfile(student)" class="w-11 h-11 rounded-[16px] bg-white/60 text-blue-600 hover:bg-white hover:shadow-sm flex items-center justify-center transition-all border border-white" title="查看主页">
+                                                    <button @click="viewStudentProfile(student)" class="w-11 h-11 rounded-[16px] bg-white/40 text-blue-600 hover:bg-white/80 hover:shadow-sm flex items-center justify-center transition-all border border-white/50" title="查看主页">
                                                         <i class="ph ph-identification-card text-xl"></i>
                                                     </button>
-                                                    <!-- 🌟 一键退班按钮 -->
-                                                    <button v-if="isAdminOrSuper" @click="triggerDropClass(student.id, state.viewingClass.id)" class="w-11 h-11 rounded-[16px] bg-white/60 text-red-500 hover:bg-red-50 hover:text-red-600 hover:shadow-sm flex items-center justify-center transition-all border border-white" title="移出本班">
+                                                    <!-- 一键退班按钮 -->
+                                                    <button v-if="isAdminOrSuper" @click="triggerDropClass(student.id, state.viewingClass.id)" class="w-11 h-11 rounded-[16px] bg-white/40 text-red-500 hover:bg-red-50 hover:text-red-600 hover:shadow-sm flex items-center justify-center transition-all border border-white/50" title="移出本班">
                                                         <i class="ph ph-sign-out text-xl"></i>
                                                     </button>
                                                 </div>
@@ -528,7 +529,7 @@
                                         </tr>
                                         <tr v-if="viewingClassStudents.length === 0">
                                             <td colspan="5" class="p-12 text-center border-none bg-transparent">
-                                                <div class="w-24 h-24 bg-white/50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner border border-white/80">
+                                                <div class="w-24 h-24 bg-white/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner border border-white/40">
                                                     <i class="ph ph-ghost text-5xl text-gray-400"></i>
                                                 </div>
                                                 <p class="text-gray-500 font-bold text-lg">班级空空如也</p>
@@ -541,9 +542,9 @@
 
                         <!-- 班级列表页 -->
                         <div v-if="state.activeTab === 'classes' && !state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
-                            <div class="p-6 border-b border-white/50 flex justify-between items-center bg-white/30">
+                            <div class="p-6 border-b border-white/40 flex justify-between items-center bg-white/20">
                                 <h2 class="text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
-                                    <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-500 mr-3 border border-indigo-200"><i class="ph ph-chalkboard-teacher text-2xl"></i></div>
+                                    <div class="w-10 h-10 bg-indigo-100/80 rounded-xl flex items-center justify-center text-indigo-600 mr-3 border border-indigo-200/50"><i class="ph ph-chalkboard-teacher text-2xl"></i></div>
                                     {{ isTeacher ? '我执教的班级' : '所有班级' }}
                                 </h2>
                                 <button v-if="isAdminOrSuper" @click="openModal('addClass')" class="glass-button-primary flex items-center">
@@ -565,9 +566,17 @@
                                     <tbody>
                                         <tr v-for="cls in visibleClasses" :key="cls.id">
                                             <td class="font-extrabold text-gray-800 text-lg">{{ cls.name }}</td>
-                                            <td><span class="px-3 py-1.5 rounded-[10px] text-xs font-bold bg-white text-indigo-600 border border-indigo-100 shadow-sm">{{ cls.course }}</span></td>
-                                            <td class="text-gray-600 font-bold flex items-center pt-5"><i class="ph ph-user-circle text-2xl text-gray-400 mr-2"></i>{{ getTeacherName(cls.teacherId) }}</td>
-                                            <td class="text-gray-500 font-bold"><i class="ph ph-clock mr-1.5 text-gray-400 text-lg"></i>{{ cls.schedule || '-' }}</td>
+                                            <td><span class="px-3 py-1.5 rounded-[10px] text-xs font-bold bg-white/60 text-indigo-700 border border-white/80 shadow-sm backdrop-blur-sm">{{ cls.course }}</span></td>
+                                            <td>
+                                                <div class="text-gray-700 font-bold flex items-center">
+                                                    <i class="ph ph-user-circle text-2xl text-gray-400 mr-2"></i>{{ getTeacherName(cls.teacherId) }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="text-gray-600 font-bold flex items-center">
+                                                    <i class="ph ph-clock mr-1.5 text-gray-400 text-lg"></i>{{ cls.schedule || '-' }}
+                                                </div>
+                                            </td>
                                             <td>
                                                 <div class="flex items-center">
                                                     <span class="text-2xl font-black text-gray-800 mr-1">{{ getClassStudentCount(cls.id) }}</span> 
@@ -575,14 +584,14 @@
                                                 </div>
                                             </td>
                                             <td class="text-right space-x-2">
-                                                <button @click="state.viewingClass = cls" class="px-5 py-2.5 bg-white text-blue-600 font-bold rounded-[14px] shadow-sm hover:bg-blue-50 transition-all border border-blue-100">
+                                                <button @click="state.viewingClass = cls" class="px-5 py-2.5 bg-white/40 text-blue-700 font-bold rounded-[14px] shadow-sm hover:bg-white/80 transition-all border border-white/50">
                                                     查看名单
                                                 </button>
                                                 <template v-if="isAdminOrSuper">
-                                                    <button @click="openEditClassModal(cls)" class="w-11 h-11 rounded-[14px] bg-white/60 text-gray-600 hover:bg-white hover:text-blue-600 shadow-sm transition-all border border-white" title="编辑/换老师">
+                                                    <button @click="openEditClassModal(cls)" class="w-11 h-11 rounded-[14px] bg-white/40 text-gray-600 hover:bg-white/80 hover:text-blue-600 shadow-sm transition-all border border-white/50" title="编辑/换老师">
                                                         <i class="ph ph-pencil-simple text-xl"></i>
                                                     </button>
-                                                    <button @click="triggerDeleteClass(cls.id)" class="w-11 h-11 rounded-[14px] bg-white/60 text-gray-600 hover:bg-white hover:text-red-500 shadow-sm transition-all border border-white" title="解散班级">
+                                                    <button @click="triggerDeleteClass(cls.id)" class="w-11 h-11 rounded-[14px] bg-white/40 text-gray-600 hover:bg-white/80 hover:text-red-500 shadow-sm transition-all border border-white/50" title="解散班级">
                                                         <i class="ph ph-trash text-xl"></i>
                                                     </button>
                                                 </template>
@@ -601,14 +610,14 @@
                         <!-- 学生个人主页 -->
                         <div v-if="state.viewingStudent" class="animate-[springUp_0.6s_ease-out]">
                             <div class="flex items-center justify-between mb-6">
-                                <button @click="state.viewingStudent = null; state.searchTerm = ''" class="flex items-center px-5 py-2.5 bg-white/60 backdrop-blur-md rounded-[16px] shadow-sm text-gray-600 font-bold hover:bg-white transition-all border border-white">
+                                <button @click="state.viewingStudent = null; state.searchTerm = ''" class="flex items-center px-5 py-2.5 bg-white/40 backdrop-blur-md rounded-[16px] shadow-sm text-gray-700 font-bold hover:bg-white/80 transition-all border border-white/50">
                                     <i class="ph ph-arrow-left mr-2 text-xl"></i> 返回
                                 </button>
                                 <div class="flex space-x-3" v-if="isSuperadmin">
-                                    <button @click="openSuperEditModal(viewingStudentData)" class="glass-button-secondary bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 flex items-center py-2.5 px-5 rounded-[16px]">
+                                    <button @click="openSuperEditModal(viewingStudentData)" class="glass-button-secondary bg-orange-50/80 text-orange-700 border-orange-200/50 hover:bg-orange-100 flex items-center py-2.5 px-5 rounded-[16px]">
                                         <i class="ph ph-wrench mr-2 text-xl"></i> 高级数据修改
                                     </button>
-                                    <button @click="triggerDeleteProfile(viewingStudentData.id)" class="glass-button-secondary bg-red-50 text-red-600 border-red-200 hover:bg-red-100 flex items-center py-2.5 px-5 rounded-[16px]">
+                                    <button @click="triggerDeleteProfile(viewingStudentData.id)" class="glass-button-secondary bg-red-50/80 text-red-700 border-red-200/50 hover:bg-red-100 flex items-center py-2.5 px-5 rounded-[16px]">
                                         <i class="ph ph-trash mr-2 text-xl"></i> 彻底删除档案
                                     </button>
                                 </div>
@@ -618,9 +627,9 @@
                                 <div class="w-full lg:w-80 flex-shrink-0 glass-panel p-8 flex flex-col items-center relative overflow-hidden">
                                     <div class="absolute top-0 w-full h-32 bg-gradient-to-b from-blue-400/20 to-transparent"></div>
                                     
-                                    <div @click="openEditAvatarModal(viewingStudentData)" class="w-32 h-32 rounded-[32px] border-4 border-white shadow-liquid relative z-10 bg-white flex items-center justify-center overflow-hidden mb-5 cursor-pointer group transition-transform hover:scale-105">
+                                    <div @click="openEditAvatarModal(viewingStudentData)" class="w-32 h-32 rounded-[32px] border-4 border-white/60 shadow-liquid relative z-10 bg-white/50 flex items-center justify-center overflow-hidden mb-5 cursor-pointer group transition-transform hover:scale-105 backdrop-blur-md">
                                         <img v-if="viewingStudentData.avatar" :src="viewingStudentData.avatar" class="w-full h-full object-cover" />
-                                        <i v-else class="ph ph-user text-6xl text-gray-300"></i>
+                                        <i v-else class="ph ph-user text-6xl text-gray-400"></i>
                                         <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
                                             <i class="ph ph-camera text-white text-3xl"></i>
                                         </div>
@@ -629,58 +638,58 @@
                                     <h3 class="text-3xl font-black text-gray-800 tracking-tight">{{ viewingStudentData.name }}</h3>
                                     
                                     <div class="w-full mt-8 space-y-4">
-                                        <div class="bg-white/50 rounded-2xl p-4 shadow-sm border border-white space-y-3">
-                                            <div class="flex justify-between items-center text-sm"><span class="text-gray-500 font-bold flex items-center"><i class="ph ph-buildings mr-2 text-xl text-blue-400"></i>学校</span><span class="font-extrabold text-gray-800">{{ viewingStudentData.school || '-' }}</span></div>
-                                            <div class="flex justify-between items-center text-sm"><span class="text-gray-500 font-bold flex items-center"><i class="ph ph-graduation-cap mr-2 text-xl text-blue-400"></i>年级</span><span class="font-extrabold text-gray-800">{{ viewingStudentData.grade || '-' }}</span></div>
+                                        <div class="bg-white/40 rounded-2xl p-4 shadow-sm border border-white/50 space-y-3">
+                                            <div class="flex justify-between items-center text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-buildings mr-2 text-xl text-blue-500"></i>学校</span><span class="font-extrabold text-gray-800">{{ viewingStudentData.school || '-' }}</span></div>
+                                            <div class="flex justify-between items-center text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-graduation-cap mr-2 text-xl text-blue-500"></i>年级</span><span class="font-extrabold text-gray-800">{{ viewingStudentData.grade || '-' }}</span></div>
                                         </div>
-                                        <div class="bg-white/50 rounded-2xl p-4 shadow-sm border border-white space-y-3">
-                                            <div class="flex justify-between items-center text-sm"><span class="text-gray-500 font-bold flex items-center"><i class="ph ph-users mr-2 text-xl text-green-400"></i>家长</span><span class="font-extrabold text-gray-800">{{ viewingStudentData.parentName || '-' }} <span class="text-xs text-gray-500 font-bold">({{ viewingStudentData.parentRole || '-' }})</span></span></div>
-                                            <div class="flex justify-between items-center text-sm"><span class="text-gray-500 font-bold flex items-center"><i class="ph ph-phone mr-2 text-xl text-green-400"></i>电话</span><span class="font-mono font-extrabold text-gray-800">{{ viewingStudentData.contact || '-' }}</span></div>
+                                        <div class="bg-white/40 rounded-2xl p-4 shadow-sm border border-white/50 space-y-3">
+                                            <div class="flex justify-between items-center text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-users mr-2 text-xl text-green-500"></i>家长</span><span class="font-extrabold text-gray-800">{{ viewingStudentData.parentName || '-' }} <span class="text-xs text-gray-600 font-bold">({{ viewingStudentData.parentRole || '-' }})</span></span></div>
+                                            <div class="flex justify-between items-center text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-phone mr-2 text-xl text-green-500"></i>电话</span><span class="font-mono font-extrabold text-gray-800">{{ viewingStudentData.contact || '-' }}</span></div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="flex-1 flex flex-col gap-6">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div class="glass-card p-6 relative overflow-hidden bg-gradient-to-br from-green-50/80 to-emerald-100/80 border-green-200">
+                                        <div class="glass-card p-6 relative overflow-hidden bg-gradient-to-br from-green-50/60 to-emerald-100/60 border-green-200/50">
                                             <i class="ph ph-leaf absolute -right-6 -bottom-6 text-8xl text-green-500/10 transform -rotate-12"></i>
-                                            <p class="text-sm font-black text-green-700/80 mb-2 uppercase tracking-widest">全局可用课时</p>
+                                            <p class="text-sm font-black text-green-800/80 mb-2 uppercase tracking-widest">全局可用课时</p>
                                             <div class="flex items-baseline">
-                                                <p class="text-7xl font-black text-green-600 tracking-tighter">{{ viewingStudentData.remainingHours }}</p>
-                                                <p class="text-xl font-bold text-green-600/50 ml-2 mb-2">节</p>
+                                                <p class="text-7xl font-black text-green-700 tracking-tighter">{{ viewingStudentData.remainingHours }}</p>
+                                                <p class="text-xl font-bold text-green-700/50 ml-2 mb-2">节</p>
                                             </div>
                                         </div>
                                         
-                                        <div class="glass-card p-6 relative overflow-hidden bg-gradient-to-br from-blue-50/80 to-indigo-100/80 border-blue-200">
+                                        <div class="glass-card p-6 relative overflow-hidden bg-gradient-to-br from-blue-50/60 to-indigo-100/60 border-blue-200/50">
                                             <i class="ph ph-wallet absolute -right-6 -bottom-6 text-8xl text-blue-500/10 transform rotate-12"></i>
-                                            <p class="text-sm font-black text-blue-700/80 mb-2 uppercase tracking-widest">历史总计核销</p>
+                                            <p class="text-sm font-black text-blue-800/80 mb-2 uppercase tracking-widest">历史总计核销</p>
                                             <div class="flex items-baseline mb-2">
-                                                <p class="text-2xl font-bold text-blue-600/50 mr-1 mb-1">¥</p>
-                                                <p class="text-5xl font-black text-blue-600 tracking-tighter">{{ viewingStudentData.totalPayment || viewingStudentData.paymentAmount || 0 }}</p>
+                                                <p class="text-2xl font-bold text-blue-700/50 mr-1 mb-1">¥</p>
+                                                <p class="text-5xl font-black text-blue-700 tracking-tighter">{{ viewingStudentData.totalPayment || viewingStudentData.paymentAmount || 0 }}</p>
                                             </div>
-                                            <p class="text-xs font-bold text-blue-600/80 bg-blue-500/10 inline-block px-3 py-1.5 rounded-lg border border-blue-200/50">累计购入: {{ viewingStudentData.totalHours }}节 (含赠{{ viewingStudentData.bonusHours || 0 }})</p>
+                                            <p class="text-xs font-bold text-blue-700/80 bg-blue-500/10 inline-block px-3 py-1.5 rounded-lg border border-blue-200/50 backdrop-blur-sm">累计购入: {{ viewingStudentData.totalHours }}节 (含赠{{ viewingStudentData.bonusHours || 0 }})</p>
                                         </div>
                                     </div>
 
-                                    <div class="glass-panel p-6 flex-1 bg-white/50 border-white/60">
+                                    <div class="glass-panel p-6 flex-1 bg-white/40 border-white/50">
                                         <h4 class="text-sm font-black text-gray-800 mb-5 flex items-center uppercase tracking-widest"><i class="ph ph-stack mr-2 text-indigo-500 text-2xl"></i>所在班级</h4>
                                         <div class="flex flex-wrap gap-4">
                                             <template v-if="viewingStudentData.classIds && viewingStudentData.classIds.length > 0">
-                                                <div v-for="cid in viewingStudentData.classIds" :key="cid" class="px-6 py-5 bg-white rounded-[24px] shadow-sm flex flex-col justify-center min-w-[200px] transition-transform hover:-translate-y-1 border border-gray-100">
+                                                <div v-for="cid in viewingStudentData.classIds" :key="cid" class="px-6 py-5 bg-white/60 backdrop-blur-md rounded-[24px] shadow-sm flex flex-col justify-center min-w-[200px] transition-transform hover:-translate-y-1 border border-white/80">
                                                     <p class="font-black text-gray-800 text-xl mb-1">{{ getClassName(cid) }}</p>
-                                                    <p class="text-sm font-bold text-indigo-600 flex items-center bg-indigo-50 w-max px-3 py-1.5 rounded-xl border border-indigo-100 mt-2"><i class="ph ph-chalkboard-teacher mr-1 text-lg"></i> {{ getTeacherName(getStudentTeacherId(cid)) }}</p>
+                                                    <p class="text-sm font-bold text-indigo-700 flex items-center bg-indigo-50/80 w-max px-3 py-1.5 rounded-xl border border-indigo-100/50 mt-2"><i class="ph ph-chalkboard-teacher mr-1 text-lg"></i> {{ getTeacherName(getStudentTeacherId(cid)) }}</p>
                                                 </div>
                                             </template>
-                                            <div v-else class="w-full py-10 text-center bg-white/40 rounded-[28px] border-2 border-white/80 border-dashed">
-                                                <p class="text-gray-400 font-bold text-lg">该学员尚未分入任何班级</p>
+                                            <div v-else class="w-full py-10 text-center bg-white/30 rounded-[28px] border-2 border-white/60 border-dashed">
+                                                <p class="text-gray-500 font-bold text-lg">该学员尚未分入任何班级</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="glass-panel overflow-hidden bg-white/50">
-                                <div class="flex justify-between items-center p-6 bg-white/40 border-b border-white/60">
+                            <div class="glass-panel overflow-hidden bg-white/30">
+                                <div class="flex justify-between items-center p-6 bg-white/20 border-b border-white/40">
                                     <h3 class="text-xl font-black text-gray-800 flex items-center"><i class="ph ph-list-dashes mr-2 text-blue-500 text-2xl"></i>个人操作日志</h3>
                                 </div>
                                 <div class="overflow-x-auto p-4">
@@ -696,18 +705,18 @@
                                         </thead>
                                         <tbody>
                                             <tr v-for="rec in filteredProfileRecords" :key="rec.id">
-                                                <td class="font-mono text-sm font-bold text-gray-500">{{ rec.date }}</td>
-                                                <td class="font-extrabold text-gray-700">{{ rec.className || '-' }}</td>
+                                                <td class="font-mono text-sm font-bold text-gray-600">{{ rec.date }}</td>
+                                                <td class="font-extrabold text-gray-800">{{ rec.className || '-' }}</td>
                                                 <td>
-                                                    <span :class="['px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm', rec.type.includes('请假') ? 'bg-amber-100 text-amber-700 border border-amber-200' : rec.type.includes('签到') ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : rec.type.includes('修改') || rec.type.includes('覆写') ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200']">
+                                                    <span :class="['px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm inline-block border backdrop-blur-sm', rec.type.includes('请假') ? 'bg-amber-100/80 text-amber-700 border-amber-200/50' : rec.type.includes('签到') ? 'bg-emerald-100/80 text-emerald-700 border-emerald-200/50' : rec.type.includes('修改') || rec.type.includes('覆写') ? 'bg-purple-100/80 text-purple-700 border-purple-200/50' : 'bg-blue-100/80 text-blue-700 border-blue-200/50']">
                                                         {{ rec.type }}
                                                     </span>
                                                 </td>
-                                                <td class="text-gray-500 font-medium max-w-xs truncate text-sm" :title="rec.remark">{{ rec.remark || '-' }}</td>
-                                                <td class="text-right font-bold text-gray-600">{{ rec.operatorName }}</td>
+                                                <td class="text-gray-600 font-medium max-w-xs truncate text-sm" :title="rec.remark">{{ rec.remark || '-' }}</td>
+                                                <td class="text-right font-bold text-gray-700">{{ rec.operatorName }}</td>
                                             </tr>
                                             <tr v-if="filteredProfileRecords.length === 0">
-                                                <td colspan="5" class="p-10 text-center text-gray-400 font-bold border-none bg-transparent">暂无相关日志</td>
+                                                <td colspan="5" class="p-10 text-center text-gray-500 font-bold border-none bg-transparent">暂无相关日志</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -717,10 +726,10 @@
 
                         <!-- 学员管理 -->
                         <div v-if="state.activeTab === 'students' && !state.viewingStudent" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
-                            <div class="p-6 border-b border-white/50 flex justify-between items-center bg-white/30">
+                            <div class="p-6 border-b border-white/40 flex justify-between items-center bg-white/20">
                                 <div>
                                     <h2 class="text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
-                                        <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-500 mr-3 border border-emerald-200"><i class="ph ph-student text-2xl"></i></div>
+                                        <div class="w-10 h-10 bg-emerald-100/80 rounded-xl flex items-center justify-center text-emerald-600 mr-3 border border-emerald-200/50"><i class="ph ph-student text-2xl"></i></div>
                                         {{ isTeacher ? '我执教的学员' : '学员管理' }}
                                     </h2>
                                 </div>
@@ -729,7 +738,7 @@
                                         <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                                         <input type="text" v-model="state.searchTerm" placeholder="搜索姓名/班级..." class="glass-input pl-11 w-56 rounded-full" />
                                     </div>
-                                    <button v-if="isAdminOrSuper" @click="openModal('addStudent')" class="glass-button-primary rounded-full">
+                                    <button v-if="isAdminOrSuper" @click="openModal('addStudent')" class="glass-button-primary rounded-full flex items-center">
                                         <i class="ph ph-plus mr-2 text-lg"></i> 录入新学员
                                     </button>
                                 </div>
@@ -749,7 +758,7 @@
                                         <tr v-for="record in filteredEnrollments" :key="record.enrollmentId" class="group">
                                             <td>
                                                 <div class="flex items-center">
-                                                    <div class="w-12 h-12 rounded-[16px] border-2 border-white shadow-sm overflow-hidden mr-4 bg-gray-100 flex items-center justify-center relative">
+                                                    <div class="w-12 h-12 rounded-[16px] border-2 border-white/60 shadow-sm overflow-hidden mr-4 bg-white/40 flex items-center justify-center relative">
                                                         <img v-if="record.avatar" :src="record.avatar" class="w-full h-full object-cover" />
                                                         <i v-else class="ph ph-user text-2xl text-gray-400"></i>
                                                     </div>
@@ -759,36 +768,38 @@
                                             <td>
                                                 <div v-if="record.classId" class="flex flex-col">
                                                     <span class="font-extrabold text-gray-700">{{ getClassName(record.classId) }}</span>
-                                                    <span class="w-max mt-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 uppercase tracking-wider">{{ getClassCourse(record.classId) }}</span>
+                                                    <span class="w-max mt-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50/80 text-indigo-700 border border-indigo-100/50 uppercase tracking-wider backdrop-blur-sm">{{ getClassCourse(record.classId) }}</span>
                                                 </div>
-                                                <span v-else class="text-gray-400 font-bold bg-gray-100 px-3 py-1 rounded-xl">未分班</span>
+                                                <span v-else class="text-gray-500 font-bold bg-white/40 px-3 py-1 rounded-xl border border-white/50">未分班</span>
                                             </td>
-                                            <td v-if="isAdminOrSuper" class="text-gray-600 font-bold">
-                                                {{ record.classId ? getTeacherName(getStudentTeacherId(record.classId)) : '-' }}
+                                            <td v-if="isAdminOrSuper">
+                                                <div class="text-gray-700 font-bold">
+                                                    {{ record.classId ? getTeacherName(getStudentTeacherId(record.classId)) : '-' }}
+                                                </div>
                                             </td>
                                             <td>
-                                                <div :class="['px-5 py-2.5 rounded-[16px] text-base font-black shadow-sm inline-block min-w-[70px] text-center border', record.remainingHours <= 3 ? 'bg-red-500 text-white animate-pulse border-red-400' : 'bg-green-100 text-green-700 border-green-200/50']">
+                                                <div :class="['px-5 py-2.5 rounded-[16px] text-base font-black shadow-sm inline-block min-w-[70px] text-center border backdrop-blur-sm', record.remainingHours <= 3 ? 'bg-red-500/90 text-white animate-pulse border-red-400/50' : 'bg-green-100/80 text-green-700 border-green-200/50']">
                                                     {{ record.remainingHours }}
                                                 </div>
                                             </td>
                                             <td class="text-right">
                                                 <div class="flex justify-end items-center space-x-2 opacity-90 group-hover:opacity-100 transition-opacity">
-                                                    <button @click="viewStudentProfile(record)" class="w-11 h-11 rounded-[16px] bg-white text-blue-600 hover:bg-blue-50 hover:shadow-sm flex items-center justify-center transition-all border border-blue-100" title="打开个人主页">
+                                                    <button @click="viewStudentProfile(record)" class="w-11 h-11 rounded-[16px] bg-white/40 text-blue-700 hover:bg-white/80 hover:shadow-sm flex items-center justify-center transition-all border border-white/50" title="打开个人主页">
                                                         <i class="ph ph-identification-card text-2xl"></i>
                                                     </button>
                                                     
                                                     <template v-if="isTeacher && record.classId">
-                                                        <button v-if="hasAttendedToday(record.id, record.classId) === 'none'" @click="openAttendanceModal(record, getClassObj(record.classId))" class="px-5 py-2.5 rounded-[16px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-sm transition-transform active:scale-95 flex items-center">
+                                                        <button v-if="hasAttendedToday(record.id, record.classId) === 'none'" @click="openAttendanceModal(record, getClassObj(record.classId))" class="px-5 py-2.5 rounded-[16px] bg-emerald-500/90 hover:bg-emerald-600 text-white font-bold shadow-sm transition-transform active:scale-95 flex items-center border border-emerald-400/50">
                                                             <i class="ph ph-hand-tap mr-1.5 text-lg"></i>打卡
                                                         </button>
-                                                        <div v-else :class="['px-5 py-2.5 rounded-[16px] text-sm font-bold flex items-center border shadow-sm', hasAttendedToday(record.id, record.classId) === 'present' ? 'bg-white text-gray-400 border-gray-200' : 'bg-amber-100 text-amber-700 border-amber-200']">
+                                                        <div v-else :class="['px-5 py-2.5 rounded-[16px] text-sm font-bold flex items-center border shadow-sm backdrop-blur-sm', hasAttendedToday(record.id, record.classId) === 'present' ? 'bg-white/40 text-gray-500 border-white/50' : 'bg-amber-100/80 text-amber-700 border-amber-200/50']">
                                                             <i :class="['mr-1.5 text-lg', hasAttendedToday(record.id, record.classId) === 'present' ? 'ph ph-check-circle' : 'ph ph-calendar-x']"></i>
                                                             {{ hasAttendedToday(record.id, record.classId) === 'present' ? '已签' : '已假' }}
                                                         </div>
                                                     </template>
 
                                                     <template v-if="isAdminOrSuper">
-                                                        <button @click="openRenewModal(record)" class="px-5 py-2.5 rounded-[16px] bg-blue-100 text-blue-700 font-bold hover:bg-blue-200 transition-all border border-blue-200 shadow-sm">
+                                                        <button @click="openRenewModal(record)" class="px-5 py-2.5 rounded-[16px] bg-blue-100/80 text-blue-700 font-bold hover:bg-blue-200/80 transition-all border border-blue-200/50 shadow-sm backdrop-blur-sm">
                                                             续费
                                                         </button>
                                                     </template>
@@ -797,7 +808,7 @@
                                         </tr>
                                         <tr v-if="filteredEnrollments.length === 0">
                                             <td colspan="5" class="p-16 text-center border-none bg-transparent">
-                                                <div class="w-24 h-24 bg-white/50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner border border-white/60">
+                                                <div class="w-24 h-24 bg-white/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner border border-white/40">
                                                     <i class="ph ph-ghost text-5xl text-gray-400"></i>
                                                 </div>
                                                 <p class="text-gray-500 font-bold text-xl">没有任何相关档案</p>
@@ -810,9 +821,9 @@
 
                         <!-- 全站流水 -->
                         <div v-if="state.activeTab === 'records' && !state.viewingStudent" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
-                            <div class="p-6 border-b border-white/50 flex justify-between items-center bg-white/30">
+                            <div class="p-6 border-b border-white/40 flex justify-between items-center bg-white/20">
                                 <h2 class="text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
-                                    <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-500 mr-3 border border-orange-200"><i class="ph ph-clock-counter-clockwise text-2xl"></i></div>
+                                    <div class="w-10 h-10 bg-orange-100/80 rounded-xl flex items-center justify-center text-orange-600 mr-3 border border-orange-200/50"><i class="ph ph-clock-counter-clockwise text-2xl"></i></div>
                                     操作日志
                                 </h2>
                                 <div class="relative w-80">
@@ -834,23 +845,23 @@
                                     </thead>
                                     <tbody>
                                         <tr v-for="rec in filteredGlobalRecords" :key="rec.id">
-                                            <td class="font-mono text-sm font-bold text-gray-500">{{ rec.date }}</td>
+                                            <td class="font-mono text-sm font-bold text-gray-600">{{ rec.date }}</td>
                                             <td class="font-black text-gray-800">{{ rec.studentName }}</td>
-                                            <td class="font-bold text-gray-600">{{ rec.className || '-' }}</td>
+                                            <td class="font-bold text-gray-700">{{ rec.className || '-' }}</td>
                                             <td>
-                                                <span :class="['px-3 py-1.5 rounded-[10px] text-xs font-bold shadow-sm inline-block border', 
-                                                    rec.type.includes('请假') ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                                                    rec.type.includes('签到') ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 
-                                                    rec.type.includes('建档') || rec.type.includes('充值') ? 'bg-blue-100 text-blue-700 border-blue-200' : 
-                                                    'bg-purple-100 text-purple-700 border-purple-200']">
+                                                <span :class="['px-3 py-1.5 rounded-[10px] text-xs font-bold shadow-sm inline-block border backdrop-blur-sm', 
+                                                    rec.type.includes('请假') ? 'bg-amber-100/80 text-amber-700 border-amber-200/50' :
+                                                    rec.type.includes('签到') ? 'bg-emerald-100/80 text-emerald-700 border-emerald-200/50' : 
+                                                    rec.type.includes('建档') || rec.type.includes('充值') ? 'bg-blue-100/80 text-blue-700 border-blue-200/50' : 
+                                                    'bg-purple-100/80 text-purple-700 border-purple-200/50']">
                                                     {{ rec.type }}
                                                 </span>
                                             </td>
-                                            <td class="text-gray-500 font-medium max-w-[200px] truncate text-sm" :title="rec.remark">{{ rec.remark || '-' }}</td>
-                                            <td class="text-right font-bold text-gray-600">{{ rec.operatorName }}</td>
+                                            <td class="text-gray-600 font-medium max-w-[200px] truncate text-sm" :title="rec.remark">{{ rec.remark || '-' }}</td>
+                                            <td class="text-right font-bold text-gray-700">{{ rec.operatorName }}</td>
                                         </tr>
                                         <tr v-if="filteredGlobalRecords.length === 0">
-                                            <td colspan="6" class="p-12 text-center text-gray-400 font-bold border-none bg-transparent">无记录</td>
+                                            <td colspan="6" class="p-12 text-center text-gray-500 font-bold border-none bg-transparent">无记录</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -859,32 +870,32 @@
 
                         <!-- 备份与恢复中心 -->
                         <div v-if="state.activeTab === 'database' && !state.viewingStudent" class="max-w-4xl mx-auto space-y-8 animate-[springUp_0.5s_ease-out]">
-                            <div class="glass-panel p-10 mt-10">
+                            <div class="glass-panel p-10 mt-10 bg-white/30">
                                 <div class="mb-10 text-center">
-                                    <div class="w-24 h-24 bg-white rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-liquid border border-gray-100">
-                                        <i class="ph ph-database text-5xl text-blue-500"></i>
+                                    <div class="w-24 h-24 bg-white/60 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-liquid border border-white/80">
+                                        <i class="ph ph-database text-5xl text-blue-600"></i>
                                     </div>
                                     <h2 class="text-3xl font-black text-gray-800 tracking-tight">数据备份与恢复</h2>
-                                    <p class="text-gray-500 mt-2 font-bold">创建本地 JSON 备份文件，或在极特殊情况下执行全站恢复。</p>
+                                    <p class="text-gray-600 mt-2 font-bold">创建本地 JSON 备份文件，或在极特殊情况下执行全站恢复。</p>
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div class="glass-card p-8 flex flex-col items-center text-center bg-white/60">
-                                        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-[20px] flex items-center justify-center mb-6 border border-blue-100 shadow-sm">
+                                    <div class="glass-card p-8 flex flex-col items-center text-center bg-white/40">
+                                        <div class="w-16 h-16 bg-blue-100/80 text-blue-700 rounded-[20px] flex items-center justify-center mb-6 border border-blue-200/50 shadow-sm backdrop-blur-sm">
                                             <i class="ph ph-download-simple text-3xl"></i>
                                         </div>
                                         <h3 class="text-xl font-black text-gray-800 mb-3">备份系统数据</h3>
-                                        <p class="text-sm text-gray-500 mb-8 font-medium flex-1">将当前云端所有的档案、班级数据、流水明细安全下载到本地电脑。</p>
+                                        <p class="text-sm text-gray-600 mb-8 font-medium flex-1">将当前云端所有的档案、班级数据、流水明细安全下载到本地电脑。</p>
                                         <button @click="handleExportData" class="glass-button-primary w-full shadow-blue-500/20 rounded-full">
                                             <i class="ph ph-file-arrow-down mr-2 text-lg"></i> 立即下载备份包
                                         </button>
                                     </div>
-                                    <div class="glass-card p-8 flex flex-col items-center text-center bg-white/60">
-                                        <div class="w-16 h-16 bg-orange-50 text-orange-500 rounded-[20px] flex items-center justify-center mb-6 border border-orange-100 shadow-sm">
+                                    <div class="glass-card p-8 flex flex-col items-center text-center bg-white/40">
+                                        <div class="w-16 h-16 bg-orange-100/80 text-orange-600 rounded-[20px] flex items-center justify-center mb-6 border border-orange-200/50 shadow-sm backdrop-blur-sm">
                                             <i class="ph ph-upload-simple text-3xl"></i>
                                         </div>
                                         <h3 class="text-xl font-black text-gray-800 mb-3">导入备份文件</h3>
-                                        <p class="text-sm text-gray-500 mb-8 font-medium flex-1">选择本地备份文件并覆盖腾讯云数据库。<strong class="text-red-500">此操作不可撤销！</strong></p>
-                                        <label class="glass-button-primary w-full cursor-pointer bg-orange-500 hover:bg-orange-600 border-orange-500 rounded-full flex justify-center items-center shadow-orange-500/20">
+                                        <p class="text-sm text-gray-600 mb-8 font-medium flex-1">选择本地备份文件并覆盖腾讯云数据库。<strong class="text-red-600">此操作不可撤销！</strong></p>
+                                        <label class="glass-button-primary w-full cursor-pointer bg-orange-500/90 hover:bg-orange-600 border-orange-400/50 rounded-full flex justify-center items-center shadow-orange-500/20">
                                             <i class="ph ph-file-arrow-up mr-2 text-lg"></i> 选择并覆盖恢复
                                             <input type="file" class="hidden" accept=".json" @change="triggerImportData" />
                                         </label>
@@ -898,12 +909,11 @@
             </div>
         </template>
 
-        <!-- 🌟 全局弹窗模态框 (已修复所有圆角溢出) -->
+        <!-- 🌟 全局弹窗模态框 -->
         <transition name="fade">
             <div v-if="state.showModal" class="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
                 
                 <transition name="spring-up" appear>
-                    <!-- 核心修复处：增加了 overflow-hidden 和 webkit-mask 强制裁切内部元素，确保绝对圆滑 -->
                     <div class="glass-panel w-full max-w-2xl max-h-[90vh] flex flex-col relative !bg-white/80 !backdrop-blur-[40px] border-white" @click.stop>
                         
                         <div class="px-8 py-5 border-b border-gray-200/50 flex justify-between items-center bg-white/50 backdrop-blur-md z-10 rounded-t-[36px]">
@@ -935,286 +945,305 @@
                                         </div>
                                         <div v-else class="flex space-x-4">
                                             <button type="button" @click="startCamera" class="glass-button-secondary bg-white px-6 py-2.5 rounded-full font-bold flex items-center text-blue-600 border-blue-200 hover:bg-blue-50"><i class="ph ph-camera mr-2 text-lg"></i> 现场拍摄</button>
-                                            <label class="glass-button-secondary bg-white px-6 py-2.5 rounded-full font-bold flex items-center cursor-pointer hover:bg-gray-50">
+                                            <label class="glass-button-secondary bg-white px-6 py-2.5 rounded-full font-bold flex items-center cursor-pointer hover:bg-gray-50 border-gray-200">
                                                 <i class="ph ph-image mr-2 text-lg"></i> 相册选择
                                                 <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'editStudentAvatar')" class="hidden" />
                                             </label>
                                         </div>
-                                        <p class="text-xs font-medium text-gray-400 bg-gray-100 px-3 py-1 rounded-full">系统已开启智能无损压缩引擎</p>
                                     </div>
                                 </div>
                                 <div class="flex justify-end pt-6 border-t border-gray-100">
-                                    <button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-2xl text-gray-500 font-bold hover:bg-gray-100 transition-colors">取消操作</button>
-                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8">同步至云端档案</button>
+                                    <button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-2xl text-gray-500 font-bold hover:bg-gray-100 transition-colors">取消</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 rounded-full">保存新头像</button>
                                 </div>
                             </form>
 
-                            <!-- 密码修改 -->
+                            <!-- 超管高级修改 -->
+                            <form v-if="state.showModal === 'superEditStudent'" @submit.prevent="submitSuperEditStudent" class="space-y-6">
+                                <div class="bg-orange-50 p-5 rounded-[24px] border border-orange-200">
+                                    <p class="text-orange-900 font-black text-lg flex items-center mb-2"><i class="ph ph-shield-warning mr-2 text-2xl text-orange-500"></i>高级数据修改</p>
+                                    <p class="text-sm text-orange-700 font-bold leading-relaxed">
+                                        您将直接修改该学员的底层数据，此操作绕过常规续费流水，请确保您清楚后果。
+                                    </p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-6 pt-2">
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-2">剩余可用课时 (节)</label>
+                                        <input type="number" required v-model.number="state.superEditForm.remainingHours" class="glass-input w-full font-black text-2xl text-orange-600 py-4" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-2">历史总课时 (节)</label>
+                                        <input type="number" required v-model.number="state.superEditForm.totalHours" class="glass-input w-full font-black text-2xl text-orange-600 py-4" />
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-sm font-bold text-gray-700 mb-2">历史总计金额 (元)</label>
+                                        <div class="relative">
+                                            <i class="ph ph-currency-cny absolute left-5 top-1/2 -translate-y-1/2 text-orange-400 text-xl"></i>
+                                            <input type="number" step="0.01" required v-model.number="state.superEditForm.paymentAmount" class="glass-input pl-12 w-full font-black text-2xl text-orange-600 py-4" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end pt-6 border-t border-gray-100">
+                                    <button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-2xl text-gray-500 font-bold hover:bg-gray-100 transition-colors">取消</button>
+                                    <button type="submit" class="glass-button-primary bg-orange-500 hover:bg-orange-600 shadow-orange-500/20 border-orange-500/30 px-8 rounded-full border-none text-lg">执行修改</button>
+                                </div>
+                            </form>
+
+                            <!-- 修改密码 -->
                             <form v-if="state.showModal === 'changePassword'" @submit.prevent="submitChangePassword" class="space-y-6">
-                                <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
-                                    <p class="text-blue-900 font-medium mb-1 flex items-center"><i class="ph ph-user-focus mr-2 text-xl"></i>目标账号：<strong class="text-xl ml-2 tracking-tight">{{ getTeacherName(state.passwordForm.targetId) }}</strong></p>
-                                    <p v-if="state.passwordForm.targetId !== state.currentUser.id" class="text-xs text-blue-600 mt-2 font-medium bg-blue-100/50 inline-block px-2 py-1 rounded">
-                                        <i class="ph ph-shield-check mr-1"></i>高权限操作保护：需验证执行者（您）的身份凭证。
+                                <div class="bg-blue-50 p-5 rounded-[24px] border border-blue-100">
+                                    <p class="text-blue-900 font-bold flex items-center text-lg"><i class="ph ph-user-focus mr-2 text-2xl text-blue-500"></i>目标账号：<span class="font-black ml-2">{{ getTeacherName(state.passwordForm.targetId) }}</span></p>
+                                    <p v-if="state.passwordForm.targetId !== state.currentUser.id" class="text-xs text-blue-600 mt-3 font-bold bg-blue-100 inline-block px-3 py-1.5 rounded-lg border border-blue-200">
+                                        <i class="ph ph-shield-check mr-1"></i>需验证您的管理员密码。
                                     </p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-2">验证当前身份密码 <span class="text-red-500">*</span></label>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">验证身份密码 <span class="text-red-500">*</span></label>
                                     <div class="relative group">
-                                        <i class="ph ph-lock-key absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors text-lg"></i>
-                                        <input type="password" required v-model="state.passwordForm.currentPassword" class="glass-input pl-12 w-full text-base" :placeholder="state.passwordForm.targetId !== state.currentUser.id ? '请输入您的超管/校长密码进行授权' : '请输入您当前的旧密码'" />
+                                        <i class="ph ph-lock-key absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors text-xl"></i>
+                                        <input type="password" required v-model="state.passwordForm.currentPassword" class="glass-input pl-12 w-full font-bold py-3" :placeholder="state.passwordForm.targetId !== state.currentUser.id ? '请输入您的管理员密码' : '请输入旧密码'" />
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-5 pt-4 border-t border-gray-100">
                                     <div>
-                                        <label class="block text-sm font-bold text-gray-700 mb-2">设置新密码 <span class="text-red-500">*</span></label>
-                                        <input type="password" required v-model="state.passwordForm.newPassword" class="glass-input w-full" placeholder="至少 6 位字符" minlength="6" />
+                                        <label class="block text-sm font-bold text-gray-700 mb-2">新密码 <span class="text-red-500">*</span></label>
+                                        <input type="password" required v-model="state.passwordForm.newPassword" class="glass-input w-full font-bold" placeholder="至少6位" minlength="6" />
                                     </div>
                                     <div>
                                         <label class="block text-sm font-bold text-gray-700 mb-2">确认新密码 <span class="text-red-500">*</span></label>
-                                        <input type="password" required v-model="state.passwordForm.confirmPassword" class="glass-input w-full" placeholder="再次输入核对" />
+                                        <input type="password" required v-model="state.passwordForm.confirmPassword" class="glass-input w-full font-bold" placeholder="再次输入" />
                                     </div>
                                 </div>
                                 <div class="flex justify-end pt-6">
                                     <button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-2xl text-gray-500 font-bold hover:bg-gray-100 transition-colors">取消</button>
-                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8">验证并签发新密码</button>
-                                </div>
-                            </form>
-
-                            <!-- 超管覆写 -->
-                            <form v-if="state.showModal === 'superEditStudent'" @submit.prevent="submitSuperEditStudent" class="space-y-6">
-                                <div class="bg-orange-50/50 p-5 rounded-2xl border border-orange-200">
-                                    <p class="text-orange-900 font-medium flex items-center"><i class="ph ph-shield-warning mr-2 text-xl"></i>底层数据强制覆写</p>
-                                    <p class="text-xs text-orange-700 mt-1 font-medium leading-relaxed">
-                                        极高危操作：您将直接篡改该学员的核心底层账单与课时数据，此操作绕过常规续费逻辑，请确保您清楚后果。
-                                    </p>
-                                </div>
-                                <div class="grid grid-cols-2 gap-5 pt-2 border-t border-gray-100">
-                                    <div>
-                                        <label class="block text-sm font-bold text-gray-700 mb-2">剩余可用课时 (节)</label>
-                                        <input type="number" required v-model.number="state.superEditForm.remainingHours" class="glass-input w-full font-bold text-lg text-orange-600" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-bold text-gray-700 mb-2">历史总课时 (节)</label>
-                                        <input type="number" required v-model.number="state.superEditForm.totalHours" class="glass-input w-full font-bold text-lg text-orange-600" />
-                                    </div>
-                                    <div class="col-span-2">
-                                        <label class="block text-sm font-bold text-gray-700 mb-2">历史总计核销金额 (元)</label>
-                                        <div class="relative">
-                                            <i class="ph ph-currency-cny absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
-                                            <input type="number" step="0.01" required v-model.number="state.superEditForm.paymentAmount" class="glass-input pl-10 w-full font-bold text-lg text-orange-600" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex justify-end pt-6">
-                                    <button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-2xl text-gray-500 font-bold hover:bg-gray-100 transition-colors">取消放弃</button>
-                                    <button type="submit" class="glass-button-primary bg-orange-600 hover:bg-orange-700 shadow-orange-500/20 border-orange-500/30 px-8">执行高危覆写</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 rounded-full">保存新密码</button>
                                 </div>
                             </form>
 
                             <!-- 签到请假 -->
                             <form v-if="state.showModal === 'attendance'" @submit.prevent="submitAttendance" class="space-y-8">
-                                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-5 rounded-2xl flex items-center space-x-5 shadow-sm">
-                                    <div class="w-16 h-16 rounded-full overflow-hidden bg-white shadow-sm border-2 border-white flex items-center justify-center">
+                                <div class="bg-gray-50 border border-gray-200 p-5 rounded-[24px] flex items-center space-x-5 shadow-sm">
+                                    <div class="w-16 h-16 rounded-[20px] overflow-hidden bg-white shadow-sm border-2 border-white flex items-center justify-center">
                                         <img v-if="state.attendanceForm.student.avatar" :src="state.attendanceForm.student.avatar" class="w-full h-full object-cover"/>
-                                        <i v-else class="ph ph-user text-3xl text-blue-300"></i>
+                                        <i v-else class="ph ph-user text-3xl text-gray-400"></i>
                                     </div>
                                     <div>
-                                        <p class="font-extrabold text-xl text-gray-800 tracking-tight">{{ state.attendanceForm.student.name }}</p>
-                                        <div class="flex items-center mt-1 space-x-3">
-                                            <p class="text-sm font-medium text-gray-500"><i class="ph ph-chalkboard-teacher mr-1 text-indigo-400"></i>{{ state.attendanceForm.classObj.name }}</p>
-                                            <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded flex items-center"><i class="ph ph-coins mr-1"></i>剩 {{ state.attendanceForm.student.remainingHours }} 节</span>
+                                        <p class="font-black text-2xl text-gray-800 tracking-tight">{{ state.attendanceForm.student.name }}</p>
+                                        <div class="flex items-center mt-1.5 space-x-3">
+                                            <p class="text-sm font-bold text-gray-500"><i class="ph ph-chalkboard-teacher mr-1 text-indigo-500"></i>{{ state.attendanceForm.classObj.name }}</p>
+                                            <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-md border border-green-200">剩 {{ state.attendanceForm.student.remainingHours }} 节</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">选择考勤状态 <span class="text-red-500">*</span></label>
+                                    <label class="block text-sm font-black text-gray-700 mb-4 uppercase tracking-wider">选择考勤状态 <span class="text-red-500">*</span></label>
                                     <div class="grid grid-cols-2 gap-5">
-                                        <label :class="['border-2 rounded-2xl p-5 cursor-pointer transition-all flex flex-col items-center text-center shadow-sm', state.attendanceForm.type === 'present' ? 'border-green-500 bg-green-50 shadow-green-500/10 scale-[1.02]' : 'border-gray-200 hover:border-green-300 hover:bg-gray-50']">
+                                        <label :class="['border-2 rounded-[24px] p-5 cursor-pointer transition-all flex flex-col items-center text-center shadow-sm', state.attendanceForm.type === 'present' ? 'border-green-500 bg-green-50 shadow-green-500/10 scale-[1.02]' : 'border-gray-200 hover:border-green-300 hover:bg-gray-50']">
                                             <input type="radio" v-model="state.attendanceForm.type" value="present" class="hidden" />
-                                            <div :class="['w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-colors', state.attendanceForm.type === 'present' ? 'bg-green-500 text-white shadow-md' : 'bg-gray-100 text-green-500']"><i class="ph ph-check text-2xl font-bold"></i></div>
-                                            <span class="font-extrabold text-green-900 text-lg">正常出勤上课</span>
-                                            <span class="text-xs font-medium text-green-600/80 mt-1.5">系统将自动扣除云端 1 节课时</span>
+                                            <div :class="['w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-colors', state.attendanceForm.type === 'present' ? 'bg-green-500 text-white shadow-md' : 'bg-white border-2 border-green-100 text-green-500']"><i class="ph ph-check text-3xl font-bold"></i></div>
+                                            <span class="font-black text-green-900 text-lg">正常出勤打卡</span>
+                                            <span class="text-xs font-bold text-green-600/80 mt-1.5">扣除 1 节课时</span>
                                         </label>
-                                        <label :class="['border-2 rounded-xl p-5 cursor-pointer transition-all flex flex-col items-center text-center shadow-sm', state.attendanceForm.type === 'leave' ? 'border-amber-500 bg-amber-50 shadow-amber-500/10 scale-[1.02]' : 'border-gray-200 hover:border-amber-300 hover:bg-gray-50']">
+                                        <label :class="['border-2 rounded-[24px] p-5 cursor-pointer transition-all flex flex-col items-center text-center shadow-sm', state.attendanceForm.type === 'leave' ? 'border-amber-500 bg-amber-50 shadow-amber-500/10 scale-[1.02]' : 'border-gray-200 hover:border-amber-300 hover:bg-gray-50']">
                                             <input type="radio" v-model="state.attendanceForm.type" value="leave" class="hidden" />
-                                            <div :class="['w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-colors', state.attendanceForm.type === 'leave' ? 'bg-amber-500 text-white shadow-md' : 'bg-gray-100 text-amber-500']"><i class="ph ph-calendar-x text-2xl font-bold"></i></div>
-                                            <span class="font-extrabold text-amber-900 text-lg">学员请假不扣课</span>
-                                            <span class="text-xs font-medium text-amber-600/80 mt-1.5">仅记录流水，不扣除可用课时</span>
+                                            <div :class="['w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-colors', state.attendanceForm.type === 'leave' ? 'bg-amber-500 text-white shadow-md' : 'bg-white border-2 border-amber-100 text-amber-500']"><i class="ph ph-calendar-x text-3xl font-bold"></i></div>
+                                            <span class="font-black text-amber-900 text-lg">学员请假记录</span>
+                                            <span class="text-xs font-bold text-amber-600/80 mt-1.5">免扣，仅留存流水</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">随堂备注说明 (选填)</label>
-                                    <textarea v-model="state.attendanceForm.remark" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="例如：孩子今天感冒发烧请假；或者：上课表现非常积极..."></textarea>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">随堂备注 (选填)</label>
+                                    <textarea v-model="state.attendanceForm.remark" rows="3" class="glass-input w-full resize-none py-3" placeholder="例如：孩子今天表现很好..."></textarea>
                                 </div>
 
-                                <div class="flex justify-end pt-4 border-t border-gray-100">
-                                    <button type="button" @click="closeModal" class="px-5 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg mr-3 transition-colors">取消</button>
-                                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors">确认登记</button>
+                                <div class="flex justify-end pt-6 border-t border-gray-100">
+                                    <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl mr-3 transition-colors">取消</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 text-lg rounded-full">确认签到</button>
                                 </div>
                             </form>
 
-                            <!-- 续费 -->
-                            <form v-if="state.showModal === 'renewStudent'" @submit.prevent="submitRenew" class="space-y-5">
-                                <div class="bg-blue-50/50 p-4 rounded-xl text-sm border border-blue-100">
-                                    <p class="text-gray-600 mb-1">正在为学员 <strong class="text-blue-700 text-lg mx-1">{{ state.renewForm.student.name }}</strong> 办理全局续费充值。</p>
+                            <!-- 续费充值 -->
+                            <form v-if="state.showModal === 'renewStudent'" @submit.prevent="submitRenew" class="space-y-6">
+                                <div class="bg-blue-50 p-5 rounded-[24px] border border-blue-200 flex items-center space-x-4">
+                                    <div class="w-14 h-14 rounded-full bg-white flex items-center justify-center text-blue-600 border-2 border-blue-100 shadow-sm"><i class="ph ph-wallet text-3xl"></i></div>
+                                    <div>
+                                        <p class="text-gray-600 text-sm font-medium mb-0.5">正在为学员 <strong class="text-blue-800 text-lg mx-1 tracking-tight">{{ state.renewForm.student.name }}</strong> 办理充值</p>
+                                        <p class="text-xs text-gray-500">当前共享库余量：<strong class="text-green-600 text-sm bg-green-100 px-1.5 py-0.5 rounded">{{ state.renewForm.student.remainingHours }} 节</strong></p>
+                                    </div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div><label class="block text-sm font-bold mb-1">新增正课 (节) <span class="text-red-500">*</span></label><input type="number" min="1" required v-model.number="state.renewForm.hours" class="w-full px-4 py-2 border rounded-xl" /></div>
-                                    <div><label class="block text-sm font-bold mb-1">新增赠课 (节)</label><input type="number" min="0" v-model.number="state.renewForm.bonus" class="w-full px-4 py-2 border rounded-xl" placeholder="默认为 0" /></div>
+                                <div class="grid grid-cols-2 gap-5">
+                                    <div><label class="block text-sm font-bold text-gray-700 mb-2">新增正课 (节) <span class="text-red-500">*</span></label><input type="number" min="1" required v-model.number="state.renewForm.hours" class="glass-input w-full font-bold text-lg" /></div>
+                                    <div><label class="block text-sm font-bold text-gray-700 mb-2">新增附赠 (节)</label><input type="number" min="0" v-model.number="state.renewForm.bonus" class="glass-input w-full font-bold text-lg" placeholder="0" /></div>
                                 </div>
-                                <div><label class="block text-sm font-bold mb-1">实付金额 (元) <span class="text-red-500">*</span></label><input type="number" min="0" step="0.01" required v-model.number="state.renewForm.payment" class="w-full px-4 py-2 border rounded-xl" /></div>
-                                <div><label class="block text-sm font-bold mb-1">收费备注说明 (选填)</label><textarea v-model="state.renewForm.remark" rows="2" class="w-full px-4 py-2 border rounded-xl" placeholder="例如：微信转账，参加双十一立减活动..."></textarea></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">实付金额 (元) <span class="text-red-500">*</span></label>
+                                    <div class="relative"><i class="ph ph-currency-cny absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i><input type="number" min="0" step="0.01" required v-model.number="state.renewForm.payment" class="glass-input pl-10 w-full font-bold text-lg text-blue-700" placeholder="0.00" /></div>
+                                </div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">账单备注 (选填)</label><textarea v-model="state.renewForm.remark" rows="2" class="glass-input w-full resize-none" placeholder="例如：微信转账，双十一优惠等..."></textarea></div>
                                 
                                 <div class="flex justify-end pt-4 border-t border-gray-100">
-                                    <button type="button" @click="closeModal" class="px-5 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg mr-3 transition-colors">取消</button>
-                                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors">确认收银充值</button>
+                                    <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl mr-3 transition-colors">取消</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8">确认收银并同步</button>
                                 </div>
                             </form>
 
                             <!-- 添加/编辑班级 -->
-                            <form v-if="state.showModal === 'addClass' || state.showModal === 'editClass'" @submit.prevent="submitClass" class="space-y-5">
-                                <div><label class="block text-sm font-bold mb-1">班级全称 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.name" class="w-full px-4 py-2 border rounded-xl" placeholder="如：英语秋季班" /></div>
-                                <div><label class="block text-sm font-bold mb-1">课程科目 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.course" class="w-full px-4 py-2 border rounded-xl" placeholder="如：英语" /></div>
-                                <div><label class="block text-sm font-bold mb-1">上课排期 <span class="text-gray-400 font-normal text-xs ml-2">(选填)</span></label>
-                                    <div class="relative"><i class="ph ph-clock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i><input type="text" v-model="state.classForm.schedule" class="pl-10 w-full px-4 py-2 border rounded-xl" placeholder="如：每周六 14:00 - 16:00" /></div>
+                            <form v-if="state.showModal === 'addClass' || state.showModal === 'editClass'" @submit.prevent="submitClass" class="space-y-6">
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">班级名称 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.name" class="glass-input w-full font-bold text-lg" placeholder="例如：新概念英语秋季周末班" /></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">课程科目 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.course" class="glass-input w-full" placeholder="例如：英语、少儿编程" /></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">上课排期 <span class="text-gray-400 font-medium text-xs ml-2">(选填，用于UI展示)</span></label>
+                                    <div class="relative"><i class="ph ph-clock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i><input type="text" v-model="state.classForm.schedule" class="glass-input pl-11 w-full" placeholder="例如：每周六 14:00 - 16:00" /></div>
                                 </div>
-                                <div v-if="state.showModal === 'addClass'"><label class="block text-sm font-bold mb-1">指派初始任课老师 <span class="text-red-500">*</span></label>
-                                    <select required v-model.number="state.classForm.teacherId" class="w-full px-4 py-2 border rounded-xl bg-white"><option value="" disabled>请选择...</option><option v-for="t in teachersOnly" :key="t.id" :value="t.id">{{t.name}}</option></select>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">指派任课老师 <span class="text-red-500">*</span></label>
+                                    <select required v-model.number="state.classForm.teacherId" class="glass-input w-full bg-white/50 appearance-none font-medium"><option value="" disabled>点击下拉选择...</option><option v-for="t in teachersOnly" :key="t.id" :value="t.id">{{t.name}}</option></select>
                                 </div>
-                                <div class="flex justify-end pt-4 border-t border-gray-100"><button type="button" @click="closeModal" class="px-5 py-2 hover:bg-gray-100 rounded-lg mr-3">取消</button><button type="submit" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md">保存</button></div>
+                                <div class="flex justify-end pt-4 border-t border-gray-100">
+                                    <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl mr-3 transition-colors">取消</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8">保存班级排期</button>
+                                </div>
                             </form>
 
                             <!-- 偏好设置 -->
-                            <form v-if="state.showModal === 'systemSettings'" @submit.prevent="submitSystemSettings" class="space-y-6">
+                            <form v-if="state.showModal === 'systemSettings'" @submit.prevent="submitSystemSettings" class="space-y-8">
                                 <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-3">系统全局背景图</label>
-                                    <div class="flex items-center space-x-6">
-                                        <div class="w-48 h-28 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-inner relative group">
-                                            <img v-if="state.settingsForm.bgImage" :src="state.settingsForm.bgImage" class="w-full h-full object-cover" />
-                                            <i v-else class="ph ph-image text-4xl text-gray-300"></i>
-                                            <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <i class="ph ph-upload-simple text-white text-2xl"></i>
+                                    <label class="block text-sm font-black text-gray-700 mb-4 uppercase tracking-wider">系统全局背景图</label>
+                                    <div class="flex items-center space-x-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                        <div class="w-28 h-28 bg-white rounded-[28px] border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group transition-colors hover:border-blue-400">
+                                            <img v-if="state.settingsForm.bgImage" :src="state.settingsForm.bgImage" class="w-full h-full object-contain p-2" />
+                                            <i v-else class="ph ph-image text-5xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
+                                            <div class="absolute inset-0 bg-blue-600/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
+                                                <i class="ph ph-upload-simple text-blue-600 text-3xl font-bold"></i>
                                             </div>
-                                            <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'bgImage')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                                            <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'bgImage')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" title="点击上传新背景" />
                                         </div>
-                                        <div class="text-sm text-gray-500 space-y-2">
-                                            <p>横版高清图片。系统将自动无损压缩防卡顿。</p>
-                                            <button type="button" @click="state.settingsForm.bgImage = ''" class="text-red-500 hover:text-red-700 font-medium transition-colors">恢复默认动态光晕</button>
+                                        <div class="text-sm text-gray-500 space-y-3 flex-1">
+                                            <p class="font-medium bg-white px-3 py-2 rounded-lg border inline-block shadow-sm"><i class="ph ph-info mr-1 text-blue-500"></i>横版高清图片，自动无损压缩防卡顿。</p>
+                                            <div><button type="button" @click="state.settingsForm.bgImage = ''" class="text-red-500 font-bold hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-red-100"><i class="ph ph-trash mr-1"></i>恢复动态光晕</button></div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="pt-4 border-t border-gray-100">
-                                    <label class="block text-sm font-bold text-gray-700 mb-3">机构系统 Logo 图标</label>
-                                    <div class="flex items-center space-x-6">
-                                        <div class="w-24 h-24 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-inner relative group">
-                                            <img v-if="state.settingsForm.logo" :src="state.settingsForm.logo" class="w-full h-full object-contain bg-white" />
-                                            <i v-else class="ph ph-image text-4xl text-gray-300"></i>
-                                            <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <i class="ph ph-upload-simple text-white text-2xl"></i>
-                                            </div>
+                                <div class="border-t border-gray-100 pt-6">
+                                    <label class="block text-sm font-black text-gray-700 mb-4 uppercase tracking-wider">品牌 Logo 标识</label>
+                                    <div class="flex items-center space-x-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                        <div class="w-24 h-24 bg-white rounded-[24px] border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group hover:border-blue-400 transition-colors">
+                                            <img v-if="state.settingsForm.logo" :src="state.settingsForm.logo" class="w-full h-full object-contain p-2" />
+                                            <i v-else class="ph ph-image text-4xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
                                             <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'logo')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
                                         </div>
-                                        <div class="text-sm text-gray-500 space-y-2">
-                                            <p>推荐尺寸 1:1，透明背景 PNG/SVG。</p>
-                                            <button type="button" @click="state.settingsForm.logo = ''" class="text-red-500 hover:text-red-700 font-medium transition-colors">移除并使用默认图标</button>
+                                        <div class="text-sm flex-1">
+                                            <button type="button" @click="state.settingsForm.logo = ''" class="text-red-500 font-bold hover:bg-red-50 px-4 py-2 rounded-xl transition-colors"><i class="ph ph-trash mr-1"></i>移除并使用默认图标</button>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="pt-4 border-t border-gray-100">
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">系统顶部显示名称</label>
-                                    <input type="text" required v-model="state.settingsForm.name" class="w-full px-4 py-2 border rounded-xl" placeholder="输入机构品牌名称" />
+                                <div class="pt-2">
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">系统显示名称</label>
+                                    <input type="text" required v-model="state.settingsForm.name" class="glass-input w-full font-bold text-lg" placeholder="例如：新东方教育管理中枢" />
                                 </div>
-                                <div class="flex justify-end pt-4 border-t border-gray-100">
-                                    <button type="button" @click="closeModal" class="px-5 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg mr-3 transition-colors">取消</button>
-                                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors">保存并广播到所有设备</button>
+                                <div class="flex justify-end pt-6 border-t border-gray-100">
+                                    <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl mr-3 transition-colors">放弃更改</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 text-lg">保存设置并同步</button>
                                 </div>
                             </form>
 
                             <!-- 添加老师 -->
                             <form v-if="state.showModal === 'addTeacher'" @submit.prevent="submitTeacher" class="space-y-4">
-                                <div><label class="block text-sm font-bold mb-1">真实姓名</label><input type="text" required v-model="state.teacherForm.name" class="w-full px-4 py-2 border rounded-xl" /></div>
-                                <div><label class="block text-sm font-bold mb-1">登录账号</label><input type="text" required v-model="state.teacherForm.username" class="w-full px-4 py-2 border rounded-xl" /></div>
-                                <div><label class="block text-sm font-bold mb-1">初始密码 (默认123456)</label><input type="text" v-model="state.teacherForm.password" class="w-full px-4 py-2 border rounded-xl" placeholder="123456"/></div>
-                                <div v-if="isSuperadmin"><label class="block text-sm font-bold mb-1">指派角色</label><select v-model="state.teacherForm.role" class="w-full px-4 py-2 border rounded-xl"><option value="teacher">普通任课讲师</option><option value="admin">分校校长 (业务管理)</option></select></div>
-                                <div class="flex justify-end pt-4 border-t border-gray-100"><button type="button" @click="closeModal" class="px-5 py-2 mr-3 rounded-lg hover:bg-gray-100">取消</button><button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md">确认添加至云端</button></div>
+                                <div><label class="block text-sm font-bold mb-1">真实姓名</label><input type="text" required v-model="state.teacherForm.name" class="glass-input w-full" /></div>
+                                <div><label class="block text-sm font-bold mb-1">登录账号</label><input type="text" required v-model="state.teacherForm.username" class="glass-input w-full" /></div>
+                                <div><label class="block text-sm font-bold mb-1">初始密码 (默认123456)</label><input type="text" v-model="state.teacherForm.password" class="glass-input w-full" placeholder="123456"/></div>
+                                <div v-if="isSuperadmin"><label class="block text-sm font-bold mb-1">指派角色</label><select v-model="state.teacherForm.role" class="glass-input w-full bg-white/50"><option value="teacher">普通任课讲师</option><option value="admin">分校校长 (管理)</option></select></div>
+                                <div class="flex justify-end pt-4 border-t border-gray-100"><button type="button" @click="closeModal" class="px-5 py-2 mr-3 rounded-xl hover:bg-gray-100">取消</button><button type="submit" class="glass-button-primary">确认添加</button></div>
                             </form>
 
-                            <!-- 添加学员 -->
+                            <!-- 新建档/报名表单 -->
                             <form v-if="state.showModal === 'addStudent'" @submit.prevent="submitStudent" class="space-y-6">
-                                <div class="flex justify-center mb-4 space-x-2 bg-gray-100 p-1 rounded-xl w-max mx-auto shadow-inner">
-                                    <button type="button" @click="state.addStudentMode='new'" :class="['px-6 py-1.5 rounded-lg text-sm font-bold transition-all', state.addStudentMode==='new'?'bg-white shadow-sm text-blue-600':'text-gray-500']">全新录入建档</button>
-                                    <button type="button" @click="state.addStudentMode='existing'" :class="['px-6 py-1.5 rounded-lg text-sm font-bold transition-all', state.addStudentMode==='existing'?'bg-white shadow-sm text-blue-600':'text-gray-500']">为老生加报新班</button>
+                                <div class="flex justify-center mb-6 bg-gray-100/80 p-1.5 rounded-full w-max mx-auto shadow-inner border border-gray-200/50 backdrop-blur-sm relative z-10">
+                                    <button type="button" @click="state.addStudentMode='new'" :class="['px-8 py-2 rounded-full text-sm font-bold transition-all', state.addStudentMode==='new'?'bg-white shadow-md text-blue-600 scale-105':'text-gray-500 hover:text-gray-700']">全新录入建档</button>
+                                    <button type="button" @click="state.addStudentMode='existing'" :class="['px-8 py-2 rounded-full text-sm font-bold transition-all', state.addStudentMode==='existing'?'bg-white shadow-md text-blue-600 scale-105':'text-gray-500 hover:text-gray-700']">老生加报新班</button>
                                 </div>
 
                                 <transition name="fade" mode="out-in">
-                                <div v-if="state.addStudentMode === 'new'" class="space-y-4 animate-[slideUp_0.4s_ease-out]">
+                                <div v-if="state.addStudentMode === 'new'" class="space-y-6 animate-[slideUp_0.4s_ease-out]">
                                     
-                                    <div class="flex items-center space-x-5 mb-4 border-b border-gray-100 pb-5">
-                                        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border border-gray-300 shadow-inner shrink-0 relative bg-black">
-                                            <video v-show="state.isCameraOpen" id="avatarVideoForm" autoplay playsinline class="w-full h-full object-cover transform -scale-x-100"></video>
-                                            <img v-show="!state.isCameraOpen && state.studentForm.avatar" :src="state.studentForm.avatar" class="w-full h-full object-cover bg-white" />
-                                            <i v-show="!state.isCameraOpen && !state.studentForm.avatar" class="ph ph-camera text-3xl text-gray-400"></i>
-                                        </div>
-                                        <div class="flex flex-col space-y-2.5">
-                                            <div v-if="state.isCameraOpen" class="flex space-x-2">
-                                                <button type="button" @click="takePhoto('form')" class="px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded shadow-sm hover:bg-green-600"><i class="ph ph-aperture mr-1"></i> 立即拍摄</button>
-                                                <button type="button" @click="stopCamera" class="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded hover:bg-gray-300">取消</button>
+                                    <div class="bg-blue-50/30 p-6 rounded-3xl border border-blue-100/50">
+                                        <h4 class="text-xs font-extrabold text-blue-800 mb-4 uppercase tracking-widest flex items-center"><i class="ph ph-identification-card mr-2 text-lg"></i>1. 基础档案建立</h4>
+                                        <div class="flex flex-col md:flex-row gap-8">
+                                            <div class="flex flex-col items-center space-y-4">
+                                                <div class="w-28 h-28 bg-white rounded-[28px] flex items-center justify-center overflow-hidden border-4 border-white shadow-liquid relative group transition-transform hover:scale-105">
+                                                    <video v-show="state.isCameraOpen" id="avatarVideoForm" autoplay playsinline class="w-full h-full object-cover transform -scale-x-100 bg-black"></video>
+                                                    <img v-show="!state.isCameraOpen && state.studentForm.avatar" :src="state.studentForm.avatar" class="w-full h-full object-cover" />
+                                                    <i v-show="!state.isCameraOpen && !state.studentForm.avatar" class="ph ph-camera text-4xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
+                                                </div>
+                                                <div class="flex flex-col space-y-2 w-full">
+                                                    <div v-if="state.isCameraOpen" class="flex space-x-2">
+                                                        <button type="button" @click="takePhoto('form')" class="flex-1 bg-green-500 text-white text-xs font-bold py-2 rounded-xl shadow-sm hover:bg-green-600 transition-colors"><i class="ph ph-aperture mr-1 text-sm"></i>快门</button>
+                                                        <button type="button" @click="stopCamera" class="flex-1 bg-gray-200 text-gray-700 text-xs font-bold py-2 rounded-xl hover:bg-gray-300 transition-colors">取消</button>
+                                                    </div>
+                                                    <div v-else class="flex space-x-2">
+                                                        <button type="button" @click="startCamera('form')" class="flex-1 bg-white text-blue-600 border border-blue-200 text-xs font-bold py-2 rounded-xl hover:bg-blue-50 shadow-sm transition-colors" title="使用设备摄像头"><i class="ph ph-camera text-sm"></i></button>
+                                                        <label class="flex-1 bg-white text-gray-600 border border-gray-200 text-xs font-bold py-2 rounded-xl hover:bg-gray-50 shadow-sm cursor-pointer transition-colors text-center" title="选择本地图片">
+                                                            <i class="ph ph-upload-simple text-sm"></i>
+                                                            <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'studentAvatar')" class="hidden" />
+                                                        </label>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div v-else class="flex space-x-2">
-                                                <button type="button" @click="startCamera('form')" class="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 text-xs font-bold rounded hover:bg-blue-100 transition-colors"><i class="ph ph-camera mr-1"></i> 打开摄像头采集</button>
-                                                <label class="px-3 py-1.5 bg-gray-50 text-gray-600 border border-gray-200 text-xs font-bold rounded hover:bg-gray-100 cursor-pointer transition-colors">
-                                                    <i class="ph ph-upload-simple mr-1"></i> 上传相册图片
-                                                    <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'studentAvatar')" class="hidden" />
-                                                </label>
+                                            <div class="flex-1 space-y-4">
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div><label class="block text-xs font-bold text-gray-600 mb-1.5">学员真实姓名 <span class="text-red-500">*</span></label><input type="text" required v-model="state.studentForm.name" class="glass-input w-full font-bold" /></div>
+                                                    <div><label class="block text-xs font-bold text-gray-600 mb-1.5">联系电话 (极度重要)</label><input type="tel" v-model="state.studentForm.contact" class="glass-input w-full font-mono" /></div>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div><label class="block text-xs font-bold text-gray-600 mb-1.5">就读学校</label><input type="text" class="glass-input w-full" v-model="state.studentForm.school" placeholder="选填" /></div>
+                                                    <div><label class="block text-xs font-bold text-gray-600 mb-1.5">所在年级</label><input type="text" class="glass-input w-full" v-model="state.studentForm.grade" placeholder="选填" /></div>
+                                                </div>
                                             </div>
-                                            <p class="text-[10px] text-gray-400">为了节省空间，上传后系统将自动将其压缩裁剪</p>
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div><label class="block text-sm font-bold mb-1">学生姓名*</label><input type="text" required v-model="state.studentForm.name" class="w-full px-3 py-2 border rounded-xl" /></div>
-                                        <div><label class="block text-sm font-bold mb-1">联系电话</label><input type="tel" v-model="state.studentForm.contact" class="w-full px-3 py-2 border rounded-xl" /></div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div><label class="block text-sm font-bold mb-1">就读学校</label><input type="text" class="w-full px-3 py-2 border rounded-xl" v-model="state.studentForm.school" placeholder="选填" /></div>
-                                        <div><label class="block text-sm font-bold mb-1">所在年级</label><input type="text" class="w-full px-3 py-2 border rounded-xl" v-model="state.studentForm.grade" placeholder="选填" /></div>
-                                    </div>
-
-                                    <div class="pt-4 border-t border-gray-100">
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div><label class="block text-sm font-bold mb-1">首期买课实付(元)</label><input type="number" step="0.01" v-model.number="state.studentForm.payment" class="w-full px-3 py-2 border rounded-xl" /></div>
-                                            <div class="flex space-x-2">
-                                                <div class="flex-1"><label class="block text-sm font-bold mb-1">正课*</label><input type="number" required min="1" v-model.number="state.studentForm.hours" class="w-full px-3 py-2 border rounded-xl" /></div>
-                                                <div class="flex-1"><label class="block text-sm font-bold mb-1">赠课</label><input type="number" min="0" v-model.number="state.studentForm.bonus" class="w-full px-3 py-2 border rounded-xl" /></div>
+                                    <div class="bg-orange-50/30 p-6 rounded-3xl border border-orange-100/50">
+                                        <h4 class="text-xs font-extrabold text-orange-800 mb-4 uppercase tracking-widest flex items-center"><i class="ph ph-wallet mr-2 text-lg"></i>2. 初始资费设定</h4>
+                                        <div class="grid grid-cols-3 gap-5">
+                                            <div class="col-span-1 border-r border-orange-200/50 pr-5"><label class="block text-xs font-bold text-gray-600 mb-1.5">首期实收 (元)</label><div class="relative"><i class="ph ph-currency-cny absolute left-3 top-1/2 -translate-y-1/2 text-orange-400"></i><input type="number" step="0.01" v-model.number="state.studentForm.payment" class="glass-input pl-8 w-full font-bold text-orange-600" /></div></div>
+                                            <div class="col-span-2 grid grid-cols-2 gap-4">
+                                                <div><label class="block text-xs font-bold text-gray-600 mb-1.5">正课录入 (节) <span class="text-red-500">*</span></label><input type="number" required min="1" v-model.number="state.studentForm.hours" class="glass-input w-full font-bold" /></div>
+                                                <div><label class="block text-xs font-bold text-gray-600 mb-1.5">附赠录入 (节)</label><input type="number" min="0" v-model.number="state.studentForm.bonus" class="glass-input w-full" placeholder="0" /></div>
                                             </div>
                                         </div>
-                                        <div class="mt-4"><label class="block text-sm font-bold mb-1">操作备注 (选填)</label><input type="text" v-model="state.studentForm.remark" class="w-full px-3 py-2 border rounded-xl" placeholder="如：家长转账，无赠送..." /></div>
+                                        <div class="mt-4"><label class="block text-xs font-bold text-gray-600 mb-1.5">全局账单备注 (选填)</label><input type="text" v-model="state.studentForm.remark" class="glass-input w-full text-sm" placeholder="例如：微信转账，含赠送教材..." /></div>
                                     </div>
                                 </div>
                                 
-                                <div v-else class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                    <label class="block text-sm font-bold text-blue-900 mb-2">选择云端现有档案*</label>
-                                    <select required v-model.number="state.studentForm.existingId" class="w-full px-3 py-2 border rounded-xl bg-white font-bold"><option value="" disabled>-- 点击下拉检索 --</option><option v-for="s in state.students" :value="s.id">{{s.name}} (剩余全局共享: {{s.remainingHours}}节)</option></select>
-                                    <p class="text-xs text-blue-600 mt-2">提示：加入新班级后，无需再次买课，该生将直接跨班共享现有的全局课时。</p>
+                                <div v-else class="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100 flex flex-col items-center justify-center animate-[slideUp_0.4s_ease-out] text-center min-h-[250px]">
+                                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 border border-indigo-100"><i class="ph ph-magnifying-glass text-3xl text-indigo-500"></i></div>
+                                    <label class="block text-lg font-extrabold text-indigo-900 mb-2">从云端数据库召回老生 <span class="text-red-500">*</span></label>
+                                    <p class="text-sm text-indigo-600 mb-6 max-w-md">加入新班级后，无需二次买课，该生将直接跨班共享现有的全局课时。</p>
+                                    <select required v-model.number="state.studentForm.existingId" class="glass-input w-full max-w-md bg-white/80 font-bold text-center text-lg py-3"><option value="" disabled>-- 点击下拉检索现有档案 --</option><option v-for="s in state.students" :value="s.id">{{s.name}} (剩余全局共享: {{s.remainingHours}}节)</option></select>
                                 </div>
                                 </transition>
 
-                                <div class="pt-4 border-t border-gray-100">
-                                    <h4 class="text-sm font-bold text-gray-700 mb-3">将学员分配至班级</h4>
-                                    <div v-if="state.studentForm.lockedClass" class="bg-indigo-50 p-3 rounded-xl border border-indigo-100 flex items-center">
-                                        <i class="ph ph-check-circle text-indigo-500 mr-2 text-xl"></i>
-                                        <span class="text-indigo-800 text-sm">已锁定去向：<strong>{{ state.studentForm.lockedClass.name }}</strong> (任课: {{ getTeacherName(state.studentForm.lockedClass.teacherId) }})</span>
+                                <div class="bg-gray-50/50 p-6 rounded-3xl border border-gray-200/50">
+                                    <h4 class="text-xs font-extrabold text-gray-600 mb-4 uppercase tracking-widest flex items-center"><i class="ph ph-chalkboard-teacher mr-2 text-lg"></i>{{ state.addStudentMode === 'new' ? '3. 指定去向班级' : '去向班级设定' }}</h4>
+                                    <div v-if="state.studentForm.lockedClass" class="bg-white p-4 rounded-2xl border border-blue-100 shadow-sm flex items-center relative overflow-hidden">
+                                        <div class="absolute left-0 top-0 bottom-0 w-2 bg-blue-500"></div>
+                                        <i class="ph ph-check-circle text-blue-500 mr-3 text-3xl"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500 font-bold mb-0.5">已受控锁定去向</p>
+                                            <p class="text-blue-900 font-extrabold text-lg tracking-tight">{{ state.studentForm.lockedClass.name }}</p>
+                                            <p class="text-xs text-blue-600 font-medium mt-1">负责讲师: {{ getTeacherName(state.studentForm.lockedClass.teacherId) }}</p>
+                                        </div>
                                     </div>
-                                    <div v-else class="grid grid-cols-2 gap-4">
-                                        <div><label class="block text-sm font-bold mb-1">任课老师*</label><select required v-model.number="state.studentForm.teacherId" @change="state.studentForm.classId=''" class="w-full px-3 py-2 border rounded-xl"><option value="" disabled>先选老师</option><option v-for="t in teachersOnly" :value="t.id">{{t.name}}</option></select></div>
-                                        <div><label class="block text-sm font-bold mb-1">具体班级*</label><select required v-model.number="state.studentForm.classId" :disabled="!state.studentForm.teacherId" class="w-full px-3 py-2 border rounded-xl disabled:bg-gray-100"><option value="" disabled>再选班级</option><option v-for="c in state.classes.filter(cls=>cls.teacherId===state.studentForm.teacherId)" :value="c.id">{{c.name}} ({{c.course}})</option></select></div>
+                                    <div v-else class="grid grid-cols-2 gap-5">
+                                        <div><label class="block text-xs font-bold text-gray-600 mb-1.5">主带老师 <span class="text-red-500">*</span></label><select required v-model.number="state.studentForm.teacherId" @change="state.studentForm.classId=''" class="glass-input w-full bg-white/50"><option value="" disabled>1. 先定位讲师</option><option v-for="t in teachersOnly" :value="t.id">{{t.name}}</option></select></div>
+                                        <div><label class="block text-xs font-bold text-gray-600 mb-1.5">落位班级 <span class="text-red-500">*</span></label><select required v-model.number="state.studentForm.classId" :disabled="!state.studentForm.teacherId" class="glass-input w-full bg-white/50 disabled:bg-gray-100/50 disabled:cursor-not-allowed disabled:opacity-60"><option value="" disabled>2. 再锁定班级</option><option v-for="c in state.classes.filter(cls=>cls.teacherId===state.studentForm.teacherId)" :value="c.id">{{c.name}}</option></select></div>
                                     </div>
                                 </div>
 
-                                <div class="flex justify-end pt-4 border-t border-gray-100"><button type="button" @click="closeModal" class="px-5 py-2 mr-3 rounded-lg hover:bg-gray-100 font-bold text-gray-500">取消</button><button type="submit" class="glass-button-primary shadow-blue-500/20 px-6">{{state.addStudentMode==='new'?'确认建档并云端进班':'直接分配入班'}}</button></div>
+                                <div class="flex justify-end pt-4">
+                                    <button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-2xl text-gray-500 font-bold hover:bg-gray-100 transition-colors">取消操作</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 text-lg">{{state.addStudentMode==='new'?'确认生成档案并落位':'确认指派入班'}}</button>
+                                </div>
                             </form>
 
                         </div>
@@ -1225,25 +1254,25 @@
 
         <!-- 危险确认框 -->
         <transition name="fade">
-            <div v-if="state.confirmDialog" class="fixed inset-0 z-[200] flex items-center justify-center bg-darkglass-800 backdrop-blur-md p-4">
-                <div class="bg-white/90 backdrop-blur-md rounded-[36px] shadow-2xl w-full max-w-sm overflow-hidden animate-[springUp_0.4s_ease-out] border border-white/50" style="-webkit-mask-image: -webkit-radial-gradient(white, black);">
+            <div v-if="state.confirmDialog" class="fixed inset-0 z-[200] flex items-center justify-center bg-darkglass-900 backdrop-blur-liquid-heavy p-4">
+                <div class="bg-white/90 backdrop-blur-md rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden animate-[springUp_0.4s_ease-out] border border-white/50">
                     <div class="p-8 text-center relative">
-                        <div class="absolute top-0 left-0 w-full h-2 bg-red-500"></div>
+                        <div class="absolute top-0 left-0 w-full h-1.5 bg-red-500"></div>
                         <div class="w-20 h-20 bg-red-50 text-red-500 rounded-[24px] flex items-center justify-center mx-auto mb-6 shadow-inner border border-red-100"><i class="ph ph-warning-circle text-5xl drop-shadow-sm"></i></div>
-                        <h3 class="text-2xl font-black text-gray-800 mb-3 tracking-tight">{{ state.confirmDialog.title }}</h3>
-                        <p class="text-gray-500 font-bold leading-relaxed">{{ state.confirmDialog.message }}</p>
+                        <h3 class="text-2xl font-extrabold text-gray-800 mb-3 tracking-tight">{{ state.confirmDialog.title }}</h3>
+                        <p class="text-gray-500 font-medium leading-relaxed">{{ state.confirmDialog.message }}</p>
                     </div>
-                    <div class="p-5 bg-gray-50 border-t border-gray-200 flex gap-4">
+                    <div class="p-5 bg-gray-50/80 border-t border-gray-200/50 flex gap-4">
                         <button @click="state.confirmDialog = null" class="flex-1 py-3.5 bg-white border border-gray-200 rounded-[20px] text-gray-600 font-bold hover:bg-gray-50 shadow-sm transition-all active:scale-95">放弃</button>
-                        <button @click="executeConfirm" class="flex-1 py-3.5 bg-red-500 text-white rounded-[20px] font-bold shadow-[0_8px_16px_rgba(239,68,68,0.2)] hover:bg-red-600 transition-all active:scale-95 border border-red-400">强制执行</button>
+                        <button @click="executeConfirm" class="flex-1 py-3.5 bg-red-500 text-white rounded-[20px] font-bold shadow-[0_8px_16px_rgba(239,68,68,0.2)] hover:bg-red-600 hover:shadow-[0_12px_20px_rgba(239,68,68,0.3)] transition-all active:scale-95 border border-red-400/50">强制执行</button>
                     </div>
                 </div>
             </div>
         </transition>
 
         <transition name="spring-up">
-            <div v-if="state.toast.show" :class="['fixed top-8 right-8 p-4 rounded-2xl shadow-liquid border flex items-center space-x-3 z-[300] max-w-sm backdrop-blur-liquid', state.toast.type === 'error' ? 'bg-red-50/90 text-red-800 border-red-200/50' : 'bg-glass-800 text-white border-white/40']">
-                <i :class="['text-3xl drop-shadow-sm', state.toast.type === 'error' ? 'ph ph-warning-circle text-red-500' : 'ph ph-check-circle text-green-400']"></i>
+            <div v-if="state.toast.show" :class="['fixed top-8 right-8 p-4 rounded-2xl shadow-liquid border flex items-center space-x-3 z-[300] max-w-sm backdrop-blur-liquid', state.toast.type === 'error' ? 'bg-red-50/90 text-red-800 border-red-200/50' : 'bg-glass-800 text-gray-800 border-white/40']">
+                <i :class="['text-3xl drop-shadow-sm', state.toast.type === 'error' ? 'ph ph-warning-circle text-red-500' : 'ph ph-check-circle text-green-500']"></i>
                 <span class="font-bold text-sm leading-tight">{{ state.toast.message }}</span>
             </div>
         </transition>
@@ -1261,7 +1290,7 @@
                     systemLogo: '',
                     systemBgImage: '',
                     isLoading: true,
-                    loadingMsg: 'Connecting...', 
+                    loadingMsg: 'Initializing Engine...', 
                     isCloud: false, 
                     systemError: null,
                     
@@ -1299,8 +1328,6 @@
                     { id: 2, username: 'admin', password: '123456', role: 'admin', name: '王校长' },
                     { id: 3, username: 'teacher1', password: '123456', role: 'teacher', name: '张老师' }
                 ];
-                const fallbackClasses = [{ id: 101, name: 'Liquid 强化班', course: '演示', teacherId: 3 }];
-                const fallbackStudents = [{ id: 1, name: 'Liquid 学员', remainingHours: 10, totalHours: 10, paymentAmount: 1000, totalPayment: 1000, bonusHours: 0, classIds: [101], avatar: '', school: '', grade: '', parentName: '', parentRole: '', contact: '' }];
 
                 const showToast = (msg, type='success') => { 
                     state.toast = { show: true, message: msg, type }; 
@@ -1346,21 +1373,17 @@
                                 
                                 let defaultData = [];
                                 if (col === 'users') defaultData = fallbackUsers;
-                                if (col === 'classes') defaultData = fallbackClasses;
-                                if (col === 'students') defaultData = fallbackStudents;
                                 if (col === 'settings') defaultData = [{ id: 'sys', name: 'EduOS Liquid', logo: '', bgImage: '' }];
 
                                 for (const defItem of defaultData) {
-                                    const exists = resData.find(r => parseInt(r.id) === defItem.id || parseInt(r._id) === defItem.id || r.id === defItem.id || r._id === defItem.id);
+                                    const exists = resData.find(r => r.id == defItem.id || r._id == defItem.id);
                                     if (!exists) {
                                         try {
                                             const payload = JSON.parse(JSON.stringify(defItem));
                                             delete payload._id;
                                             await tcbDb.collection(col).doc(defItem.id.toString()).set(payload);
                                             resData.push({ ...payload, _id: defItem.id.toString() });
-                                        } catch (writeErr) {
-                                            throw new Error(`【${col}】写入被拒，请确保控制台中已有该集合且权限为 write:true。`);
-                                        }
+                                        } catch (writeErr) {}
                                     }
                                 }
 
@@ -1389,13 +1412,10 @@
                                     },
                                     onError: () => {}
                                 });
-
                             } catch (dbErr) {
-                                if (dbErr.message && dbErr.message.includes('写入被拒')) throw dbErr;
-                                throw new Error(`集合访问失败！请确认您已经在控制台新建了名为【${col}】的集合，并将权限设为 read:true, write:true。`);
+                                throw new Error(`同步失败: 缺少【${col}】权限。请去控制台设置集合权限为 write:true。`);
                             }
                         }
-
                     } catch (e) {
                         state.isCloud = false;
                         state.systemError = e.message;
@@ -1409,9 +1429,9 @@
                     const checkSdk = () => {
                         if (typeof cloudbase !== 'undefined') {
                             initCloudBase();
-                        } else if (attempts > 80) { 
+                        } else if (attempts > 100) { 
                             state.isCloud = false; state.isLoading = false;
-                            state.systemError = "SDK加载失败，您的网络或代理直接阻断了文件下载，请关闭代理后重试。";
+                            state.systemError = "SDK文件加载被浏览器或代理拦截，请关闭去广告插件后重试。";
                         } else {
                             attempts++;
                             setTimeout(checkSdk, 100);
@@ -1420,12 +1440,13 @@
                     checkSdk();
                 });
 
+                // 核心同步层：剔除了 _openid 拦截隐患
                 const saveToDb = async (colName, id, data, skipLocalUpdate=false) => {
-                    if (!state.isCloud || !tcbDb) throw new Error("云端未连接");
+                    if (!state.isCloud || !tcbDb) throw new Error("Cloud disconnected");
                     try {
                         const payload = JSON.parse(JSON.stringify(data));
                         delete payload._id; 
-                        delete payload._openid;
+                        delete payload._openid; // 🔥 防止腾讯云因为该字段抛弃我们的覆写请求
                         
                         await tcbDb.collection(colName).doc(id.toString()).set(payload);
                         
@@ -1435,18 +1456,18 @@
                             if (idx > -1) arr[idx] = data; else arr.push(data);
                         }
                     } catch (err) {
-                        showToast(`🚫 云端读写拦截: 请检查【${colName}】的权限!`, 'error');
+                        showToast(`云端写入受阻: ${err.message}`, 'error');
                         throw err; 
                     }
                 };
                 
                 const delFromDb = async (colName, id) => {
-                    if (!state.isCloud || !tcbDb) throw new Error("云端未连接");
+                    if (!state.isCloud || !tcbDb) throw new Error("Cloud disconnected");
                     try {
                         await tcbDb.collection(colName).doc(id.toString()).remove();
                         state[colName] = state[colName].filter(x => x.id !== id);
                     } catch (err) {
-                        showToast(`🚫 删除拦截: 请检查【${colName}】的权限!`, 'error');
+                        showToast(`删除被拒: ${err.message}`, 'error');
                         throw err;
                     }
                 };
