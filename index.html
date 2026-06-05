@@ -124,52 +124,50 @@
             @apply bg-white/50 backdrop-blur-[20px] text-gray-700 rounded-2xl py-3 px-6 shadow-sm hover:bg-white/70 transition-all active:scale-95 border border-white/60 font-bold;
         }
 
-        /* 🌟 极致液态胶囊表格 */
+        /* 🌟 极致液态胶囊表格 (彻底修复 Z-Axis 和 硬件加速导致的遮挡Bug) */
         table { border-collapse: separate !important; border-spacing: 0 10px !important; width: 100%; }
         
-        /* 修复滚动模糊失效：必须给 thead 设定强固的 stacking context */
         thead {
             position: sticky;
             top: 0;
-            z-index: 40;
+            z-index: 40; /* 确保表头永远在最上层 */
         }
 
-        /* 表头：回归真实的 iOS Material 物理质感，解决浏览器渲染崩溃 Bug */
+        /* 表头：纯净滤镜流！无底色，全靠极限模糊 */
         th { 
-            @apply text-xs font-extrabold text-gray-600 uppercase tracking-wider py-4 px-6 align-middle shadow-sm relative; 
-            background: rgba(255, 255, 255, 0.6); /* 苹果原生系统的物理磨砂厚度 */
-            backdrop-filter: blur(24px) saturate(150%);
-            -webkit-backdrop-filter: blur(24px) saturate(150%);
-            border-top: 1px solid rgba(255, 255, 255, 0.8);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-            background-clip: padding-box;
+            @apply text-xs font-bold text-gray-500 uppercase tracking-wider py-4 px-6 align-middle shadow-sm relative z-40; 
+            background: rgba(255, 255, 255, 0.05); /* 极度透明底色 */
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            /* 已剔除会引起 Bug 的 translateZ(0) */
         }
         th:first-child { 
             @apply rounded-l-[24px]; 
-            border-left: 1px solid rgba(255, 255, 255, 0.8);
+            border-left: 1px solid rgba(255, 255, 255, 0.4);
         }
         th:last-child { 
             @apply rounded-r-[24px]; 
-            border-right: 1px solid rgba(255, 255, 255, 0.8);
+            border-right: 1px solid rgba(255, 255, 255, 0.4);
         }
 
-        /* 数据行：高透玻璃态 */
+        /* 数据行单元格：保持通透 */
         td { 
-            @apply py-4 px-6 align-middle transition-colors duration-300; 
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(20px) saturate(120%);
-            -webkit-backdrop-filter: blur(20px) saturate(120%);
-            border-top: 1px solid rgba(255, 255, 255, 0.4);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            background-clip: padding-box;
+            @apply py-4 px-6 bg-white/20 border-y border-white/30 align-middle transition-colors duration-300; 
+            backdrop-filter: blur(24px) saturate(120%);
+            -webkit-backdrop-filter: blur(24px) saturate(120%);
+            /* 已剔除会引起 Bug 的 translateZ(0) */
         }
-        td:first-child { @apply border-l border-white/40 rounded-l-[24px]; }
-        td:last-child { @apply border-r border-white/40 rounded-r-[24px]; }
+        td:first-child { @apply border-l border-white/30 rounded-l-[24px]; }
+        td:last-child { @apply border-r border-white/30 rounded-r-[24px]; }
         
-        /* Hover 提亮发光效果，提升层级防止被遮挡 */
-        tbody tr { @apply shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 relative z-10; }
-        tbody tr:hover { z-index: 20; }
-        tbody tr:hover td { background: rgba(255, 255, 255, 0.45); }
+        /* 完善行悬浮的 Z 轴图层逻辑：基础为 z-10，悬浮为 z-30 (在表头 z-40 之下) */
+        tbody tr { @apply shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-all duration-300 relative z-10; }
+        tbody tr:hover { 
+            @apply shadow-md -translate-y-1 z-30; 
+        }
+        tbody tr:hover td { background: rgba(255, 255, 255, 0.35); }
 
         /* 动画过渡 */
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -417,7 +415,7 @@
                                     <div class="w-10 h-10 bg-red-100/80 rounded-xl flex items-center justify-center text-red-600 mr-3 border border-red-200/50"><i class="ph ph-bell-ringing text-xl animate-bounce"></i></div>
                                     <h3 class="text-xl font-extrabold text-gray-800 tracking-tight">续费预警雷达 <span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-2 align-middle">{{ lowHoursStudents.length }} 人</span></h3>
                                 </div>
-                                <div class="overflow-x-auto relative z-10">
+                                <div class="overflow-x-auto relative z-10 pb-4">
                                     <div class="flex space-x-4 pb-2">
                                         <div v-for="student in lowHoursStudents" :key="'alert'+student.id" class="bg-white/60 backdrop-blur-md rounded-[20px] p-4 min-w-[220px] border border-red-100/50 shadow-sm flex flex-col transition-transform hover:-translate-y-1">
                                             <div class="flex items-center justify-between mb-3">
@@ -446,9 +444,10 @@
                                     <i class="ph ph-plus mr-2 text-lg"></i> 新增人员
                                 </button>
                             </div>
-                            <div class="overflow-x-auto p-4">
+                            <!-- 为防阴影被切，增加底部 padding pb-8 -->
+                            <div class="overflow-x-auto p-4 pb-8">
                                 <table class="w-full text-left">
-                                    <thead class="sticky top-0 z-10">
+                                    <thead class="sticky top-0 z-40">
                                         <tr>
                                             <th>姓名</th>
                                             <th>登录账号</th>
@@ -505,9 +504,9 @@
                                 </button>
                             </div>
 
-                            <div class="overflow-x-auto p-4">
+                            <div class="overflow-x-auto p-4 pb-8">
                                 <table class="w-full text-left">
-                                    <thead class="sticky top-0 z-10">
+                                    <thead class="sticky top-0 z-40">
                                         <tr>
                                             <th>学员档案</th>
                                             <th>背景信息</th>
@@ -589,9 +588,9 @@
                                     <i class="ph ph-plus mr-2 text-lg"></i> 开设新班级
                                 </button>
                             </div>
-                            <div class="overflow-x-auto p-4">
+                            <div class="overflow-x-auto p-4 pb-8">
                                 <table class="w-full text-left">
-                                    <thead class="sticky top-0 z-10">
+                                    <thead class="sticky top-0 z-40">
                                         <tr>
                                             <th>班级名称</th>
                                             <th>课程科目</th>
@@ -730,9 +729,9 @@
                                 <div class="flex justify-between items-center p-6 bg-white/20 border-b border-white/40 rounded-t-[36px]">
                                     <h3 class="text-xl font-black text-gray-800 flex items-center"><i class="ph ph-list-dashes mr-2 text-blue-500 text-2xl"></i>个人操作日志</h3>
                                 </div>
-                                <div class="overflow-x-auto p-4">
+                                <div class="overflow-x-auto p-4 pb-8">
                                     <table class="w-full text-left">
-                                        <thead class="sticky top-0 z-10">
+                                        <thead class="sticky top-0 z-40">
                                             <tr>
                                                 <th>操作时间</th>
                                                 <th>关联班级</th>
@@ -781,9 +780,9 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="overflow-y-auto flex-1 p-4 relative">
+                            <div class="overflow-y-auto flex-1 p-4 pb-8 relative">
                                 <table class="w-full text-left">
-                                    <thead class="sticky top-0 z-10">
+                                    <thead class="sticky top-0 z-40">
                                         <tr>
                                             <th>学员档案</th>
                                             <th>所在班级</th>
@@ -869,9 +868,9 @@
                                     <input type="text" v-model="state.searchTerm" placeholder="搜索任何记录..." class="glass-input pl-11 w-full rounded-full" />
                                 </div>
                             </div>
-                            <div class="overflow-y-auto flex-1 p-4">
+                            <div class="overflow-y-auto flex-1 p-4 pb-8">
                                 <table class="w-full text-left">
-                                    <thead class="sticky top-0 z-10">
+                                    <thead class="sticky top-0 z-40">
                                         <tr>
                                             <th>时间</th>
                                             <th>关联学员</th>
