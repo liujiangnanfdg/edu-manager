@@ -144,6 +144,7 @@
         <div class="ambient-blob blob-3"></div>
     </div>
 
+    <!-- 🌟 核心修复：移除了导致 Vue 编译报错的 v-else-if，使用独立的 v-if 以完美兼容 Transition 动画组件 -->
     <div id="app" class="h-screen w-screen flex flex-col relative z-10" v-cloak>
 
         <!-- 全局加载遮罩 -->
@@ -214,7 +215,7 @@
         </transition>
 
         <!-- 主系统框架 -->
-        <template v-else-if="state.currentUser && !state.isLoading">
+        <template v-if="state.currentUser && !state.isLoading && !state.systemError">
             <div class="flex-1 flex overflow-hidden p-4 gap-4">
                 
                 <!-- 侧边栏 (玻璃浮岛) -->
@@ -913,6 +914,37 @@
                                 </div>
                             </form>
 
+                            <!-- 🌟 新增超管覆写弹窗 -->
+                            <form v-if="state.showModal === 'superEditStudent'" @submit.prevent="submitSuperEditStudent" class="space-y-6">
+                                <div class="bg-orange-50/50 p-5 rounded-2xl border border-orange-200">
+                                    <p class="text-orange-900 font-medium flex items-center"><i class="ph ph-shield-warning mr-2 text-xl"></i>底层数据强制覆写</p>
+                                    <p class="text-xs text-orange-700 mt-1 font-medium leading-relaxed">
+                                        极高危操作：您将直接篡改该学员的核心底层账单与课时数据，此操作绕过常规续费逻辑，请确保您清楚后果。
+                                    </p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-5 pt-2 border-t border-gray-100">
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-2">剩余可用课时 (节)</label>
+                                        <input type="number" required v-model.number="state.superEditForm.remainingHours" class="glass-input w-full font-bold text-lg text-orange-600" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-2">历史总课时 (节)</label>
+                                        <input type="number" required v-model.number="state.superEditForm.totalHours" class="glass-input w-full font-bold text-lg text-orange-600" />
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-sm font-bold text-gray-700 mb-2">历史总计核销金额 (元)</label>
+                                        <div class="relative">
+                                            <i class="ph ph-currency-cny absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                                            <input type="number" step="0.01" required v-model.number="state.superEditForm.paymentAmount" class="glass-input pl-10 w-full font-bold text-lg text-orange-600" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end pt-6">
+                                    <button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-2xl text-gray-500 font-bold hover:bg-gray-100 transition-colors">取消放弃</button>
+                                    <button type="submit" class="glass-button-primary bg-orange-600 hover:bg-orange-700 shadow-orange-500/20 border-orange-500/30 px-8">执行高危覆写</button>
+                                </div>
+                            </form>
+
                             <form v-if="state.showModal === 'changePassword'" @submit.prevent="submitChangePassword" class="space-y-6">
                                 <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
                                     <p class="text-blue-900 font-medium mb-1 flex items-center"><i class="ph ph-user-focus mr-2 text-xl"></i>目标账号：<strong class="text-xl ml-2 tracking-tight">{{ getTeacherName(state.passwordForm.targetId) }}</strong></p>
@@ -1053,6 +1085,14 @@
                                 </div>
                             </form>
 
+                            <form v-if="state.showModal === 'addTeacher'" @submit.prevent="submitTeacher" class="space-y-4">
+                                <div><label class="block text-sm font-bold mb-1">真实姓名</label><input type="text" required v-model="state.teacherForm.name" class="glass-input w-full" /></div>
+                                <div><label class="block text-sm font-bold mb-1">登录账号</label><input type="text" required v-model="state.teacherForm.username" class="glass-input w-full" /></div>
+                                <div><label class="block text-sm font-bold mb-1">初始密码 (默认123456)</label><input type="text" v-model="state.teacherForm.password" class="glass-input w-full" placeholder="123456"/></div>
+                                <div v-if="isSuperadmin"><label class="block text-sm font-bold mb-1">指派角色</label><select v-model="state.teacherForm.role" class="glass-input w-full bg-white/50"><option value="teacher">普通任课老师</option><option value="admin">分校校长 (业务管理)</option></select></div>
+                                <div class="flex justify-end pt-4 border-t border-gray-100"><button type="button" @click="closeModal" class="px-5 py-2 mr-3 rounded-xl hover:bg-gray-100">取消</button><button type="submit" class="glass-button-primary">确认添加</button></div>
+                            </form>
+
                             <form v-if="state.showModal === 'addStudent'" @submit.prevent="submitStudent" class="space-y-6">
                                 <div class="flex justify-center mb-6 bg-gray-100/80 p-1.5 rounded-full w-max mx-auto shadow-inner border border-gray-200/50 backdrop-blur-sm relative z-10">
                                     <button type="button" @click="state.addStudentMode='new'" :class="['px-8 py-2 rounded-full text-sm font-bold transition-all', state.addStudentMode==='new'?'bg-white shadow-md text-blue-600 scale-105':'text-gray-500 hover:text-gray-700']">全新录入建档</button>
@@ -1120,7 +1160,7 @@
                                 </transition>
 
                                 <div class="bg-gray-50/50 p-6 rounded-3xl border border-gray-200/50">
-                                    <h4 class="text-xs font-extrabold text-gray-600 mb-4 uppercase tracking-widest flex items-center"><i class="ph ph-chalkboard-teacher mr-2 text-lg"></i>{{ addStudentMode === 'new' ? '3. 指定去向班级' : '去向班级设定' }}</h4>
+                                    <h4 class="text-xs font-extrabold text-gray-600 mb-4 uppercase tracking-widest flex items-center"><i class="ph ph-chalkboard-teacher mr-2 text-lg"></i>{{ state.addStudentMode === 'new' ? '3. 指定去向班级' : '去向班级设定' }}</h4>
                                     <div v-if="state.studentForm.lockedClass" class="bg-white p-4 rounded-2xl border border-blue-100 shadow-sm flex items-center relative overflow-hidden">
                                         <div class="absolute left-0 top-0 bottom-0 w-2 bg-blue-500"></div>
                                         <i class="ph ph-check-circle text-blue-500 mr-3 text-3xl"></i>
@@ -1205,6 +1245,7 @@
                     isCameraOpen: false,
                     passwordForm: { targetId: null, currentPassword: '', newPassword: '', confirmPassword: '' },
                     editAvatarForm: { studentId: null, avatar: '' }, 
+                    superEditForm: { targetId: null, remainingHours: 0, totalHours: 0, paymentAmount: 0 },
 
                     loginForm: { username: '', password: '' },
                     settingsForm: { name: '', logo: '' },
@@ -1435,11 +1476,11 @@
                 });
 
                 const modalTitle = computed(() => {
-                    const t = { addTeacher: '创建系统账号', addClass: '开设新班级排期', editClass: '编辑班级信息', addStudent: '学员建档及分配', renewStudent: '为学员全局续费', attendance: '上课/请假登记', systemSettings: '全局品牌与界面设置', changePassword: '安全修改登录密码', editAvatar: '更新学员头像资料' };
+                    const t = { addTeacher: '创建系统账号', addClass: '开设新班级排期', editClass: '编辑班级信息', addStudent: '学员建档及分配', renewStudent: '为学员全局续费', attendance: '上课/请假登记', systemSettings: '全局品牌与界面设置', changePassword: '安全修改登录密码', editAvatar: '更新学员头像资料', superEditStudent: '高级系统覆写' };
                     return t[state.showModal] || '';
                 });
                 const modalIconClass = computed(() => {
-                    const i = { addTeacher: 'ph-user-plus', addClass: 'ph-chalkboard-teacher', editClass: 'ph-pencil-simple', addStudent: 'ph-student', renewStudent: 'ph-coins', attendance: 'ph-calendar-check', systemSettings: 'ph-gear', changePassword: 'ph-key', editAvatar: 'ph-camera' };
+                    const i = { addTeacher: 'ph-user-plus', addClass: 'ph-chalkboard-teacher', editClass: 'ph-pencil-simple', addStudent: 'ph-student', renewStudent: 'ph-coins', attendance: 'ph-calendar-check', systemSettings: 'ph-gear', changePassword: 'ph-key', editAvatar: 'ph-camera', superEditStudent: 'ph-wrench' };
                     return i[state.showModal] || 'ph-app-window';
                 });
 
@@ -1477,6 +1518,33 @@
                 };
                 const handleLogout = () => { state.currentUser = null; switchTab('dashboard'); };
                 const executeConfirm = () => { if(state.confirmDialog?.onConfirm) state.confirmDialog.onConfirm(); state.confirmDialog = null; };
+
+                // 强制覆写逻辑
+                const openSuperEditModal = (student) => {
+                    state.superEditForm = {
+                        targetId: student.id,
+                        remainingHours: student.remainingHours,
+                        totalHours: student.totalHours,
+                        paymentAmount: student.totalPayment || student.paymentAmount || 0
+                    };
+                    state.showModal = 'superEditStudent';
+                };
+
+                const submitSuperEditStudent = () => {
+                    withLoading('正在执行底层强行覆写...', async () => {
+                        const s = state.students.find(x => x.id === state.superEditForm.targetId);
+                        const newS = { 
+                            ...s, 
+                            remainingHours: state.superEditForm.remainingHours,
+                            totalHours: state.superEditForm.totalHours,
+                            totalPayment: state.superEditForm.paymentAmount
+                        };
+                        await saveToDb('students', s.id, newS);
+                        await addRecord(s.id, s.name, null, null, '底层强行篡改', `剩余变更为${newS.remainingHours}节，总课时变更为${newS.totalHours}节`);
+                        closeModal();
+                        showToast('底层数据覆写完成', 'success');
+                    });
+                };
 
                 const openChangePasswordModal = (user) => {
                     state.passwordForm = { targetId: user.id, currentPassword: '', newPassword: '', confirmPassword: '' };
@@ -1806,9 +1874,9 @@
                     openAttendanceModal, submitAttendance,
                     handleExportData, triggerImportData, handleImageUpload,
                     startCamera, takePhoto, stopCamera, 
-                    openChangePasswordModal, submitChangePassword, openEditAvatarModal, submitEditAvatar,
+                    openChangePasswordModal, submitChangePassword, openEditAvatarModal, submitEditAvatar, openSuperEditModal, submitSuperEditStudent,
                     getTeacherName, getClassName, getClassCourse, getStudentTeacherId, getTeacherClassCount, getClassStudentCount, getClassObj,
-                    hasAttendedToday, openSuperEditModal: (s) => {}
+                    hasAttendedToday 
                 };
             }
         }).mount('#app');
