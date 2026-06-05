@@ -138,18 +138,18 @@
     </style>
 </head>
 <body class="text-gray-800 overflow-hidden selection:bg-blue-200 selection:text-blue-900">
-    <!-- 动态背景/自定义背景图片渲染层 -->
-    <div class="ambient-bg" :style="state.systemBgImage ? { backgroundImage: 'url(' + state.systemBgImage + ')', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {}">
-        <template v-if="!state.systemBgImage">
-            <div class="ambient-blob blob-1"></div>
-            <div class="ambient-blob blob-2"></div>
-            <div class="ambient-blob blob-3"></div>
-        </template>
-        <!-- 添加一个极其轻微的全局遮罩，保证自定义图片下字体依然可见 -->
-        <div v-if="state.systemBgImage" class="absolute inset-0 bg-white/20 backdrop-blur-[2px]"></div>
-    </div>
-
     <div id="app" class="h-screen w-screen flex flex-col relative z-10" v-cloak>
+        
+        <!-- 🌟 核心修复：将背景层包裹进 #app 内部，以便 Vue 能够解析并应用图片链接 -->
+        <div class="ambient-bg" :style="state.systemBgImage ? { backgroundImage: 'url(' + state.systemBgImage + ')', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {}">
+            <template v-if="!state.systemBgImage">
+                <div class="ambient-blob blob-1"></div>
+                <div class="ambient-blob blob-2"></div>
+                <div class="ambient-blob blob-3"></div>
+            </template>
+            <!-- 遮罩确保文字清晰可见 -->
+            <div v-if="state.systemBgImage" class="absolute inset-0 bg-white/20 backdrop-blur-[2px]"></div>
+        </div>
 
         <!-- 全局加载遮罩 -->
         <transition name="fade">
