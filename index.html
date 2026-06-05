@@ -52,7 +52,7 @@
             }
         }
     </script>
-
+    
     <script>
         // ==========================================
         // 🚀 腾讯云开发 (TCB) 配置区
@@ -61,7 +61,8 @@
         // ==========================================
     </script>
     
-    <style>
+    <!-- 🌟 核心修复：必须指定 type="text/tailwindcss" 才能让引擎正确解析 @apply 语法，否则会导致全站排版崩溃！ -->
+    <style type="text/tailwindcss">
         /* iOS26 风格系统基础设定 */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -144,8 +145,8 @@
         <div class="ambient-blob blob-3"></div>
     </div>
 
-    <!-- 🌟 核心修复：移除了导致 Vue 编译报错的 v-else-if，使用独立的 v-if 以完美兼容 Transition 动画组件 -->
-    <div id="app" class="h-screen w-screen flex flex-col relative z-10" v-cloak>
+    <!-- 顶级应用容器，锁定全屏 -->
+    <div id="app" class="h-screen w-screen flex flex-col relative z-10 overflow-hidden" v-cloak>
 
         <!-- 全局加载遮罩 -->
         <transition name="fade">
@@ -179,7 +180,7 @@
 
         <!-- 登录界面 -->
         <transition name="fade">
-            <div v-if="!state.currentUser && !state.isLoading && !state.systemError" class="flex-1 w-full flex items-center justify-center p-4 relative">
+            <div v-if="!state.currentUser && !state.isLoading && !state.systemError" class="flex-1 w-full h-full flex items-center justify-center p-4 relative">
                 <!-- 状态胶囊 -->
                 <div class="absolute top-6 right-6 bg-glass-600 backdrop-blur-md px-4 py-2 rounded-full shadow-liquid border border-white/30 text-xs font-bold flex items-center text-gray-700">
                     <div class="w-2.5 h-2.5 rounded-full mr-2 animate-pulse bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
@@ -214,13 +215,13 @@
             </div>
         </transition>
 
-        <!-- 主系统框架 -->
+        <!-- 🌟 主系统框架：严格锁定为 flex-row 左右布局 -->
         <template v-if="state.currentUser && !state.isLoading && !state.systemError">
-            <!-- 🌟 核心修复：这里之前漏了 flex-row 导致上下堆叠，现在恢复左右布局 -->
-            <div class="flex-1 flex flex-row overflow-hidden p-4 gap-4">
+            <!-- 这个容器保证左边是侧边栏，右边是主内容区 -->
+            <div class="flex-1 flex flex-row overflow-hidden p-4 gap-4 w-full h-full min-h-0">
                 
                 <!-- 侧边栏 (玻璃浮岛) -->
-                <aside class="w-72 glass-panel flex flex-col z-20 flex-shrink-0">
+                <aside class="w-72 glass-panel flex flex-col z-20 flex-shrink-0 h-full">
                     <div class="p-6 flex items-center space-x-4 border-b border-white/20">
                         <div class="w-12 h-12 bg-white/50 rounded-[18px] flex items-center justify-center shadow-sm overflow-hidden border border-white/60">
                             <img v-if="state.systemLogo" :src="state.systemLogo" class="w-full h-full object-cover" />
@@ -262,19 +263,18 @@
                                 <i class="ph ph-faders text-2xl"></i><span>偏好设置</span>
                             </button>
                         </div>
-                    </div>
+                    </nav>
 
-                    <div class="p-5 border-t border-white/20 bg-white/10">
+                    <div class="p-5 border-t border-white/20 bg-white/10 mt-auto flex-shrink-0">
                         <div class="flex items-center space-x-3 mb-5">
-                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-md border-2 border-white/50">
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-md border-2 border-white/50 flex-shrink-0">
                                 {{ state.currentUser.name.charAt(0) }}
                             </div>
                             <div class="flex-1 overflow-hidden">
                                 <p class="text-gray-800 font-bold truncate">{{ state.currentUser.name }}</p>
-                                <p class="text-xs text-blue-600 font-semibold">{{ isSuperadmin ? 'System Root' : isAdmin ? 'Administrator' : 'Instructor' }}</p>
+                                <p class="text-xs text-blue-600 font-semibold truncate">{{ isSuperadmin ? 'System Root' : isAdmin ? 'Administrator' : 'Instructor' }}</p>
                             </div>
-                            <!-- 修复了侧边栏修改密码按钮丢失的问题 -->
-                            <button @click="openChangePasswordModal(state.currentUser)" class="w-8 h-8 rounded-full bg-white/50 hover:bg-white flex items-center justify-center text-gray-500 hover:text-blue-600 transition-colors shadow-sm" title="修改密码">
+                            <button @click="openChangePasswordModal(state.currentUser)" class="w-8 h-8 rounded-full bg-white/50 hover:bg-white flex items-center justify-center text-gray-500 hover:text-blue-600 transition-colors shadow-sm flex-shrink-0" title="修改密码">
                                 <i class="ph ph-key text-lg"></i>
                             </button>
                         </div>
@@ -284,23 +284,24 @@
                     </div>
                 </aside>
 
-                <!-- 主视图区 -->
-                <main class="flex-1 flex flex-col overflow-hidden relative">
+                <!-- 右侧视图区 -->
+                <main class="flex-1 flex flex-col overflow-hidden relative h-full">
                     
                     <!-- 顶部超管横幅 -->
                     <transition name="fade">
-                        <div v-if="isSuperadmin" class="mx-6 mt-2 mb-4 bg-orange-500/20 backdrop-blur-md border border-orange-500/30 px-6 py-3 rounded-[20px] flex items-center text-orange-800 text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
+                        <div v-if="isSuperadmin" class="mx-4 md:mx-6 mt-2 mb-4 bg-orange-500/20 backdrop-blur-md border border-orange-500/30 px-6 py-3 rounded-[20px] flex items-center text-orange-800 text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
                             <div class="absolute inset-0 bg-gradient-to-r from-orange-400/10 to-transparent"></div>
-                            <i class="ph ph-shield-warning text-xl mr-3 relative z-10"></i>
-                            <span class="relative z-10 font-medium">Root Access Granted. 您拥有底层最高权限，可执行高危覆写操作，请谨慎处理数据。</span>
+                            <i class="ph ph-shield-warning text-xl mr-3 relative z-10 flex-shrink-0"></i>
+                            <span class="relative z-10 font-medium truncate">Root Access Granted. 您拥有底层最高权限，可执行高危覆写操作，请谨慎处理数据。</span>
                         </div>
                     </transition>
 
-                    <div class="flex-1 overflow-y-auto p-2 md:px-6 md:pb-6 no-scrollbar">
+                    <!-- 右侧滚动内容 -->
+                    <div class="flex-1 overflow-y-auto px-4 md:px-6 pb-6 no-scrollbar h-full w-full relative">
                         
                         <!-- Dashboard -->
                         <div v-if="state.activeTab === 'dashboard' && !state.viewingStudent && !state.viewingClass" class="space-y-8 animate-[springUp_0.6s_ease-out]">
-                            <div class="flex justify-between items-end px-2">
+                            <div class="flex justify-between items-end px-2 pt-2">
                                 <div>
                                     <p class="text-gray-500 font-medium mb-1">Overview</p>
                                     <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight">你好, {{ state.currentUser.name }}</h1>
