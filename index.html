@@ -125,41 +125,51 @@
         }
 
         /* 🌟 极致液态胶囊表格 */
-        table { border-collapse: separate !important; border-spacing: 0 10px !important; }
+        table { border-collapse: separate !important; border-spacing: 0 10px !important; width: 100%; }
         
+        /* 修复滚动模糊失效：必须给 thead 设定强固的 stacking context */
         thead {
             position: sticky;
             top: 0;
-            z-index: 30;
+            z-index: 40;
         }
 
-        /* 表头：纯净滤镜流！无底色，全靠极限模糊和色彩粉碎 */
+        /* 表头：回归真实的 iOS Material 物理质感，解决浏览器渲染崩溃 Bug */
         th { 
-            @apply text-xs font-bold text-gray-500 uppercase tracking-wider py-4 px-6 align-middle shadow-sm relative z-30; 
-            background: rgba(255, 255, 255, 0.02); /* 几乎完全透明 */
-            backdrop-filter: blur(80px) saturate(180%) brightness(1.15) contrast(0.7); /* 极限模糊 + 降低底层文字对比度 */
-            -webkit-backdrop-filter: blur(80px) saturate(180%) brightness(1.15) contrast(0.7);
-            border-top: 1px solid rgba(255, 255, 255, 0.4);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            transform: translateZ(0); 
+            @apply text-xs font-extrabold text-gray-600 uppercase tracking-wider py-4 px-6 align-middle shadow-sm relative; 
+            background: rgba(255, 255, 255, 0.6); /* 苹果原生系统的物理磨砂厚度 */
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border-top: 1px solid rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            background-clip: padding-box;
         }
         th:first-child { 
             @apply rounded-l-[24px]; 
-            border-left: 1px solid rgba(255, 255, 255, 0.4);
+            border-left: 1px solid rgba(255, 255, 255, 0.8);
         }
         th:last-child { 
             @apply rounded-r-[24px]; 
-            border-right: 1px solid rgba(255, 255, 255, 0.4);
+            border-right: 1px solid rgba(255, 255, 255, 0.8);
         }
 
-        /* 数据行：保持极度透明 */
-        td { @apply py-4 px-6 bg-white/20 backdrop-blur-[24px] border-y border-white/30 align-middle transition-colors duration-300; transform: translateZ(0); }
-        td:first-child { @apply border-l border-white/30 rounded-l-[24px]; }
-        td:last-child { @apply border-r border-white/30 rounded-r-[24px]; }
+        /* 数据行：高透玻璃态 */
+        td { 
+            @apply py-4 px-6 align-middle transition-colors duration-300; 
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px) saturate(120%);
+            -webkit-backdrop-filter: blur(20px) saturate(120%);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-clip: padding-box;
+        }
+        td:first-child { @apply border-l border-white/40 rounded-l-[24px]; }
+        td:last-child { @apply border-r border-white/40 rounded-r-[24px]; }
         
-        /* Hover 提亮发光效果 */
-        tbody tr { @apply shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-md hover:-translate-y-0.5; }
-        tbody tr:hover td { background: rgba(255, 255, 255, 0.35); }
+        /* Hover 提亮发光效果，提升层级防止被遮挡 */
+        tbody tr { @apply shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 relative z-10; }
+        tbody tr:hover { z-index: 20; }
+        tbody tr:hover td { background: rgba(255, 255, 255, 0.45); }
 
         /* 动画过渡 */
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
