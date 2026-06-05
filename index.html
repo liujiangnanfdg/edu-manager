@@ -237,7 +237,6 @@
                                             </td>
                                             <td class="p-4 text-slate-500">{{ getTeacherClassCount(user.id) }} 个班级</td>
                                             <td class="p-4 text-right space-x-2">
-                                                <!-- 重置他人密码入口 (受高权限保护) -->
                                                 <button @click="openChangePasswordModal(user)" class="text-blue-500 hover:text-blue-700 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors">
                                                     <i class="ph ph-key mr-1"></i>改密
                                                 </button>
@@ -383,7 +382,7 @@
                             </div>
                         </div>
 
-                        <!-- 学生个人主页 -->
+                        <!-- 🌟 学生个人主页 -->
                         <div v-if="state.viewingStudent" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                             <div class="flex items-center justify-between mb-8 border-b border-slate-100 pb-4">
                                 <button @click="state.viewingStudent = null; state.searchTerm = ''" class="text-slate-400 hover:text-blue-600 flex items-center transition-colors font-medium">
@@ -399,10 +398,18 @@
                             <div class="flex flex-col md:flex-row gap-8 mb-8">
                                 <div class="w-full md:w-72 flex-shrink-0 bg-slate-50 rounded-2xl p-6 border border-slate-100 flex flex-col items-center relative overflow-hidden">
                                     <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-blue-400 to-indigo-600"></div>
-                                    <div class="w-24 h-24 rounded-full border-4 border-white shadow-md relative z-10 bg-white flex items-center justify-center overflow-hidden mb-4 mt-8">
+                                    
+                                    <!-- 🌟 头像区域：添加修改触发点 -->
+                                    <div @click="openEditAvatarModal(viewingStudentData)" class="w-24 h-24 rounded-full border-4 border-white shadow-md relative z-10 bg-white flex items-center justify-center overflow-hidden mb-4 mt-8 cursor-pointer group">
                                         <img v-if="viewingStudentData.avatar" :src="viewingStudentData.avatar" class="w-full h-full object-cover" />
                                         <i v-else class="ph ph-user text-5xl text-slate-300"></i>
+                                        
+                                        <!-- 悬浮遮罩提示 -->
+                                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <i class="ph ph-camera text-white text-2xl"></i>
+                                        </div>
                                     </div>
+
                                     <h3 class="text-2xl font-bold text-slate-800">{{ viewingStudentData.name }}</h3>
                                     <div class="w-full mt-6 space-y-3 text-sm">
                                         <div class="flex justify-between items-center py-2 border-b border-slate-200/60"><span class="text-slate-500"><i class="ph ph-buildings mr-1.5"></i>学校</span><span class="font-medium text-slate-800">{{ viewingStudentData.school || '-' }}</span></div>
@@ -678,7 +685,36 @@
 
                         <div class="p-6 overflow-y-auto flex-1 no-scrollbar bg-white relative">
                             
-                            <!-- 🌟 新增：密码修改表单 -->
+                            <!-- 🌟 新增：独立修改学员头像表单 -->
+                            <form v-if="state.showModal === 'editAvatar'" @submit.prevent="submitEditAvatar" class="space-y-6">
+                                <div class="flex flex-col items-center justify-center space-y-4 py-4">
+                                    <div class="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-slate-200 shadow-inner relative bg-black">
+                                        <video v-show="state.isCameraOpen" id="avatarVideo" autoplay playsinline class="w-full h-full object-cover transform -scale-x-100"></video>
+                                        <img v-show="!state.isCameraOpen && state.editAvatarForm.avatar" :src="state.editAvatarForm.avatar" class="w-full h-full object-cover bg-white" />
+                                        <i v-show="!state.isCameraOpen && !state.editAvatarForm.avatar" class="ph ph-user text-5xl text-slate-400"></i>
+                                    </div>
+                                    <div class="flex flex-col space-y-3 items-center w-full">
+                                        <div v-if="state.isCameraOpen" class="flex space-x-3 w-full justify-center">
+                                            <button type="button" @click="takePhoto" class="px-4 py-2 bg-green-500 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-green-600"><i class="ph ph-aperture mr-1"></i> 立即拍摄</button>
+                                            <button type="button" @click="stopCamera" class="px-4 py-2 bg-slate-200 text-slate-700 text-sm font-bold rounded-lg hover:bg-slate-300">取消拍摄</button>
+                                        </div>
+                                        <div v-else class="flex space-x-3 w-full justify-center">
+                                            <button type="button" @click="startCamera" class="px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 text-sm font-bold rounded-lg hover:bg-blue-100 transition-colors"><i class="ph ph-camera mr-1"></i> 启用摄像头</button>
+                                            <label class="px-4 py-2 bg-slate-50 text-slate-600 border border-slate-200 text-sm font-bold rounded-lg hover:bg-slate-100 cursor-pointer transition-colors">
+                                                <i class="ph ph-upload-simple mr-1"></i> 上传相册图片
+                                                <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'editStudentAvatar')" class="hidden" />
+                                            </label>
+                                        </div>
+                                        <p class="text-xs text-slate-400">为了节省空间，上传或拍摄后系统将自动进行压缩裁剪</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end pt-4 border-t border-slate-100">
+                                    <button type="button" @click="closeModal" class="px-5 py-2 mr-3 rounded-lg text-slate-600 hover:bg-slate-100 font-medium">取消</button>
+                                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors">保存新头像至云端</button>
+                                </div>
+                            </form>
+
+                            <!-- 密码修改表单 -->
                             <form v-if="state.showModal === 'changePassword'" @submit.prevent="submitChangePassword" class="space-y-5">
                                 <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                                     <p class="text-blue-900 font-medium mb-1">正在修改账号：<strong class="text-lg">{{ getTeacherName(state.passwordForm.targetId) }}</strong></p>
@@ -824,7 +860,7 @@
                                 <div class="flex justify-end pt-4 border-t border-slate-100"><button type="button" @click="closeModal" class="px-5 py-2 mr-3 rounded-lg">取消</button><button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md">确认添加至云端</button></div>
                             </form>
 
-                            <!-- 🌟 添加学生 (带摄像头拍照与本地上传) -->
+                            <!-- 新建档/报名表单 (带摄像头) -->
                             <form v-if="state.showModal === 'addStudent'" @submit.prevent="submitStudent" class="space-y-6">
                                 <div class="flex justify-center mb-4 space-x-2 bg-slate-100 p-1 rounded-xl w-max mx-auto">
                                     <button type="button" @click="state.addStudentMode='new'" :class="['px-6 py-1.5 rounded-lg text-sm font-bold transition-all', state.addStudentMode==='new'?'bg-white shadow text-blue-600':'text-slate-500']">全新录入建档</button>
@@ -950,9 +986,10 @@
                     toast: { show: false, message: '', type: 'success' },
                     confirmDialog: null,
                     
-                    // 🌟 摄像头与修改密码状态
+                    // 🌟 摄像头与修改状态
                     isCameraOpen: false,
                     passwordForm: { targetId: null, currentPassword: '', newPassword: '', confirmPassword: '' },
+                    editAvatarForm: { studentId: null, avatar: '' }, // 新增：修改头像专属表单
 
                     loginForm: { username: '', password: '' },
                     settingsForm: { name: '', logo: '' },
@@ -1125,7 +1162,7 @@
                 const isAdminOrSuper = computed(() => isSuperadmin.value || isAdmin.value);
 
                 const teachersOnly = computed(() => state.users.filter(u => u.role === 'teacher'));
-                // 🌟 修改：可见老师列表 - 超管能看所有人除了自己(或者自己也可以看，这里过滤掉superadmin只让看下级，若要重置密码由顶部按钮完成)，校长只能看老师。
+                // 可见老师列表
                 const visibleTeachers = computed(() => isSuperadmin.value ? state.users.filter(u => u.role !== 'superadmin') : teachersOnly.value);
                 const visibleClasses = computed(() => isTeacher.value ? state.classes.filter(c => c.teacherId === state.currentUser.id) : state.classes);
                 
@@ -1184,15 +1221,15 @@
                 });
 
                 const modalTitle = computed(() => {
-                    const t = { addTeacher: '创建系统账号', addClass: '开设新班级排期', editClass: '编辑班级信息', addStudent: '学员建档及分配', renewStudent: '为学员全局续费', attendance: '上课/请假登记', systemSettings: '全局品牌与界面设置', changePassword: '安全修改登录密码' };
+                    const t = { addTeacher: '创建系统账号', addClass: '开设新班级排期', editClass: '编辑班级信息', addStudent: '学员建档及分配', renewStudent: '为学员全局续费', attendance: '上课/请假登记', systemSettings: '全局品牌与界面设置', changePassword: '安全修改登录密码', editAvatar: '更新学员头像资料' };
                     return t[state.showModal] || '';
                 });
                 const modalIconClass = computed(() => {
-                    const i = { addTeacher: 'ph-user-plus', addClass: 'ph-chalkboard-teacher', editClass: 'ph-pencil-simple', addStudent: 'ph-student', renewStudent: 'ph-coins', attendance: 'ph-calendar-check', systemSettings: 'ph-gear', changePassword: 'ph-key' };
+                    const i = { addTeacher: 'ph-user-plus', addClass: 'ph-chalkboard-teacher', editClass: 'ph-pencil-simple', addStudent: 'ph-student', renewStudent: 'ph-coins', attendance: 'ph-calendar-check', systemSettings: 'ph-gear', changePassword: 'ph-key', editAvatar: 'ph-camera' };
                     return i[state.showModal] || 'ph-app-window';
                 });
 
-                // 🌟 新增：关闭 Modal 时自动停止摄像头
+                // 🌟 关闭 Modal 时自动停止摄像头
                 const closeModal = () => { 
                     state.showModal = null; 
                     stopCamera(); // 确保安全关闭硬件调用
@@ -1228,21 +1265,19 @@
                 const handleLogout = () => { state.currentUser = null; switchTab('dashboard'); };
                 const executeConfirm = () => { if(state.confirmDialog?.onConfirm) state.confirmDialog.onConfirm(); state.confirmDialog = null; };
 
-                // 🌟 新增：更改密码权限校验逻辑
+                // 更改密码权限校验逻辑
                 const openChangePasswordModal = (user) => {
                     state.passwordForm = { targetId: user.id, currentPassword: '', newPassword: '', confirmPassword: '' };
                     state.showModal = 'changePassword';
                 };
                 
                 const submitChangePassword = async () => {
-                    // 1. 验证密码二次确认
                     if (state.passwordForm.newPassword !== state.passwordForm.confirmPassword) {
                         return showToast('两次输入的新密码不一致！', 'error');
                     }
                     if (state.passwordForm.newPassword.length < 6) {
                         return showToast('为了账号安全，新密码至少需要 6 位', 'error');
                     }
-                    // 2. 越权/本人修改的严密验证：必须提供操作者(currentUser)的正确密码
                     if (state.passwordForm.currentPassword !== state.currentUser.password) {
                         return showToast('验证失败！您输入的当前密码不正确，无法授权本次修改。', 'error');
                     }
@@ -1252,7 +1287,6 @@
                         const updatedUser = { ...targetUser, password: state.passwordForm.newPassword };
                         await saveToDb('users', updatedUser.id, updatedUser);
                         
-                        // 如果改的是自己的密码，同步更新当前登录态缓存
                         if (targetUser.id === state.currentUser.id) {
                             state.currentUser.password = state.passwordForm.newPassword;
                         }
@@ -1345,6 +1379,23 @@
                     });
                 };
 
+                // 🌟 新增：独立修改学生头像机制
+                const openEditAvatarModal = (student) => {
+                    state.editAvatarForm = { studentId: student.id, avatar: student.avatar || '' };
+                    state.showModal = 'editAvatar';
+                };
+                
+                const submitEditAvatar = async () => {
+                    withLoading('正在同步最新头像至云端...', async () => {
+                        const s = state.students.find(x => x.id === state.editAvatarForm.studentId);
+                        const newS = { ...s, avatar: state.editAvatarForm.avatar };
+                        await saveToDb('students', s.id, newS);
+                        await addRecord(s.id, s.name, null, null, '系统操作记录', '通过个人主页重新拍摄/上传了头像');
+                        closeModal();
+                        showToast('头像已完美更新同步！');
+                    });
+                };
+
                 const openAddStudentModal = (lockedClassObj=null, mode='new') => {
                     state.addStudentMode = mode;
                     state.studentForm = { existingId: '', name: '', contact: '', payment: 0, hours: '', bonus: 0, teacherId: lockedClassObj?.teacherId||'', classId: lockedClassObj?.id||'', remark: '', lockedClass: lockedClassObj, avatar: '' };
@@ -1368,7 +1419,7 @@
                             const newS = { 
                                 id: sid, name: sf.name, contact: sf.contact, 
                                 remainingHours: total, totalHours: total, paymentAmount: sf.payment, totalPayment: sf.payment, bonusHours: sf.bonus||0, classIds: [cid], 
-                                avatar: sf.avatar || '', // 附带处理好的压缩头像
+                                avatar: sf.avatar || '',
                                 school: '', grade: '', parentName: '', parentRole: '' 
                             };
                             await saveToDb('students', sid, newS);
@@ -1463,38 +1514,36 @@
                     e.target.value = null; 
                 };
 
-                // 🌟 新增：图片智能压缩引擎，解决云端塞爆问题
+                // 图片智能压缩引擎
                 const compressImage = (dataUrl, maxWidth, callback) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        // 计算按比例缩放后的宽高
                         const ratio = img.height / img.width;
                         canvas.width = maxWidth;
                         canvas.height = maxWidth * ratio;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        // 输出高压缩比的 jpeg，控制体积在几十KB左右
                         callback(canvas.toDataURL('image/jpeg', 0.7));
                     };
                     img.src = dataUrl;
                 };
 
-                // 🌟 新增：本地上传含自动压缩
+                // 本地上传含自动压缩
                 const handleImageUpload = (e, field) => {
                     const file = e.target.files[0]; if(!file) return;
                     const reader = new FileReader();
                     reader.onload = (evt) => { 
-                        // 将任何上传图片强制压缩到最宽 400px 以节省云数据库昂贵空间
                         compressImage(evt.target.result, 400, (compressedBase64) => {
                             if(field === 'logo') state.settingsForm.logo = compressedBase64;
                             if(field === 'studentAvatar') state.studentForm.avatar = compressedBase64;
+                            if(field === 'editStudentAvatar') state.editAvatarForm.avatar = compressedBase64;
                         });
                     };
                     reader.readAsDataURL(file);
                 };
 
-                // 🌟 新增：硬件摄像头调用模块
+                // 硬件摄像头调用模块
                 let localStream = null;
                 const startCamera = async () => {
                     try {
@@ -1506,7 +1555,7 @@
                             if (video) video.srcObject = localStream;
                         }, 200);
                     } catch (err) {
-                        showToast('无法访问摄像头，请检查浏览器权限设置！', 'error');
+                        showToast('无法访问摄像头，请检查设备或浏览器权限设置！', 'error');
                     }
                 };
 
@@ -1514,12 +1563,15 @@
                     const video = document.getElementById('avatarVideo');
                     if (!video) return;
                     const canvas = document.createElement('canvas');
-                    // 同样使用压缩比例 400px，防止拍照质量过高卡死服务器
                     canvas.width = 400;
                     canvas.height = Math.floor(400 * video.videoHeight / video.videoWidth);
                     canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
                     
-                    state.studentForm.avatar = canvas.toDataURL('image/jpeg', 0.8);
+                    const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                    // 智能分配到对应的表单中
+                    if (state.showModal === 'addStudent') state.studentForm.avatar = base64;
+                    else if (state.showModal === 'editAvatar') state.editAvatarForm.avatar = base64;
+                    
                     stopCamera(); // 拍完立刻停止，防隐私泄露
                 };
 
@@ -1545,8 +1597,8 @@
                     openRenewModal, submitRenew,
                     openAttendanceModal, submitAttendance,
                     handleExportData, triggerImportData, handleImageUpload,
-                    startCamera, takePhoto, stopCamera, // 导出摄像头方法
-                    openChangePasswordModal, submitChangePassword, // 导出密码方法
+                    startCamera, takePhoto, stopCamera, 
+                    openChangePasswordModal, submitChangePassword, openEditAvatarModal, submitEditAvatar,
                     getTeacherName, getClassName, getClassCourse, getStudentTeacherId, getTeacherClassCount, getClassStudentCount, getClassObj,
                     hasAttendedToday 
                 };
