@@ -17,8 +17,8 @@
         }
     </script>
     
+    <!-- 引入 Tailwind 自定义配置以支持毛玻璃特效 -->
     <script>
-        // 配置 Tailwind 扩展以支持更丰富的毛玻璃和动画
         tailwind.config = {
             theme: {
                 extend: {
@@ -43,7 +43,6 @@
                     boxShadow: {
                         'liquid': '0 8px 32px 0 rgba(31, 38, 135, 0.07), inset 0 0 0 1px rgba(255, 255, 255, 0.2)',
                         'liquid-hover': '0 12px 40px 0 rgba(31, 38, 135, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.3)',
-                        'liquid-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
                     },
                     backdropBlur: {
                         'liquid': '20px',
@@ -64,9 +63,6 @@
     
     <style>
         /* iOS26 风格系统基础设定 */
-        @supports (font: -apple-system-body) and (-webkit-appearance: none) {
-            body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-        }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: #f2f2f7;
@@ -123,7 +119,6 @@
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
         
-        /* 弹簧动画模拟 */
         .spring-up-enter-active { transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .spring-up-leave-active { transition: all 0.3s ease-in; }
         .spring-up-enter-from { opacity: 0; transform: translateY(40px) scale(0.95); }
@@ -133,7 +128,7 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         [v-cloak] { display: none; }
 
-        /* 表格样式重写 */
+        /* 表格样式优化 */
         table { border-collapse: separate; border-spacing: 0; }
         th { @apply text-xs font-semibold text-gray-500 uppercase tracking-wider py-4 px-6 border-b border-gray-200/50 bg-glass-300 backdrop-blur-sm sticky top-0; }
         td { @apply py-4 px-6 border-b border-gray-100/50 align-middle; }
@@ -151,7 +146,7 @@
 
     <div id="app" class="h-screen w-screen flex flex-col relative z-10" v-cloak>
 
-        <!-- 全局加载遮罩 (液态) -->
+        <!-- 全局加载遮罩 -->
         <transition name="fade">
             <div v-if="state.isLoading" class="fixed inset-0 z-[999] bg-glass-700 backdrop-blur-liquid-heavy flex flex-col items-center justify-center">
                 <div class="p-8 rounded-[32px] bg-white/40 shadow-liquid border border-white/50 flex flex-col items-center animate-pulse">
@@ -181,7 +176,7 @@
             </div>
         </transition>
 
-        <!-- 登录界面 (液态卡片) -->
+        <!-- 登录界面 -->
         <transition name="fade">
             <div v-if="!state.currentUser && !state.isLoading && !state.systemError" class="flex-1 w-full flex items-center justify-center p-4 relative">
                 <!-- 状态胶囊 -->
@@ -289,7 +284,7 @@
                 <!-- 主视图区 -->
                 <main class="flex-1 flex flex-col overflow-hidden relative">
                     
-                    <!-- 顶部超管横幅 (液态融合) -->
+                    <!-- 顶部超管横幅 -->
                     <transition name="fade">
                         <div v-if="isSuperadmin" class="mx-6 mt-2 mb-4 bg-orange-500/20 backdrop-blur-md border border-orange-500/30 px-6 py-3 rounded-[20px] flex items-center text-orange-800 text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
                             <div class="absolute inset-0 bg-gradient-to-r from-orange-400/10 to-transparent"></div>
@@ -564,9 +559,8 @@
                             </div>
                         </div>
 
-                        <!-- 🌟 学生个人主页 (液态强化版) -->
+                        <!-- 🌟 学生个人主页 -->
                         <div v-if="state.viewingStudent" class="animate-[springUp_0.6s_ease-out]">
-                            <!-- 顶部导航栏 -->
                             <div class="flex items-center justify-between mb-6">
                                 <button @click="state.viewingStudent = null; state.searchTerm = ''" class="flex items-center px-4 py-2 bg-glass-500 backdrop-blur-md rounded-full shadow-sm text-gray-600 font-bold hover:bg-white/60 transition-all border border-white/30">
                                     <i class="ph ph-arrow-left mr-2 text-lg"></i> 返回
@@ -582,12 +576,9 @@
                             </div>
 
                             <div class="flex flex-col lg:flex-row gap-6 mb-6">
-                                <!-- 个人名片 -->
                                 <div class="w-full lg:w-80 flex-shrink-0 glass-panel p-8 flex flex-col items-center relative">
-                                    <!-- 动态环境光晕 -->
                                     <div class="absolute top-0 w-full h-32 bg-gradient-to-b from-blue-400/20 to-transparent"></div>
                                     
-                                    <!-- 头像编辑区 -->
                                     <div @click="openEditAvatarModal(viewingStudentData)" class="w-28 h-28 rounded-[28px] border-4 border-white/80 shadow-liquid relative z-10 bg-glass-300 flex items-center justify-center overflow-hidden mb-5 cursor-pointer group backdrop-blur-md transition-transform hover:scale-105">
                                         <img v-if="viewingStudentData.avatar" :src="viewingStudentData.avatar" class="w-full h-full object-cover" />
                                         <i v-else class="ph ph-user text-6xl text-gray-400/50"></i>
@@ -611,7 +602,6 @@
                                 </div>
 
                                 <div class="flex-1 flex flex-col gap-6">
-                                    <!-- 资产核心看板 -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div class="glass-card p-6 relative overflow-hidden bg-gradient-to-br from-green-50/50 to-emerald-100/50 border-green-200/50">
                                             <i class="ph ph-leaf absolute -right-6 -bottom-6 text-8xl text-green-500/10 transform -rotate-12"></i>
@@ -633,7 +623,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- 就读班级矩阵 -->
                                     <div class="glass-panel p-6 flex-1 bg-white/40">
                                         <h4 class="text-sm font-bold text-gray-800 mb-4 flex items-center uppercase tracking-widest"><i class="ph ph-stack mr-2 text-indigo-500 text-xl"></i>Active Classes</h4>
                                         <div class="flex flex-wrap gap-4">
@@ -651,7 +640,6 @@
                                 </div>
                             </div>
 
-                            <!-- 个人流水表 -->
                             <div class="glass-panel overflow-hidden">
                                 <div class="flex justify-between items-center p-5 bg-white/30 border-b border-white/30">
                                     <h3 class="text-lg font-bold text-gray-800 flex items-center"><i class="ph ph-list-dashes mr-2 text-blue-500"></i>个人活动日志</h3>
@@ -876,14 +864,13 @@
             </div>
         </template>
 
-        <!-- 全局弹窗模态框 (毛玻璃深色背景) -->
+        <!-- 全局弹窗模态框 -->
         <transition name="fade">
             <div v-if="state.showModal" class="fixed inset-0 z-[150] flex items-center justify-center bg-darkglass-800 backdrop-blur-md p-4">
                 
                 <transition name="spring-up" appear>
                     <div class="glass-panel w-full max-w-2xl max-h-[90vh] flex flex-col relative bg-white/80" @click.stop>
                         
-                        <!-- 弹窗头部 -->
                         <div class="px-8 py-5 border-b border-gray-200/50 flex justify-between items-center bg-white/50 backdrop-blur-md z-10">
                             <h3 class="text-xl font-extrabold text-gray-800 flex items-center tracking-tight">
                                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
@@ -896,10 +883,8 @@
                             </button>
                         </div>
 
-                        <!-- 弹窗滚动区 -->
                         <div class="p-8 overflow-y-auto flex-1 no-scrollbar relative z-0">
                             
-                            <!-- 独立修改头像 -->
                             <form v-if="state.showModal === 'editAvatar'" @submit.prevent="submitEditAvatar" class="space-y-6">
                                 <div class="flex flex-col items-center justify-center space-y-6 py-4">
                                     <div class="w-40 h-40 bg-gray-100 rounded-[40px] flex items-center justify-center overflow-hidden border-4 border-white shadow-liquid relative">
@@ -928,7 +913,6 @@
                                 </div>
                             </form>
 
-                            <!-- 修改密码 -->
                             <form v-if="state.showModal === 'changePassword'" @submit.prevent="submitChangePassword" class="space-y-6">
                                 <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
                                     <p class="text-blue-900 font-medium mb-1 flex items-center"><i class="ph ph-user-focus mr-2 text-xl"></i>目标账号：<strong class="text-xl ml-2 tracking-tight">{{ getTeacherName(state.passwordForm.targetId) }}</strong></p>
@@ -959,7 +943,6 @@
                                 </div>
                             </form>
 
-                            <!-- 签到/请假 -->
                             <form v-if="state.showModal === 'attendance'" @submit.prevent="submitAttendance" class="space-y-8">
                                 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-5 rounded-2xl flex items-center space-x-5 shadow-sm">
                                     <div class="w-16 h-16 rounded-full overflow-hidden bg-white shadow-sm border-2 border-white flex items-center justify-center">
@@ -984,7 +967,7 @@
                                             <span class="font-extrabold text-green-900 text-lg">正常出勤上课</span>
                                             <span class="text-xs font-medium text-green-600/80 mt-1.5">系统将自动核销 1 节可用课时</span>
                                         </label>
-                                        <label :class="['border-2 rounded-2xl p-5 cursor-pointer transition-all flex flex-col items-center text-center shadow-sm', state.attendanceForm.type === 'leave' ? 'border-amber-500 bg-amber-50 shadow-amber-500/10 scale-[1.02]' : 'border-gray-200 hover:border-amber-300 hover:bg-gray-50']">
+                                        <label :class="['border-2 rounded-xl p-5 cursor-pointer transition-all flex flex-col items-center text-center shadow-sm', state.attendanceForm.type === 'leave' ? 'border-amber-500 bg-amber-50 shadow-amber-500/10 scale-[1.02]' : 'border-gray-200 hover:border-amber-300 hover:bg-gray-50']">
                                             <input type="radio" v-model="state.attendanceForm.type" value="leave" class="hidden" />
                                             <div :class="['w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-colors', state.attendanceForm.type === 'leave' ? 'bg-amber-500 text-white shadow-md' : 'bg-gray-100 text-amber-500']"><i class="ph ph-calendar-x text-2xl font-bold"></i></div>
                                             <span class="font-extrabold text-amber-900 text-lg">学员请假免扣</span>
@@ -1004,7 +987,6 @@
                                 </div>
                             </form>
 
-                            <!-- 续费 -->
                             <form v-if="state.showModal === 'renewStudent'" @submit.prevent="submitRenew" class="space-y-6">
                                 <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 flex items-center space-x-4">
                                     <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 border border-white shadow-sm"><i class="ph ph-wallet text-2xl"></i></div>
@@ -1028,14 +1010,13 @@
                                 </div>
                             </form>
 
-                            <!-- 班级表单 -->
                             <form v-if="state.showModal === 'addClass' || state.showModal === 'editClass'" @submit.prevent="submitClass" class="space-y-6">
                                 <div><label class="block text-sm font-bold text-gray-700 mb-2">班级全称 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.name" class="glass-input w-full font-bold text-lg" placeholder="例如：新概念英语秋季周末班" /></div>
                                 <div><label class="block text-sm font-bold text-gray-700 mb-2">课程科目 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.course" class="glass-input w-full" placeholder="例如：英语、少儿编程" /></div>
                                 <div><label class="block text-sm font-bold text-gray-700 mb-2">上课排期说明 <span class="text-gray-400 font-medium text-xs ml-2">(选填，用于UI展示)</span></label>
                                     <div class="relative"><i class="ph ph-clock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i><input type="text" v-model="state.classForm.schedule" class="glass-input pl-11 w-full" placeholder="例如：每周六 14:00 - 16:00" /></div>
                                 </div>
-                                <div v-if="state.showModal === 'addClass'"><label class="block text-sm font-bold text-gray-700 mb-2">指派主责任课老师 <span class="text-red-500">*</span></label>
+                                <div v-if="state.showModal === 'addClass'"><label class="block text-sm font-bold text-gray-700 mb-2">指派初始任课老师 <span class="text-red-500">*</span></label>
                                     <select required v-model.number="state.classForm.teacherId" class="glass-input w-full bg-white/50 appearance-none font-medium"><option value="" disabled>点击下拉选择...</option><option v-for="t in teachersOnly" :key="t.id" :value="t.id">{{t.name}}</option></select>
                                 </div>
                                 <div class="flex justify-end pt-4 border-t border-gray-100">
@@ -1044,7 +1025,6 @@
                                 </div>
                             </form>
 
-                            <!-- 全局设置 -->
                             <form v-if="state.showModal === 'systemSettings'" @submit.prevent="submitSystemSettings" class="space-y-8">
                                 <div>
                                     <label class="block text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">品牌 Logo 标识</label>
@@ -1073,7 +1053,6 @@
                                 </div>
                             </form>
 
-                            <!-- 添加学生 (多模态架构) -->
                             <form v-if="state.showModal === 'addStudent'" @submit.prevent="submitStudent" class="space-y-6">
                                 <div class="flex justify-center mb-6 bg-gray-100/80 p-1.5 rounded-full w-max mx-auto shadow-inner border border-gray-200/50 backdrop-blur-sm relative z-10">
                                     <button type="button" @click="state.addStudentMode='new'" :class="['px-8 py-2 rounded-full text-sm font-bold transition-all', state.addStudentMode==='new'?'bg-white shadow-md text-blue-600 scale-105':'text-gray-500 hover:text-gray-700']">全新录入建档</button>
@@ -1086,7 +1065,6 @@
                                     <div class="bg-blue-50/30 p-6 rounded-3xl border border-blue-100/50">
                                         <h4 class="text-xs font-extrabold text-blue-800 mb-4 uppercase tracking-widest flex items-center"><i class="ph ph-identification-card mr-2 text-lg"></i>1. 基础档案建立</h4>
                                         <div class="flex flex-col md:flex-row gap-8">
-                                            <!-- 头像组件 -->
                                             <div class="flex flex-col items-center space-y-4">
                                                 <div class="w-28 h-28 bg-white rounded-[28px] flex items-center justify-center overflow-hidden border-4 border-white shadow-liquid relative group transition-transform hover:scale-105">
                                                     <video v-show="state.isCameraOpen" id="avatarVideoForm" autoplay playsinline class="w-full h-full object-cover transform -scale-x-100 bg-black"></video>
@@ -1107,7 +1085,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <!-- 信息输入 -->
                                             <div class="flex-1 space-y-4">
                                                 <div class="grid grid-cols-2 gap-4">
                                                     <div><label class="block text-xs font-bold text-gray-600 mb-1.5">学员真实姓名 <span class="text-red-500">*</span></label><input type="text" required v-model="state.studentForm.name" class="glass-input w-full font-bold" /></div>
@@ -1171,7 +1148,6 @@
             </div>
         </transition>
 
-        <!-- 危险弹窗遮罩 -->
         <transition name="fade">
             <div v-if="state.confirmDialog" class="fixed inset-0 z-[200] flex items-center justify-center bg-darkglass-900 backdrop-blur-liquid-heavy p-4">
                 <div class="bg-white/90 backdrop-blur-md rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden animate-[springUp_0.4s_ease-out] border border-white/50">
@@ -1189,7 +1165,6 @@
             </div>
         </transition>
 
-        <!-- Toast 提示 -->
         <transition name="spring-up">
             <div v-if="state.toast.show" :class="['fixed top-8 right-8 p-4 rounded-2xl shadow-liquid border flex items-center space-x-3 z-[300] max-w-sm backdrop-blur-liquid', state.toast.type === 'error' ? 'bg-red-50/90 text-red-800 border-red-200/50' : 'bg-glass-800 text-gray-800 border-white/40']">
                 <i :class="['text-3xl drop-shadow-sm', state.toast.type === 'error' ? 'ph ph-warning-circle text-red-500' : 'ph ph-check-circle text-green-500']"></i>
@@ -1614,11 +1589,6 @@
                         }
                         closeModal(); state.classForm = {id:null, name:'', course:'', schedule:'', teacherId:''};
                     });
-                };
-
-                const openSuperEditModal = (student) => {
-                    state.editAvatarForm = { studentId: student.id, avatar: student.avatar || '' };
-                    state.showModal = 'superEditStudent'; // 或者直接在这里用专门的编辑弹窗逻辑
                 };
 
                 const openEditAvatarModal = (student) => {
