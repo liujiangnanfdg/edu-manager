@@ -9,11 +9,15 @@
     <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- 稳定的云端组件，防假死防拦截 -->
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/2.28.6/cloudbase.full.js"></script>
     <script>
         if (typeof cloudbase === 'undefined') {
-            document.write('<script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"><\/script>');
+            document.write('<script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
+        }
+    </script>
+    <script>
+        if (typeof cloudbase === 'undefined') {
+            document.write('<script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
         }
     </script>
     
@@ -33,6 +37,10 @@
                             700: 'rgba(255, 255, 255, 0.7)',
                             800: 'rgba(255, 255, 255, 0.8)',
                             900: 'rgba(255, 255, 255, 0.9)',
+                        },
+                        darkglass: {
+                            800: 'rgba(15, 23, 42, 0.8)',
+                            900: 'rgba(15, 23, 42, 0.9)',
                         }
                     },
                     boxShadow: {
@@ -115,7 +123,7 @@
             @apply bg-white/50 backdrop-blur-[20px] text-gray-700 rounded-2xl py-3 px-6 shadow-sm hover:bg-white/70 transition-all active:scale-95 border border-white/60 font-bold;
         }
 
-        /* 🌟 极致液态胶囊表格（修复版：解决滚动重叠与背景割裂） */
+        /* 🌟 极致液态胶囊表格（修复版：厚毛玻璃表头防遮挡） */
         table { border-collapse: separate !important; border-spacing: 0 10px !important; }
         
         thead {
@@ -124,33 +132,27 @@
             z-index: 30;
         }
 
-        /* 表头：高透毛玻璃，增加饱和度与硬件加速解决滚动重叠 */
+        /* 表头：高通透白底厚材质，完美遮盖底部滚动文字 */
         th { 
-            @apply text-xs font-extrabold text-gray-600 uppercase tracking-wider py-4 px-6 align-middle relative z-30; 
-            background: rgba(255, 255, 255, 0.45);
-            backdrop-filter: blur(40px) saturate(150%);
-            -webkit-backdrop-filter: blur(40px) saturate(150%);
-            border-top: 1px solid rgba(255, 255, 255, 0.6);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
-            transform: translateZ(0); /* 强制开启硬件加速，解决滚动时层叠模糊失效的bug */
+            @apply text-xs font-bold text-gray-500 uppercase tracking-wider py-4 px-6 align-middle shadow-sm relative z-30; 
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            border-top: 1px solid rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+            transform: translateZ(0); 
         }
         th:first-child { 
-            @apply border-l border-white/60 rounded-l-[24px]; 
+            @apply rounded-l-[24px]; 
+            border-left: 1px solid rgba(255, 255, 255, 0.8);
         }
         th:last-child { 
-            @apply border-r border-white/60 rounded-r-[24px]; 
+            @apply rounded-r-[24px]; 
+            border-right: 1px solid rgba(255, 255, 255, 0.8);
         }
 
-        /* 数据行：极度透明，极高模糊，并剔除了内部子元素的 blur 干扰 */
-        td { 
-            @apply py-4 px-6 align-middle transition-colors duration-300; 
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(24px) saturate(120%);
-            -webkit-backdrop-filter: blur(24px) saturate(120%);
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-            transform: translateZ(0); /* 硬件加速，防止背景断裂 */
-        }
+        /* 数据行：极度透明，极高模糊 */
+        td { @apply py-4 px-6 bg-white/20 backdrop-blur-[24px] border-y border-white/30 align-middle transition-colors duration-300; transform: translateZ(0); }
         td:first-child { @apply border-l border-white/30 rounded-l-[24px]; }
         td:last-child { @apply border-r border-white/30 rounded-r-[24px]; }
         
@@ -181,7 +183,6 @@
             <div v-if="!state.systemBgImage" class="ambient-blob blob-1"></div>
             <div v-if="!state.systemBgImage" class="ambient-blob blob-2"></div>
             <div v-if="!state.systemBgImage" class="ambient-blob blob-3"></div>
-            <!-- 如果有背景图，则加一层薄薄的遮罩让文字更清晰 -->
             <div v-if="state.systemBgImage" class="absolute inset-0 bg-black/10 backdrop-blur-[2px]"></div>
         </div>
 
@@ -218,7 +219,6 @@
         <!-- 登录界面 -->
         <transition name="fade">
             <div v-if="!state.currentUser && !state.isLoading && !state.systemError" class="flex-1 w-full flex items-center justify-center p-4 relative">
-                <!-- 状态胶囊 -->
                 <div class="absolute top-6 right-6 bg-white/60 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/80 text-xs font-bold flex items-center text-gray-700">
                     <div class="w-2.5 h-2.5 rounded-full mr-2 animate-pulse bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
                     iOS26 Liquid Engine Active
@@ -301,7 +301,7 @@
                         </div>
                     </nav>
 
-                    <div class="p-5 border-t border-white/30 bg-white/10">
+                    <div class="p-5 border-t border-white/30 bg-white/10 rounded-b-[36px]">
                         <div class="flex items-center space-x-3 mb-5">
                             <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-md border-2 border-white/50">
                                 {{ state.currentUser.name.charAt(0) }}
@@ -320,12 +320,10 @@
                     </div>
                 </aside>
 
-                <!-- 主视图区 -->
                 <main class="flex-1 flex flex-col overflow-hidden relative">
                     
-                    <!-- 顶部超管横幅 -->
                     <transition name="fade">
-                        <div v-if="isSuperadmin" class="mb-4 bg-orange-100/50 backdrop-blur-xl border border-orange-200/80 px-6 py-3.5 rounded-[24px] flex items-center text-orange-800 text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
+                        <div v-if="isSuperadmin" class="mb-4 bg-orange-100/60 backdrop-blur-xl border border-orange-200/80 px-6 py-3.5 rounded-[24px] flex items-center text-orange-800 text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
                             <i class="ph ph-shield-warning text-xl mr-3 relative z-10 text-orange-600"></i>
                             <span class="relative z-10 font-bold">超级管理员已登录。您拥有最高权限，可修改所有数据。</span>
                         </div>
@@ -340,7 +338,7 @@
                                     <p class="text-gray-500 font-bold mb-1 uppercase tracking-widest text-xs">Overview</p>
                                     <h1 class="text-4xl font-black text-gray-800 tracking-tight">你好, {{ state.currentUser.name }}</h1>
                                 </div>
-                                <div class="bg-white/40 backdrop-blur-xl border border-white/50 px-4 py-2 rounded-full shadow-sm flex items-center">
+                                <div class="bg-white/60 backdrop-blur-xl border border-white/50 px-4 py-2 rounded-full shadow-sm flex items-center">
                                     <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse mr-3 shadow-[0_0_8px_#22c55e]"></div>
                                     <span class="text-sm font-bold text-gray-700">云端节点正常</span>
                                 </div>
@@ -396,7 +394,7 @@
                                 </div>
                             </div>
                             
-                            <!-- 课时不足续费预警雷达 -->
+                            <!-- 课时不足预警 -->
                             <div v-if="isAdminOrSuper && lowHoursStudents.length > 0" class="glass-panel p-6 border-red-200/40 relative overflow-hidden bg-white/40">
                                 <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-4 translate-y-4 pointer-events-none">
                                     <i class="ph ph-warning text-9xl text-red-500"></i>
@@ -423,7 +421,7 @@
 
                         <!-- 教师管理 -->
                         <div v-if="state.activeTab === 'teachers' && !state.viewingStudent && !state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
-                            <div class="p-6 border-b border-white/40 flex justify-between items-center bg-white/20 rounded-t-[36px]">
+                            <div class="p-6 border-b border-white/40 flex justify-between items-center bg-white/20">
                                 <div>
                                     <h2 class="text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
                                         <div class="w-10 h-10 bg-blue-100/80 rounded-xl flex items-center justify-center text-blue-600 mr-3 border border-blue-200/50"><i class="ph ph-users-three text-2xl"></i></div>
@@ -436,11 +434,11 @@
                             </div>
                             <div class="overflow-x-auto p-4">
                                 <table class="w-full text-left">
-                                    <thead class="sticky top-0 z-10">
+                                    <thead>
                                         <tr>
                                             <th>姓名</th>
                                             <th>登录账号</th>
-                                            <th>权限层级</th>
+                                            <th>权限角色</th>
                                             <th>带班数量</th>
                                             <th class="text-right">操作</th>
                                         </tr>
@@ -495,7 +493,7 @@
 
                             <div class="overflow-x-auto p-4">
                                 <table class="w-full text-left">
-                                    <thead class="sticky top-0 z-10">
+                                    <thead>
                                         <tr>
                                             <th>学员档案</th>
                                             <th>背景信息</th>
@@ -535,10 +533,10 @@
                                             <td class="text-right">
                                                 <div class="flex justify-end items-center space-x-2">
                                                     <template v-if="isTeacher">
-                                                        <button v-if="hasAttendedToday(student.id, state.viewingClass.id) === 'none'" @click="openAttendanceModal(student, state.viewingClass)" class="bg-emerald-500/90 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-[16px] shadow-sm text-sm font-bold transition-transform active:scale-95 flex items-center border border-emerald-400/50">
+                                                        <button v-if="hasAttendedToday(student.id, state.viewingClass.id) === 'none'" @click="openAttendanceModal(student, state.viewingClass)" class="bg-emerald-500/90 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-[16px] shadow-sm text-sm font-bold transition-transform active:scale-95 flex items-center border border-emerald-400/50 backdrop-blur-sm">
                                                             <i class="ph ph-hand-tap mr-1.5 text-lg"></i>打卡
                                                         </button>
-                                                        <div v-else :class="['px-5 py-2.5 rounded-[16px] shadow-sm text-sm font-bold flex items-center border', hasAttendedToday(student.id, state.viewingClass.id) === 'present' ? 'bg-white/40 text-gray-500 border-white/50' : 'bg-amber-100/80 text-amber-700 border-amber-200/50']">
+                                                        <div v-else :class="['px-5 py-2.5 rounded-[16px] shadow-sm text-sm font-bold flex items-center border backdrop-blur-sm', hasAttendedToday(student.id, state.viewingClass.id) === 'present' ? 'bg-white/40 text-gray-500 border-white/50' : 'bg-amber-100/80 text-amber-700 border-amber-200/50']">
                                                             <i :class="['mr-1.5 text-lg', hasAttendedToday(student.id, state.viewingClass.id) === 'present' ? 'ph ph-check-circle' : 'ph ph-calendar-x']"></i>
                                                             {{ hasAttendedToday(student.id, state.viewingClass.id) === 'present' ? '已签' : '已假' }}
                                                         </div>
@@ -579,7 +577,7 @@
                             </div>
                             <div class="overflow-x-auto p-4">
                                 <table class="w-full text-left">
-                                    <thead class="sticky top-0 z-10">
+                                    <thead>
                                         <tr>
                                             <th>班级名称</th>
                                             <th>课程科目</th>
@@ -592,7 +590,7 @@
                                     <tbody>
                                         <tr v-for="cls in visibleClasses" :key="cls.id">
                                             <td class="font-extrabold text-gray-800 text-lg">{{ cls.name }}</td>
-                                            <td><span class="px-3 py-1.5 rounded-[10px] text-xs font-bold bg-white/60 text-indigo-700 border border-white/80 shadow-sm">{{ cls.course }}</span></td>
+                                            <td><span class="px-3 py-1.5 rounded-[10px] text-xs font-bold bg-white/60 text-indigo-700 border border-white/80 shadow-sm backdrop-blur-sm">{{ cls.course }}</span></td>
                                             <td>
                                                 <div class="text-gray-700 font-bold flex items-center">
                                                     <i class="ph ph-user-circle text-2xl text-gray-400 mr-2"></i>{{ getTeacherName(cls.teacherId) }}
@@ -693,7 +691,7 @@
                                                 <p class="text-2xl font-bold text-blue-700/50 mr-1 mb-1">¥</p>
                                                 <p class="text-5xl font-black text-blue-700 tracking-tighter">{{ viewingStudentData.totalPayment || viewingStudentData.paymentAmount || 0 }}</p>
                                             </div>
-                                            <p class="text-xs font-bold text-blue-700/80 bg-blue-500/10 inline-block px-3 py-1.5 rounded-lg border border-blue-200/50">累计购入: {{ viewingStudentData.totalHours }}节 (含赠{{ viewingStudentData.bonusHours || 0 }})</p>
+                                            <p class="text-xs font-bold text-blue-700/80 bg-blue-500/10 inline-block px-3 py-1.5 rounded-lg border border-blue-200/50 backdrop-blur-sm">累计购入: {{ viewingStudentData.totalHours }}节 (含赠{{ viewingStudentData.bonusHours || 0 }})</p>
                                         </div>
                                     </div>
 
@@ -715,12 +713,12 @@
                             </div>
 
                             <div class="glass-panel overflow-hidden bg-white/30">
-                                <div class="flex justify-between items-center p-6 bg-white/20 border-b border-white/40 rounded-t-[36px]">
+                                <div class="flex justify-between items-center p-6 bg-white/20 border-b border-white/40">
                                     <h3 class="text-xl font-black text-gray-800 flex items-center"><i class="ph ph-list-dashes mr-2 text-blue-500 text-2xl"></i>个人操作日志</h3>
                                 </div>
                                 <div class="overflow-x-auto p-4">
                                     <table class="w-full text-left">
-                                        <thead class="sticky top-0 z-10">
+                                        <thead>
                                             <tr>
                                                 <th>操作时间</th>
                                                 <th>关联班级</th>
@@ -734,7 +732,7 @@
                                                 <td class="font-mono text-sm font-bold text-gray-600">{{ rec.date }}</td>
                                                 <td class="font-extrabold text-gray-800">{{ rec.className || '-' }}</td>
                                                 <td>
-                                                    <span :class="['px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm inline-block border', rec.type.includes('请假') ? 'bg-amber-100/80 text-amber-700 border-amber-200/50' : rec.type.includes('签到') ? 'bg-emerald-100/80 text-emerald-700 border-emerald-200/50' : rec.type.includes('修改') || rec.type.includes('覆写') ? 'bg-purple-100/80 text-purple-700 border-purple-200/50' : 'bg-blue-100/80 text-blue-700 border-blue-200/50']">
+                                                    <span :class="['px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm inline-block border backdrop-blur-sm', rec.type.includes('请假') ? 'bg-amber-100/80 text-amber-700 border-amber-200/50' : rec.type.includes('签到') ? 'bg-emerald-100/80 text-emerald-700 border-emerald-200/50' : rec.type.includes('修改') || rec.type.includes('覆写') ? 'bg-purple-100/80 text-purple-700 border-purple-200/50' : 'bg-blue-100/80 text-blue-700 border-blue-200/50']">
                                                         {{ rec.type }}
                                                     </span>
                                                 </td>
@@ -794,7 +792,7 @@
                                             <td>
                                                 <div v-if="record.classId" class="flex flex-col">
                                                     <span class="font-extrabold text-gray-700">{{ getClassName(record.classId) }}</span>
-                                                    <span class="w-max mt-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50/80 text-indigo-700 border border-indigo-100/50 uppercase tracking-wider">{{ getClassCourse(record.classId) }}</span>
+                                                    <span class="w-max mt-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50/80 text-indigo-700 border border-indigo-100/50 uppercase tracking-wider backdrop-blur-sm">{{ getClassCourse(record.classId) }}</span>
                                                 </div>
                                                 <span v-else class="text-gray-500 font-bold bg-white/40 px-3 py-1 rounded-xl border border-white/50">未分班</span>
                                             </td>
@@ -804,7 +802,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <div :class="['px-5 py-2.5 rounded-[16px] text-base font-black shadow-sm inline-block min-w-[70px] text-center border', record.remainingHours <= 3 ? 'bg-red-500/90 text-white animate-pulse border-red-400/50' : 'bg-green-100/80 text-green-700 border-green-200/50']">
+                                                <div :class="['px-5 py-2.5 rounded-[16px] text-base font-black shadow-sm inline-block min-w-[70px] text-center border backdrop-blur-sm', record.remainingHours <= 3 ? 'bg-red-500/90 text-white animate-pulse border-red-400/50' : 'bg-green-100/80 text-green-700 border-green-200/50']">
                                                     {{ record.remainingHours }}
                                                 </div>
                                             </td>
@@ -818,7 +816,7 @@
                                                         <button v-if="hasAttendedToday(record.id, record.classId) === 'none'" @click="openAttendanceModal(record, getClassObj(record.classId))" class="px-5 py-2.5 rounded-[16px] bg-emerald-500/90 hover:bg-emerald-600 text-white font-bold shadow-sm transition-transform active:scale-95 flex items-center border border-emerald-400/50">
                                                             <i class="ph ph-hand-tap mr-1.5 text-lg"></i>打卡
                                                         </button>
-                                                        <div v-else :class="['px-5 py-2.5 rounded-[16px] text-sm font-bold flex items-center border shadow-sm', hasAttendedToday(record.id, record.classId) === 'present' ? 'bg-white/40 text-gray-500 border-gray-200' : 'bg-amber-100/80 text-amber-700 border-amber-200/50']">
+                                                        <div v-else :class="['px-5 py-2.5 rounded-[16px] text-sm font-bold flex items-center border shadow-sm backdrop-blur-sm', hasAttendedToday(record.id, record.classId) === 'present' ? 'bg-white/40 text-gray-500 border-gray-200' : 'bg-amber-100/80 text-amber-700 border-amber-200/50']">
                                                             <i :class="['mr-1.5 text-lg', hasAttendedToday(record.id, record.classId) === 'present' ? 'ph ph-check-circle' : 'ph ph-calendar-x']"></i>
                                                             {{ hasAttendedToday(record.id, record.classId) === 'present' ? '已签' : '已假' }}
                                                         </div>
@@ -875,7 +873,7 @@
                                             <td class="font-black text-gray-800">{{ rec.studentName }}</td>
                                             <td class="font-bold text-gray-700">{{ rec.className || '-' }}</td>
                                             <td>
-                                                <span :class="['px-3 py-1.5 rounded-[10px] text-xs font-bold shadow-sm inline-block border', 
+                                                <span :class="['px-3 py-1.5 rounded-[10px] text-xs font-bold shadow-sm inline-block border backdrop-blur-sm', 
                                                     rec.type.includes('请假') ? 'bg-amber-100/80 text-amber-700 border-amber-200/50' :
                                                     rec.type.includes('签到') ? 'bg-emerald-100/80 text-emerald-700 border-emerald-200/50' : 
                                                     rec.type.includes('建档') || rec.type.includes('充值') ? 'bg-blue-100/80 text-blue-700 border-blue-200/50' : 
@@ -976,10 +974,11 @@
                                                 <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'editStudentAvatar')" class="hidden" />
                                             </label>
                                         </div>
+                                        <p class="text-xs font-medium text-gray-400 bg-gray-100 px-3 py-1 rounded-full">系统已开启智能无损压缩引擎</p>
                                     </div>
                                 </div>
                                 <div class="flex justify-end pt-6 border-t border-gray-100">
-                                    <button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-2xl text-gray-500 font-bold hover:bg-gray-100 transition-colors">取消</button>
+                                    <button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-2xl text-gray-500 font-bold hover:bg-gray-100 transition-colors">取消操作</button>
                                     <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 rounded-full">保存新头像</button>
                                 </div>
                             </form>
@@ -1096,38 +1095,38 @@
                                 <div class="bg-blue-50 p-5 rounded-[24px] border border-blue-200 flex items-center space-x-4">
                                     <div class="w-14 h-14 rounded-full bg-white flex items-center justify-center text-blue-600 border-2 border-blue-100 shadow-sm"><i class="ph ph-wallet text-3xl"></i></div>
                                     <div>
-                                        <p class="text-gray-600 text-sm font-medium mb-0.5">正在为学员 <strong class="text-blue-800 text-lg mx-1 tracking-tight">{{ state.renewForm.student.name }}</strong> 办理充值</p>
-                                        <p class="text-xs text-gray-500">当前共享库余量：<strong class="text-green-600 text-sm bg-green-100 px-1.5 py-0.5 rounded">{{ state.renewForm.student.remainingHours }} 节</strong></p>
+                                        <p class="text-gray-600 font-bold mb-1">正在为 <strong class="text-blue-800 text-xl mx-1 tracking-tight">{{ state.renewForm.student.name }}</strong> 办理充值</p>
+                                        <p class="text-sm text-gray-500 font-medium">当前余量：<strong class="text-green-600 font-black bg-green-100 px-2 py-0.5 rounded-md border border-green-200">{{ state.renewForm.student.remainingHours }} 节</strong></p>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-5">
-                                    <div><label class="block text-sm font-bold text-gray-700 mb-2">新增正课 (节) <span class="text-red-500">*</span></label><input type="number" min="1" required v-model.number="state.renewForm.hours" class="glass-input w-full font-bold text-lg" /></div>
-                                    <div><label class="block text-sm font-bold text-gray-700 mb-2">新增附赠 (节)</label><input type="number" min="0" v-model.number="state.renewForm.bonus" class="glass-input w-full font-bold text-lg" placeholder="0" /></div>
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div><label class="block text-sm font-bold text-gray-700 mb-2">购买正课 (节) <span class="text-red-500">*</span></label><input type="number" min="1" required v-model.number="state.renewForm.hours" class="glass-input w-full font-black text-2xl py-3" /></div>
+                                    <div><label class="block text-sm font-bold text-gray-700 mb-2">额外赠送 (节)</label><input type="number" min="0" v-model.number="state.renewForm.bonus" class="glass-input w-full font-black text-2xl py-3" placeholder="0" /></div>
                                 </div>
                                 <div><label class="block text-sm font-bold text-gray-700 mb-2">实付金额 (元) <span class="text-red-500">*</span></label>
-                                    <div class="relative"><i class="ph ph-currency-cny absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i><input type="number" min="0" step="0.01" required v-model.number="state.renewForm.payment" class="glass-input pl-10 w-full font-bold text-lg text-blue-700" placeholder="0.00" /></div>
+                                    <div class="relative"><i class="ph ph-currency-cny absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i><input type="number" min="0" step="0.01" required v-model.number="state.renewForm.payment" class="glass-input pl-11 w-full font-black text-2xl text-blue-600 py-3" placeholder="0.00" /></div>
                                 </div>
-                                <div><label class="block text-sm font-bold text-gray-700 mb-2">账单备注 (选填)</label><textarea v-model="state.renewForm.remark" rows="2" class="glass-input w-full resize-none" placeholder="例如：微信转账，双十一优惠等..."></textarea></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">账单备注 (选填)</label><textarea v-model="state.renewForm.remark" rows="2" class="glass-input w-full resize-none" placeholder="例如：微信收款..."></textarea></div>
                                 
-                                <div class="flex justify-end pt-4 border-t border-gray-100">
+                                <div class="flex justify-end pt-6 border-t border-gray-100">
                                     <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl mr-3 transition-colors">取消</button>
-                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8">确认收银并同步</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 rounded-full text-lg">确认充值</button>
                                 </div>
                             </form>
 
                             <!-- 添加/编辑班级 -->
                             <form v-if="state.showModal === 'addClass' || state.showModal === 'editClass'" @submit.prevent="submitClass" class="space-y-6">
-                                <div><label class="block text-sm font-bold text-gray-700 mb-2">班级名称 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.name" class="glass-input w-full font-bold text-lg" placeholder="例如：新概念英语秋季周末班" /></div>
-                                <div><label class="block text-sm font-bold text-gray-700 mb-2">课程科目 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.course" class="glass-input w-full" placeholder="例如：英语、少儿编程" /></div>
-                                <div><label class="block text-sm font-bold text-gray-700 mb-2">上课排期 <span class="text-gray-400 font-medium text-xs ml-2">(选填，用于UI展示)</span></label>
-                                    <div class="relative"><i class="ph ph-clock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i><input type="text" v-model="state.classForm.schedule" class="glass-input pl-11 w-full" placeholder="例如：每周六 14:00 - 16:00" /></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">班级名称 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.name" class="glass-input w-full font-bold text-lg" placeholder="例如：春季编程班" /></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">课程科目 <span class="text-red-500">*</span></label><input type="text" required v-model="state.classForm.course" class="glass-input w-full font-bold" /></div>
+                                <div><label class="block text-sm font-bold text-gray-700 mb-2">上课时间 <span class="text-gray-400 font-medium text-xs ml-2">(选填)</span></label>
+                                    <div class="relative"><i class="ph ph-clock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i><input type="text" v-model="state.classForm.schedule" class="glass-input pl-12 w-full font-bold" placeholder="如：周六 14:00" /></div>
                                 </div>
                                 <div><label class="block text-sm font-bold text-gray-700 mb-2">指派任课老师 <span class="text-red-500">*</span></label>
-                                    <select required v-model.number="state.classForm.teacherId" class="glass-input w-full bg-white/50 appearance-none font-medium"><option value="" disabled>点击下拉选择...</option><option v-for="t in teachersOnly" :key="t.id" :value="t.id">{{t.name}}</option></select>
+                                    <select required v-model.number="state.classForm.teacherId" class="glass-input w-full bg-white appearance-none font-bold text-lg py-3"><option value="" disabled>请选择负责老师...</option><option v-for="t in teachersOnly" :key="t.id" :value="t.id">{{t.name}}</option></select>
                                 </div>
-                                <div class="flex justify-end pt-4 border-t border-gray-100">
+                                <div class="flex justify-end pt-6 border-t border-gray-100">
                                     <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl mr-3 transition-colors">取消</button>
-                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8">保存班级排期</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 rounded-full text-lg">保存排期</button>
                                 </div>
                             </form>
 
@@ -1135,37 +1134,37 @@
                             <form v-if="state.showModal === 'systemSettings'" @submit.prevent="submitSystemSettings" class="space-y-8">
                                 <div>
                                     <label class="block text-sm font-black text-gray-700 mb-4 uppercase tracking-wider">系统全局背景图</label>
-                                    <div class="flex items-center space-x-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                                        <div class="w-28 h-28 bg-white rounded-[28px] border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group transition-colors hover:border-blue-400">
-                                            <img v-if="state.settingsForm.bgImage" :src="state.settingsForm.bgImage" class="w-full h-full object-contain p-2" />
-                                            <i v-else class="ph ph-image text-5xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
+                                    <div class="flex items-center space-x-6 p-6 bg-gray-50 rounded-[24px] border border-gray-200 shadow-sm">
+                                        <div class="w-40 h-24 bg-white rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group hover:border-blue-400 transition-colors">
+                                            <img v-if="state.settingsForm.bgImage" :src="state.settingsForm.bgImage" class="w-full h-full object-cover" />
+                                            <i v-else class="ph ph-image text-4xl text-gray-300 group-hover:text-blue-400"></i>
                                             <div class="absolute inset-0 bg-blue-600/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
                                                 <i class="ph ph-upload-simple text-blue-600 text-3xl font-bold"></i>
                                             </div>
-                                            <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'bgImage')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" title="点击上传新背景" />
+                                            <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'bgImage')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" title="点击上传背景" />
                                         </div>
                                         <div class="text-sm text-gray-500 space-y-3 flex-1">
-                                            <p class="font-medium bg-white px-3 py-2 rounded-lg border inline-block shadow-sm"><i class="ph ph-info mr-1 text-blue-500"></i>横版高清图片，自动无损压缩防卡顿。</p>
-                                            <div><button type="button" @click="state.settingsForm.bgImage = ''" class="text-red-500 font-bold hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-red-100"><i class="ph ph-trash mr-1"></i>恢复动态光晕</button></div>
+                                            <p class="font-bold bg-white px-3 py-2 rounded-xl border inline-block shadow-sm">自动压缩适应屏幕，不卡顿。</p>
+                                            <div><button type="button" @click="state.settingsForm.bgImage = ''" class="text-red-500 font-bold hover:bg-red-50 px-4 py-2 rounded-xl transition-colors"><i class="ph ph-trash mr-1"></i>恢复默认动态光晕</button></div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="border-t border-gray-100 pt-6">
                                     <label class="block text-sm font-black text-gray-700 mb-4 uppercase tracking-wider">品牌 Logo 标识</label>
-                                    <div class="flex items-center space-x-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                    <div class="flex items-center space-x-6 p-6 bg-gray-50 rounded-[24px] border border-gray-200 shadow-sm">
                                         <div class="w-24 h-24 bg-white rounded-[24px] border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group hover:border-blue-400 transition-colors">
                                             <img v-if="state.settingsForm.logo" :src="state.settingsForm.logo" class="w-full h-full object-contain p-2" />
-                                            <i v-else class="ph ph-image text-4xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
+                                            <i v-else class="ph ph-image text-4xl text-gray-300 group-hover:text-blue-400"></i>
                                             <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'logo')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
                                         </div>
                                         <div class="text-sm flex-1">
-                                            <button type="button" @click="state.settingsForm.logo = ''" class="text-red-500 font-bold hover:bg-red-50 px-4 py-2 rounded-xl transition-colors"><i class="ph ph-trash mr-1"></i>移除并使用默认图标</button>
+                                            <button type="button" @click="state.settingsForm.logo = ''" class="text-red-500 font-bold hover:bg-red-50 px-4 py-2 rounded-xl transition-colors"><i class="ph ph-trash mr-1"></i>移除 Logo</button>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="pt-2">
                                     <label class="block text-sm font-bold text-gray-700 mb-2">系统显示名称</label>
-                                    <input type="text" required v-model="state.settingsForm.name" class="glass-input w-full font-bold text-lg" placeholder="例如：新东方教育管理中枢" />
+                                    <input type="text" required v-model="state.settingsForm.name" class="glass-input w-full font-bold text-xl py-3" placeholder="例如：新东方教育" />
                                 </div>
                                 <div class="flex justify-end pt-6 border-t border-gray-100">
                                     <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-2xl mr-3 transition-colors">放弃更改</button>
@@ -1175,11 +1174,11 @@
 
                             <!-- 添加老师 -->
                             <form v-if="state.showModal === 'addTeacher'" @submit.prevent="submitTeacher" class="space-y-4">
-                                <div><label class="block text-sm font-bold mb-1">真实姓名</label><input type="text" required v-model="state.teacherForm.name" class="glass-input w-full" /></div>
-                                <div><label class="block text-sm font-bold mb-1">登录账号</label><input type="text" required v-model="state.teacherForm.username" class="glass-input w-full" /></div>
-                                <div><label class="block text-sm font-bold mb-1">初始密码 (默认123456)</label><input type="text" v-model="state.teacherForm.password" class="glass-input w-full" placeholder="123456"/></div>
-                                <div v-if="isSuperadmin"><label class="block text-sm font-bold mb-1">指派角色</label><select v-model="state.teacherForm.role" class="glass-input w-full bg-white/50"><option value="teacher">普通任课讲师</option><option value="admin">分校校长 (管理)</option></select></div>
-                                <div class="flex justify-end pt-4 border-t border-gray-100"><button type="button" @click="closeModal" class="px-5 py-2 mr-3 rounded-xl hover:bg-gray-100">取消</button><button type="submit" class="glass-button-primary">确认添加</button></div>
+                                <div><label class="block text-sm font-bold mb-1">真实姓名</label><input type="text" required v-model="state.teacherForm.name" class="glass-input w-full font-bold" /></div>
+                                <div><label class="block text-sm font-bold mb-1">登录账号</label><input type="text" required v-model="state.teacherForm.username" class="glass-input w-full font-mono font-bold" /></div>
+                                <div><label class="block text-sm font-bold mb-1">初始密码 (默认123456)</label><input type="text" v-model="state.teacherForm.password" class="glass-input w-full font-bold" placeholder="123456"/></div>
+                                <div v-if="isSuperadmin"><label class="block text-sm font-bold mb-1">指派角色</label><select v-model="state.teacherForm.role" class="glass-input w-full bg-white font-bold"><option value="teacher">普通任课讲师</option><option value="admin">分校校长 (管理)</option></select></div>
+                                <div class="flex justify-end pt-6 border-t border-gray-100"><button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100">取消</button><button type="submit" class="glass-button-primary rounded-full px-8">确认添加</button></div>
                             </form>
 
                             <!-- 新建档/报名表单 -->
@@ -1281,24 +1280,24 @@
         <!-- 危险确认框 -->
         <transition name="fade">
             <div v-if="state.confirmDialog" class="fixed inset-0 z-[200] flex items-center justify-center bg-darkglass-900 backdrop-blur-liquid-heavy p-4">
-                <div class="bg-white/90 backdrop-blur-md rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden animate-[springUp_0.4s_ease-out] border border-white/50">
+                <div class="bg-white/90 backdrop-blur-md rounded-[36px] shadow-2xl w-full max-w-sm overflow-hidden animate-[springUp_0.4s_ease-out] border border-white/50" style="-webkit-mask-image: -webkit-radial-gradient(white, black);">
                     <div class="p-8 text-center relative">
                         <div class="absolute top-0 left-0 w-full h-1.5 bg-red-500"></div>
                         <div class="w-20 h-20 bg-red-50 text-red-500 rounded-[24px] flex items-center justify-center mx-auto mb-6 shadow-inner border border-red-100"><i class="ph ph-warning-circle text-5xl drop-shadow-sm"></i></div>
                         <h3 class="text-2xl font-extrabold text-gray-800 mb-3 tracking-tight">{{ state.confirmDialog.title }}</h3>
                         <p class="text-gray-500 font-medium leading-relaxed">{{ state.confirmDialog.message }}</p>
                     </div>
-                    <div class="p-5 bg-gray-50/80 border-t border-gray-200/50 flex gap-4">
-                        <button @click="state.confirmDialog = null" class="flex-1 py-3.5 bg-white border border-gray-200 rounded-[20px] text-gray-600 font-bold hover:bg-gray-50 shadow-sm transition-all active:scale-95">放弃</button>
-                        <button @click="executeConfirm" class="flex-1 py-3.5 bg-red-500 text-white rounded-[20px] font-bold shadow-[0_8px_16px_rgba(239,68,68,0.2)] hover:bg-red-600 hover:shadow-[0_12px_20px_rgba(239,68,68,0.3)] transition-all active:scale-95 border border-red-400/50">强制执行</button>
+                    <div class="p-5 bg-gray-50 border-t border-gray-200 flex gap-4">
+                        <button @click="state.confirmDialog = null" class="flex-1 py-4 bg-white border border-gray-200 rounded-[20px] text-gray-600 font-bold hover:bg-gray-50 shadow-sm transition-all active:scale-95">放弃</button>
+                        <button @click="executeConfirm" class="flex-1 py-4 bg-red-500 text-white rounded-[20px] font-bold shadow-[0_8px_16px_rgba(239,68,68,0.2)] hover:bg-red-600 transition-all active:scale-95 border border-red-400">强制执行</button>
                     </div>
                 </div>
             </div>
         </transition>
 
         <transition name="spring-up">
-            <div v-if="state.toast.show" :class="['fixed top-8 right-8 p-4 rounded-2xl shadow-liquid border flex items-center space-x-3 z-[300] max-w-sm backdrop-blur-liquid', state.toast.type === 'error' ? 'bg-red-50/90 text-red-800 border-red-200/50' : 'bg-glass-800 text-gray-800 border-white/40']">
-                <i :class="['text-3xl drop-shadow-sm', state.toast.type === 'error' ? 'ph ph-warning-circle text-red-500' : 'ph ph-check-circle text-green-500']"></i>
+            <div v-if="state.toast.show" :class="['fixed top-8 right-8 p-4 rounded-2xl shadow-liquid border flex items-center space-x-3 z-[300] max-w-md backdrop-blur-liquid', state.toast.type === 'error' ? 'bg-red-50/90 text-red-800 border-red-200/50' : 'bg-glass-800 text-white border-white/20']">
+                <i :class="['text-3xl drop-shadow-sm', state.toast.type === 'error' ? 'ph ph-warning-circle text-red-500' : 'ph ph-check-circle text-green-400']"></i>
                 <span class="font-bold text-sm leading-tight">{{ state.toast.message }}</span>
             </div>
         </transition>
@@ -1316,7 +1315,7 @@
                     systemLogo: '',
                     systemBgImage: '',
                     isLoading: true,
-                    loadingMsg: 'Initializing Engine...', 
+                    loadingMsg: 'Connecting...', 
                     isCloud: false, 
                     systemError: null,
                     
@@ -1466,12 +1465,13 @@
                     checkSdk();
                 });
 
+                // 核心同步层：剔除了 _openid 拦截隐患
                 const saveToDb = async (colName, id, data, skipLocalUpdate=false) => {
                     if (!state.isCloud || !tcbDb) throw new Error("Cloud disconnected");
                     try {
                         const payload = JSON.parse(JSON.stringify(data));
                         delete payload._id; 
-                        delete payload._openid; 
+                        delete payload._openid; // 🔥 防止腾讯云因为该字段抛弃我们的覆写请求
                         
                         await tcbDb.collection(colName).doc(id.toString()).set(payload);
                         
@@ -1823,10 +1823,10 @@
                                     const d = JSON.parse(evt.target.result); 
                                     if(d.users && d.records) { 
                                         await withLoading('强制重构时空中，切勿断电...', async () => {
-                                            if (d.sys) await saveToDb('settings', 'sys', { id: 'sys', name: d.sys.name, logo: d.sys.logo, bgImage: d.sys.bgImage || '' }, true);
+                                            if (d.sys) await saveToDb('settings', 'sys', { id: 'sys', name: d.sys.name, logo: d.sys.logo, bgImage: d.sys.bgImage }, true);
                                             const cols = ['users', 'classes', 'students', 'records'];
                                             for (const c of cols) { if (d[c]) { for (const item of d[c]) await saveToDb(c, item.id, item, true); state[c] = d[c]; } }
-                                            if (d.sys) { state.systemName = d.sys.name; state.systemLogo = d.sys.logo; state.systemBgImage = d.sys.bgImage || ''; }
+                                            if (d.sys) { state.systemName = d.sys.name; state.systemLogo = d.sys.logo; state.systemBgImage = d.sys.bgImage; }
                                             showToast('时空线跃迁完成'); switchTab('dashboard');
                                         });
                                     }
@@ -1838,6 +1838,7 @@
                     e.target.value = null; 
                 };
 
+                // 核心压缩算法，支持 1920px 高清背景压缩
                 const compressImage = (dataUrl, maxWidth, callback) => {
                     const img = new Image();
                     img.onload = () => {
@@ -1855,6 +1856,7 @@
                     const file = e.target.files[0]; if(!file) return;
                     const reader = new FileReader();
                     reader.onload = (evt) => { 
+                        // 背景给 1920 高清，其余给 400
                         const qWidth = field === 'bgImage' ? 1920 : 400;
                         compressImage(evt.target.result, qWidth, (compressedBase64) => {
                             if(field === 'logo') state.settingsForm.logo = compressedBase64;
