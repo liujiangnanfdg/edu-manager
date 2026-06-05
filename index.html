@@ -216,7 +216,8 @@
 
         <!-- 主系统框架 -->
         <template v-if="state.currentUser && !state.isLoading && !state.systemError">
-            <div class="flex-1 flex overflow-hidden p-4 gap-4">
+            <!-- 🌟 核心修复：这里之前漏了 flex-row 导致上下堆叠，现在恢复左右布局 -->
+            <div class="flex-1 flex flex-row overflow-hidden p-4 gap-4">
                 
                 <!-- 侧边栏 (玻璃浮岛) -->
                 <aside class="w-72 glass-panel flex flex-col z-20 flex-shrink-0">
@@ -272,6 +273,7 @@
                                 <p class="text-gray-800 font-bold truncate">{{ state.currentUser.name }}</p>
                                 <p class="text-xs text-blue-600 font-semibold">{{ isSuperadmin ? 'System Root' : isAdmin ? 'Administrator' : 'Instructor' }}</p>
                             </div>
+                            <!-- 修复了侧边栏修改密码按钮丢失的问题 -->
                             <button @click="openChangePasswordModal(state.currentUser)" class="w-8 h-8 rounded-full bg-white/50 hover:bg-white flex items-center justify-center text-gray-500 hover:text-blue-600 transition-colors shadow-sm" title="修改密码">
                                 <i class="ph ph-key text-lg"></i>
                             </button>
