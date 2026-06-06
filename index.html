@@ -124,51 +124,52 @@
             @apply bg-white/50 backdrop-blur-[20px] text-gray-700 rounded-2xl py-3 px-6 shadow-sm hover:bg-white/70 transition-all active:scale-95 border border-white/60 font-bold;
         }
 
-        /* 🌟 极致液态胶囊表格 (重回高透霜白材质) */
+        /* 🌟 极致液态胶囊表格 (采用侧边栏同款高斯模糊材质) */
         table { border-collapse: separate !important; border-spacing: 0 10px !important; width: 100%; }
         
         thead {
             position: sticky;
             top: 0;
-            z-index: 40;
-            transform: translate3d(0, 0, 10px); /* 将表头在 Z 轴强行提上来一层 */
+            z-index: 50; /* 提升 z-index 确保压住数据行 */
+            /* 彻底移除了导致浏览器渲染 BUG 的 transform */
         }
 
-        /* 表头：高透霜白材质 */
+        /* 表头：完全复刻侧边栏的材质 */
         th { 
-            @apply text-xs font-bold text-gray-500 uppercase tracking-wider py-4 px-6 align-middle shadow-sm relative; 
-            background: rgba(255, 255, 255, 0.4); /* 适度的霜白底色 */
-            backdrop-filter: blur(24px) saturate(150%);
-            -webkit-backdrop-filter: blur(24px) saturate(150%);
-            border-top: 1px solid rgba(255, 255, 255, 0.6);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            @apply text-xs font-bold text-gray-600 uppercase tracking-wider py-4 px-6 align-middle shadow-sm relative; 
+            background: rgba(255, 255, 255, 0.3); /* 同侧边栏 bg-white/30 */
+            backdrop-filter: blur(40px); /* 同侧边栏 blur-[40px] */
+            -webkit-backdrop-filter: blur(40px);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+            background-clip: padding-box;
         }
         th:first-child { 
             @apply rounded-l-[24px]; 
-            border-left: 1px solid rgba(255, 255, 255, 0.6);
+            border-left: 1px solid rgba(255, 255, 255, 0.4);
         }
         th:last-child { 
             @apply rounded-r-[24px]; 
-            border-right: 1px solid rgba(255, 255, 255, 0.6);
+            border-right: 1px solid rgba(255, 255, 255, 0.4);
         }
 
-        /* 数据行：极轻薄的霜白材质 */
+        /* 数据行：高透玻璃态 */
         td { 
-            @apply py-4 px-6 border-y border-white/30 align-middle transition-colors duration-300 relative; 
-            background: rgba(255, 255, 255, 0.15); /* 极度轻薄的底色，充分透出下层背景 */
-            backdrop-filter: blur(20px) saturate(120%);
-            -webkit-backdrop-filter: blur(20px) saturate(120%);
-            z-index: 10;
+            @apply py-4 px-6 border-y border-white/30 align-middle transition-colors duration-300 relative z-10; 
+            background: rgba(255, 255, 255, 0.15); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background-clip: padding-box;
         }
-        td:first-child { @apply border-l border-white/30 rounded-l-[24px]; }
-        td:last-child { @apply border-r border-white/30 rounded-r-[24px]; }
+        td:first-child { @apply border-l border-white/40 rounded-l-[24px]; }
+        td:last-child { @apply border-r border-white/40 rounded-r-[24px]; }
         
         /* 悬浮层级控制 */
-        tbody tr { @apply shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-all duration-300; }
+        tbody tr { @apply shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-all duration-300 relative z-10; }
         tbody tr:hover { 
-            @apply shadow-md -translate-y-1; 
+            @apply shadow-md -translate-y-1 z-30; /* z-30 小于表头的 z-50 */
         }
-        tbody tr:hover td { background: rgba(255, 255, 255, 0.35); z-index: 20; }
+        tbody tr:hover td { background: rgba(255, 255, 255, 0.35); }
 
         /* 动画过渡 */
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
