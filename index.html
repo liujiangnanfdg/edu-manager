@@ -124,50 +124,51 @@
             @apply bg-white/50 backdrop-blur-[20px] text-gray-700 rounded-2xl py-3 px-6 shadow-sm hover:bg-white/70 transition-all active:scale-95 border border-white/60 font-bold;
         }
 
-        /* 🌟 极致液态胶囊表格 (彻底修复 Z-Axis 和 硬件加速导致的遮挡Bug) */
+        /* 🌟 极致液态胶囊表格 (重回高透霜白材质) */
         table { border-collapse: separate !important; border-spacing: 0 10px !important; width: 100%; }
         
         thead {
             position: sticky;
             top: 0;
-            z-index: 40; /* 确保表头永远在最上层 */
+            z-index: 40;
+            transform: translate3d(0, 0, 10px); /* 将表头在 Z 轴强行提上来一层 */
         }
 
-        /* 表头：纯净滤镜流！无底色，全靠极限模糊 */
+        /* 表头：高透霜白材质 */
         th { 
-            @apply text-xs font-bold text-gray-500 uppercase tracking-wider py-4 px-6 align-middle shadow-sm relative z-40; 
-            background: rgba(255, 255, 255, 0.05); /* 极度透明底色 */
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            @apply text-xs font-bold text-gray-500 uppercase tracking-wider py-4 px-6 align-middle shadow-sm relative; 
+            background: rgba(255, 255, 255, 0.4); /* 适度的霜白底色 */
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border-top: 1px solid rgba(255, 255, 255, 0.6);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            /* 已剔除会引起 Bug 的 translateZ(0) */
         }
         th:first-child { 
             @apply rounded-l-[24px]; 
-            border-left: 1px solid rgba(255, 255, 255, 0.4);
+            border-left: 1px solid rgba(255, 255, 255, 0.6);
         }
         th:last-child { 
             @apply rounded-r-[24px]; 
-            border-right: 1px solid rgba(255, 255, 255, 0.4);
+            border-right: 1px solid rgba(255, 255, 255, 0.6);
         }
 
-        /* 数据行单元格：保持通透 */
+        /* 数据行：极轻薄的霜白材质 */
         td { 
-            @apply py-4 px-6 bg-white/20 border-y border-white/30 align-middle transition-colors duration-300; 
-            backdrop-filter: blur(24px) saturate(120%);
-            -webkit-backdrop-filter: blur(24px) saturate(120%);
-            /* 已剔除会引起 Bug 的 translateZ(0) */
+            @apply py-4 px-6 border-y border-white/30 align-middle transition-colors duration-300 relative; 
+            background: rgba(255, 255, 255, 0.15); /* 极度轻薄的底色，充分透出下层背景 */
+            backdrop-filter: blur(20px) saturate(120%);
+            -webkit-backdrop-filter: blur(20px) saturate(120%);
+            z-index: 10;
         }
         td:first-child { @apply border-l border-white/30 rounded-l-[24px]; }
         td:last-child { @apply border-r border-white/30 rounded-r-[24px]; }
         
-        /* 完善行悬浮的 Z 轴图层逻辑：基础为 z-10，悬浮为 z-30 (在表头 z-40 之下) */
-        tbody tr { @apply shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-all duration-300 relative z-10; }
+        /* 悬浮层级控制 */
+        tbody tr { @apply shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-all duration-300; }
         tbody tr:hover { 
-            @apply shadow-md -translate-y-1 z-30; 
+            @apply shadow-md -translate-y-1; 
         }
-        tbody tr:hover td { background: rgba(255, 255, 255, 0.35); }
+        tbody tr:hover td { background: rgba(255, 255, 255, 0.35); z-index: 20; }
 
         /* 动画过渡 */
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
