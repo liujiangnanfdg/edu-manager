@@ -1788,7 +1788,8 @@
                     withLoading('排期更新中...', async () => {
                         if (state.showModal === 'addClass') {
                             const cid = Date.now();
-                            await saveToDb('classes', cid, { id: cid, ...state.classForm });
+                            // 修复 Bug：将真实的 id 放在最后面，防止被表单初始化里的 null 覆盖
+                            await saveToDb('classes', cid, { ...state.classForm, id: cid });
                             showToast('班级部署完毕');
                         } else {
                             await saveToDb('classes', state.classForm.id, { ...state.classForm });
