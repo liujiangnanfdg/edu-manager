@@ -38,6 +38,10 @@
                             700: 'rgba(255, 255, 255, 0.7)',
                             800: 'rgba(255, 255, 255, 0.8)',
                             900: 'rgba(255, 255, 255, 0.9)',
+                        },
+                        darkglass: {
+                            800: 'rgba(15, 23, 42, 0.8)',
+                            900: 'rgba(15, 23, 42, 0.9)',
                         }
                     },
                     boxShadow: {
@@ -494,7 +498,7 @@
                             </div>
                             
                             <div class="overflow-x-auto p-2 md:p-4 pb-4 md:pb-8 w-full relative">
-                                <table class="w-full text-left min-w-[700px]">
+                                <table class="w-full text-left min-w-[600px]">
                                     <thead class="sticky top-0 z-40">
                                         <tr>
                                             <th>姓名</th>
@@ -632,17 +636,23 @@
                         </div>
 
                         <!-- 班级列表页 -->
-                        <div v-if="state.activeTab === 'classes' && !state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
+                        <div v-if="state.activeTab === 'classes' && !state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out] flex flex-col h-full">
                             <div class="p-4 md:p-6 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
                                 <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
                                     <div class="w-8 h-8 md:w-10 md:h-10 bg-indigo-100/80 rounded-lg md:rounded-xl flex items-center justify-center text-indigo-600 mr-2 md:mr-3 border border-indigo-200/50 shrink-0"><i class="ph ph-chalkboard-teacher text-xl md:text-2xl"></i></div>
-                                    {{ isTeacher ? '我执教的班级' : '所有班级' }}
+                                    {{ isTeacher ? '我执教的班级' : (state.showArchivedClasses ? '历史归档班级' : '所有活跃班级') }}
                                 </h2>
-                                <button v-if="isAdminOrSuper" @click="openModal('addClass')" class="glass-button-primary flex items-center w-full sm:w-auto justify-center text-sm md:text-base py-2 md:py-3">
-                                    <i class="ph ph-plus mr-2 text-base md:text-lg"></i> 开设新班级
-                                </button>
+                                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 w-full sm:w-auto">
+                                    <button @click="state.showArchivedClasses = !state.showArchivedClasses" class="glass-button-secondary flex items-center justify-center text-sm md:text-base py-2 md:py-3 w-full sm:w-auto sm:mr-3">
+                                        <i :class="['mr-1.5 md:mr-2 text-base md:text-lg', state.showArchivedClasses ? 'ph-arrow-u-up-left' : 'ph-archive']"></i> 
+                                        {{ state.showArchivedClasses ? '返回活跃班级' : '查看历史归档' }}
+                                    </button>
+                                    <button v-if="isAdminOrSuper" @click="openModal('addClass')" class="glass-button-primary flex items-center justify-center text-sm md:text-base py-2 md:py-3 w-full sm:w-auto">
+                                        <i class="ph ph-plus mr-2 text-base md:text-lg"></i> 开设新班级
+                                    </button>
+                                </div>
                             </div>
-                            <div class="overflow-x-auto p-2 md:p-4 pb-4 md:pb-8 w-full relative">
+                            <div class="overflow-y-auto flex-1 p-2 md:p-4 pb-4 md:pb-8 w-full relative">
                                 <table class="w-full text-left min-w-[700px]">
                                     <thead class="sticky top-0 z-40">
                                         <tr>
@@ -656,7 +666,10 @@
                                     </thead>
                                     <tbody>
                                         <tr v-for="cls in visibleClasses" :key="cls.id">
-                                            <td class="font-extrabold text-gray-800 text-base md:text-lg">{{ cls.name }}</td>
+                                            <td class="font-extrabold text-gray-800 text-base md:text-lg">
+                                                {{ cls.name }}
+                                                <span v-if="cls.status === 'archived'" class="ml-2 px-2 py-0.5 bg-gray-200 text-gray-600 rounded text-[10px] uppercase font-bold">已结业</span>
+                                            </td>
                                             <td><span class="px-2 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-[10px] text-[10px] md:text-xs font-bold bg-white/60 text-indigo-700 border border-white/80 shadow-sm backdrop-blur-sm">{{ cls.course }}</span></td>
                                             <td>
                                                 <div class="text-gray-700 text-sm md:text-base font-bold flex items-center">
@@ -679,18 +692,21 @@
                                                     查看名单
                                                 </button>
                                                 <template v-if="isAdminOrSuper">
-                                                    <button @click="openEditClassModal(cls)" class="w-8 h-8 md:w-11 md:h-11 rounded-xl md:rounded-[14px] bg-white/40 text-gray-600 hover:bg-white/80 hover:text-blue-600 shadow-sm transition-all border border-white/50" title="编辑/换老师">
+                                                    <button @click="openEditClassModal(cls)" class="w-8 h-8 md:w-11 md:h-11 rounded-xl md:rounded-[14px] bg-white/40 text-gray-600 hover:bg-white/80 hover:text-blue-600 shadow-sm transition-all border border-white/50 inline-flex items-center justify-center" title="编辑/换老师">
                                                         <i class="ph ph-pencil-simple text-base md:text-xl"></i>
                                                     </button>
-                                                    <button @click="triggerDeleteClass(cls.id)" class="w-8 h-8 md:w-11 md:h-11 rounded-xl md:rounded-[14px] bg-white/40 text-gray-600 hover:bg-white/80 hover:text-red-500 shadow-sm transition-all border border-white/50" title="解散班级">
-                                                        <i class="ph ph-trash text-base md:text-xl"></i>
+                                                    <button v-if="cls.status !== 'archived'" @click="triggerArchiveClass(cls.id)" class="w-8 h-8 md:w-11 md:h-11 rounded-xl md:rounded-[14px] bg-amber-50 text-amber-600 hover:bg-amber-100 hover:text-amber-700 shadow-sm transition-all border border-amber-200/50 inline-flex items-center justify-center" title="归档结业">
+                                                        <i class="ph ph-archive text-base md:text-xl"></i>
+                                                    </button>
+                                                    <button v-else @click="triggerUnarchiveClass(cls.id)" class="w-8 h-8 md:w-11 md:h-11 rounded-xl md:rounded-[14px] bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 shadow-sm transition-all border border-emerald-200/50 inline-flex items-center justify-center" title="恢复活跃班级">
+                                                        <i class="ph ph-arrow-u-up-left text-base md:text-xl"></i>
                                                     </button>
                                                 </template>
                                             </td>
                                         </tr>
                                         <tr v-if="visibleClasses.length === 0">
                                             <td colspan="6" class="p-8 md:p-12 text-center text-gray-400 font-bold border-none bg-transparent">
-                                                暂无班级排课
+                                                暂无{{ state.showArchivedClasses ? '归档' : '活跃' }}班级数据
                                             </td>
                                         </tr>
                                     </tbody>
@@ -848,7 +864,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="record in filteredEnrollments" :key="record.enrollmentId" class="group">
+                                        <tr v-for="record in paginatedEnrollments" :key="record.enrollmentId" class="group">
                                             <td>
                                                 <div class="flex items-center">
                                                     <div class="w-10 h-10 md:w-12 h-12 rounded-xl md:rounded-[16px] border-2 border-white/60 shadow-sm overflow-hidden mr-3 md:mr-4 bg-white/40 flex items-center justify-center relative shrink-0">
@@ -910,18 +926,41 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <!-- 学员列表分页器 -->
+                            <div v-if="filteredEnrollments.length > 0" class="px-4 py-3 border-t border-white/30 flex items-center justify-between bg-white/10 rounded-b-[32px] md:rounded-b-[36px]">
+                                <span class="text-xs md:text-sm text-gray-500 font-bold">共 {{ filteredEnrollments.length }} 条明细</span>
+                                <div class="flex items-center space-x-2">
+                                    <button :disabled="state.studentCurrentPage === 1" @click="state.studentCurrentPage--" class="px-3 py-1.5 rounded-lg bg-white/50 text-gray-700 text-xs md:text-sm font-bold hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all">上一页</button>
+                                    <span class="text-xs md:text-sm font-black text-gray-700 px-2">{{ state.studentCurrentPage }} / {{ totalStudentPages }}</span>
+                                    <button :disabled="state.studentCurrentPage === totalStudentPages" @click="state.studentCurrentPage++" class="px-3 py-1.5 rounded-lg bg-white/50 text-gray-700 text-xs md:text-sm font-bold hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all">下一页</button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- 全站流水 -->
                         <div v-if="state.activeTab === 'records' && !state.viewingStudent" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
-                            <div class="p-4 md:p-6 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
-                                <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
-                                    <div class="w-8 h-8 md:w-10 md:h-10 bg-orange-100/80 rounded-lg md:rounded-xl flex items-center justify-center text-orange-600 mr-2 md:mr-3 border border-orange-200/50 shrink-0"><i class="ph ph-clock-counter-clockwise text-xl md:text-2xl"></i></div>
-                                    操作日志
-                                </h2>
-                                <div class="relative w-full sm:w-64 md:w-80">
-                                    <i class="ph ph-magnifying-glass absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                    <input type="text" v-model="state.searchTerm" placeholder="搜索任何记录..." class="glass-input pl-9 md:pl-11 w-full rounded-xl md:rounded-full py-2 md:py-3 text-sm md:text-base" />
+                            <div class="p-4 md:p-6 border-b border-white/40 flex flex-col md:flex-row justify-between items-start md:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 md:gap-0">
+                                <div>
+                                    <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
+                                        <div class="w-8 h-8 md:w-10 md:h-10 bg-orange-100/80 rounded-lg md:rounded-xl flex items-center justify-center text-orange-600 mr-2 md:mr-3 border border-orange-200/50 shrink-0"><i class="ph ph-clock-counter-clockwise text-xl md:text-2xl"></i></div>
+                                        操作日志
+                                    </h2>
+                                </div>
+                                <div class="flex flex-col md:flex-row md:items-center w-full md:w-auto gap-2">
+                                    <div class="flex gap-2 w-full md:w-auto">
+                                        <input type="date" v-model="state.recordFilterDateStart" class="glass-input w-full md:w-auto py-2 px-3 text-xs md:text-sm" />
+                                        <input type="date" v-model="state.recordFilterDateEnd" class="glass-input w-full md:w-auto py-2 px-3 text-xs md:text-sm" />
+                                    </div>
+                                    <select v-model="state.recordFilterType" class="glass-input w-full md:w-auto py-2 px-3 text-xs md:text-sm bg-white/50">
+                                        <option value="">全部分类</option>
+                                        <option value="签到">仅签到核销</option>
+                                        <option value="充课">仅缴费充值</option>
+                                        <option value="退班">仅退班脱离</option>
+                                    </select>
+                                    <div class="relative w-full md:w-64">
+                                        <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                        <input type="text" v-model="state.searchTerm" placeholder="关键字搜索..." class="glass-input pl-9 w-full rounded-xl md:rounded-full py-2 text-xs md:text-sm" />
+                                    </div>
                                 </div>
                             </div>
                             <div class="overflow-y-auto flex-1 p-2 md:p-4 pb-4 md:pb-8 w-full relative">
@@ -937,7 +976,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="rec in filteredGlobalRecords" :key="rec.id">
+                                        <tr v-for="rec in paginatedGlobalRecords" :key="rec.id">
                                             <td class="font-mono text-xs md:text-sm font-bold text-gray-600">{{ rec.date }}</td>
                                             <td class="font-black text-gray-800 text-sm md:text-base">{{ rec.studentName }}</td>
                                             <td class="font-bold text-gray-700 text-sm md:text-base truncate max-w-[120px] md:max-w-none" :title="rec.className || '-'">{{ rec.className || '-' }}</td>
@@ -945,7 +984,7 @@
                                                 <span :class="['px-2 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-[10px] text-[10px] md:text-xs font-bold shadow-sm inline-block border backdrop-blur-sm whitespace-nowrap', 
                                                     rec.type.includes('请假') ? 'bg-amber-100/80 text-amber-700 border-amber-200/50' :
                                                     (rec.type.includes('签到') || rec.type.includes('核销')) ? 'bg-emerald-100/80 text-emerald-700 border-emerald-200/50' : 
-                                                    rec.type.includes('建档') || rec.type.includes('充值') ? 'bg-blue-100/80 text-blue-700 border-blue-200/50' : 
+                                                    rec.type.includes('建档') || rec.type.includes('充值') || rec.type.includes('充课') ? 'bg-blue-100/80 text-blue-700 border-blue-200/50' : 
                                                     'bg-purple-100/80 text-purple-700 border-purple-200/50']">
                                                     {{ rec.type }}
                                                 </span>
@@ -958,6 +997,15 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+                            <!-- 流水记录分页器 -->
+                            <div v-if="filteredGlobalRecords.length > 0" class="px-4 py-3 border-t border-white/30 flex items-center justify-between bg-white/10 rounded-b-[32px] md:rounded-b-[36px]">
+                                <span class="text-xs md:text-sm text-gray-500 font-bold">共 {{ filteredGlobalRecords.length }} 条记录</span>
+                                <div class="flex items-center space-x-2">
+                                    <button :disabled="state.recordCurrentPage === 1" @click="state.recordCurrentPage--" class="px-3 py-1.5 rounded-lg bg-white/50 text-gray-700 text-xs md:text-sm font-bold hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all">上一页</button>
+                                    <span class="text-xs md:text-sm font-black text-gray-700 px-2">{{ state.recordCurrentPage }} / {{ totalRecordPages }}</span>
+                                    <button :disabled="state.recordCurrentPage === totalRecordPages" @click="state.recordCurrentPage++" class="px-3 py-1.5 rounded-lg bg-white/50 text-gray-700 text-xs md:text-sm font-bold hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all">下一页</button>
+                                </div>
                             </div>
                         </div>
 
@@ -1207,7 +1255,7 @@
                                 <div><label class="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">账单备注 (选填)</label><textarea v-model="state.renewForm.remark" rows="2" class="glass-input w-full resize-none text-sm sm:text-base py-2.5" placeholder="例如：微信收款..."></textarea></div>
                                 
                                 <div class="flex flex-col sm:flex-row justify-end pt-4 sm:pt-4 border-t border-gray-100 gap-3 sm:gap-0">
-                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 py-3 rounded-xl sm:rounded-full text-base sm:text-lg w-full sm:w-auto order-1 sm:order-2 sm:ml-3">确认充值</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 py-3 text-base sm:text-lg rounded-xl sm:rounded-full w-full sm:w-auto order-1 sm:order-2 sm:ml-3">确认充值</button>
                                     <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors bg-gray-50 sm:bg-transparent w-full sm:w-auto order-2 sm:order-1">取消</button>
                                 </div>
                             </form>
@@ -1225,7 +1273,7 @@
                                     <select required v-model.number="state.classForm.teacherId" class="glass-input w-full bg-white appearance-none font-bold text-base sm:text-lg py-2.5 sm:py-3"><option value="" disabled>请选择负责老师...</option><option v-for="t in teachersOnly" :key="t.id" :value="t.id">{{t.name}}</option></select>
                                 </div>
                                 <div class="flex flex-col sm:flex-row justify-end pt-4 sm:pt-6 border-t border-gray-100 gap-3 sm:gap-0">
-                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 py-3 rounded-xl sm:rounded-full text-base sm:text-lg w-full sm:w-auto order-1 sm:order-2 sm:ml-3">保存排期</button>
+                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 py-3 text-base sm:text-lg rounded-xl sm:rounded-full w-full sm:w-auto order-1 sm:order-2 sm:ml-3">保存排期</button>
                                     <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors bg-gray-50 sm:bg-transparent w-full sm:w-auto order-2 sm:order-1">取消</button>
                                 </div>
                             </form>
@@ -1349,7 +1397,10 @@
                                     <div class="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-3 sm:mb-4 border border-indigo-100 shrink-0"><i class="ph ph-magnifying-glass text-2xl sm:text-3xl text-indigo-500"></i></div>
                                     <label class="block text-base sm:text-lg font-extrabold text-indigo-900 mb-1.5 sm:mb-2">从云端数据库召回老生 <span class="text-red-500">*</span></label>
                                     <p class="text-xs sm:text-sm text-indigo-600 mb-4 sm:mb-6 max-w-md px-2">老生加入新班级后，无需二次买课，将直接跨班共享现有的全局课时。</p>
-                                    <select v-model.number="state.studentForm.existingId" class="glass-input w-full max-w-md bg-white/80 font-bold text-center text-sm sm:text-lg py-2.5 sm:py-3 truncate"><option value="" disabled>-- 点击下拉检索现有档案 --</option><option v-for="s in state.students" :value="s.id">{{s.name}} (剩余全局共享: {{s.remainingHours}}节)</option></select>
+                                    <select v-model.number="state.studentForm.existingId" class="glass-input w-full max-w-md bg-white/80 font-bold text-center text-sm sm:text-lg py-2.5 sm:py-3 truncate">
+                                        <option value="" disabled>-- 点击下拉检索现有档案 --</option>
+                                        <option v-for="s in state.students" :value="s.id">{{s.name}} (剩余全局共享: {{s.remainingHours}}节)</option>
+                                    </select>
                                 </div>
                                 </transition>
 
@@ -1365,8 +1416,21 @@
                                         </div>
                                     </div>
                                     <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                                        <div><label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">主带老师 <span class="text-red-500">*</span></label><select v-model.number="state.studentForm.teacherId" @change="state.studentForm.classId=''" class="glass-input w-full bg-white/50 py-2 sm:py-3 text-sm sm:text-base"><option value="" disabled>1. 先定位讲师</option><option v-for="t in teachersOnly" :value="t.id">{{t.name}}</option></select></div>
-                                        <div><label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">落位班级 <span class="text-red-500">*</span></label><select v-model.number="state.studentForm.classId" :disabled="!state.studentForm.teacherId" class="glass-input w-full bg-white/50 disabled:bg-gray-100/50 disabled:cursor-not-allowed disabled:opacity-60 py-2 sm:py-3 text-sm sm:text-base"><option value="" disabled>2. 再锁定班级</option><option v-for="c in state.classes.filter(cls=>cls.teacherId===state.studentForm.teacherId)" :value="c.id">{{c.name}}</option></select></div>
+                                        <div>
+                                            <label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">主带老师 <span class="text-red-500">*</span></label>
+                                            <select v-model.number="state.studentForm.teacherId" @change="state.studentForm.classId=''" class="glass-input w-full bg-white/50 py-2 sm:py-3 text-sm sm:text-base">
+                                                <option value="" disabled>1. 先定位讲师</option>
+                                                <option v-for="t in teachersOnly" :value="t.id">{{t.name}}</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">落位班级 <span class="text-red-500">*</span></label>
+                                            <select v-model.number="state.studentForm.classId" :disabled="!state.studentForm.teacherId" class="glass-input w-full bg-white/50 disabled:bg-gray-100/50 disabled:cursor-not-allowed disabled:opacity-60 py-2 sm:py-3 text-sm sm:text-base">
+                                                <option value="" disabled>2. 再锁定班级</option>
+                                                <!-- 新增：过滤掉已归档班级 -->
+                                                <option v-for="c in state.classes.filter(cls=>cls.teacherId===state.studentForm.teacherId && cls.status !== 'archived')" :value="c.id">{{c.name}}</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1442,9 +1506,17 @@
                     toast: { show: false, message: '', type: 'success' },
                     confirmDialog: null,
                     
-                    isMobileMenuOpen: false, // 移动端侧边栏抽屉开关
-                    showAutoBackupPrompt: false, // 每日自动备份提醒状态
-                    historyUser: null, // 追踪明细的目标账号
+                    isMobileMenuOpen: false, 
+                    showAutoBackupPrompt: false, 
+                    historyUser: null, 
+
+                    // 新增：归档与过滤分页状态
+                    showArchivedClasses: false,
+                    recordFilterDateStart: '',
+                    recordFilterDateEnd: '',
+                    recordFilterType: '',
+                    studentCurrentPage: 1,
+                    recordCurrentPage: 1,
                     
                     isCameraOpen: false,
                     passwordForm: { targetId: null, currentPassword: '', newPassword: '', confirmPassword: '' },
@@ -1619,13 +1691,22 @@
 
                 const teachersOnly = computed(() => state.users.filter(u => u.role === 'teacher'));
                 const visibleTeachers = computed(() => isSuperadmin.value ? state.users.filter(u => u.role !== 'superadmin') : teachersOnly.value);
-                const visibleClasses = computed(() => isTeacher.value ? state.classes.filter(c => c.teacherId === state.currentUser.id) : state.classes);
+                
+                // 🌟 新增：班级列表归档状态过滤
+                const visibleClasses = computed(() => {
+                    let cls = isTeacher.value ? state.classes.filter(c => c.teacherId === state.currentUser.id) : state.classes;
+                    return cls.filter(c => state.showArchivedClasses ? c.status === 'archived' : c.status !== 'archived');
+                });
                 
                 const teachersCount = computed(() => teachersOnly.value.length);
-                const myClassesCount = computed(() => visibleClasses.value.length);
+                // 总班级数也排除归档班级
+                const myClassesCount = computed(() => {
+                    let cls = isTeacher.value ? state.classes.filter(c => c.teacherId === state.currentUser.id) : state.classes;
+                    return cls.filter(c => c.status !== 'archived').length;
+                });
                 const myStudentsCount = computed(() => {
                     if (isTeacher.value) {
-                        const tc = visibleClasses.value.map(c => c.id);
+                        const tc = state.classes.filter(c => c.teacherId === state.currentUser.id && c.status !== 'archived').map(c => c.id);
                         return state.students.filter(s => s.classIds && s.classIds.some(id => tc.includes(id))).length;
                     }
                     return state.students.length;
@@ -1638,7 +1719,7 @@
                 const lowHoursStudents = computed(() => {
                     let stus = state.students.filter(s => s.remainingHours <= 3);
                     if (isTeacher.value) {
-                        const tc = visibleClasses.value.map(c => c.id);
+                        const tc = state.classes.filter(c => c.teacherId === state.currentUser.id && c.status !== 'archived').map(c => c.id);
                         stus = stus.filter(s => s.classIds && s.classIds.some(id => tc.includes(id)));
                     }
                     return stus;
@@ -1661,27 +1742,84 @@
                     return recs.filter(r => (r.type||'').toLowerCase().includes(st) || (r.className||'').toLowerCase().includes(st) || (r.remark||'').toLowerCase().includes(st) || (r.date||'').includes(st));
                 });
 
+                // 🌟 新增：流水过滤引擎
                 const filteredGlobalRecords = computed(() => {
                     let recs = isTeacher.value ? state.records.filter(r => r.teacherId === state.currentUser.id) : state.records;
                     if (!isSuperadmin.value) recs = recs.filter(r => r.operatorRole !== 'superadmin');
-                    if (!state.searchTerm) return recs;
-                    const st = state.searchTerm.toLowerCase();
-                    return recs.filter(r => (r.studentName||'').toLowerCase().includes(st) || (r.className||'').toLowerCase().includes(st) || (r.operatorName||'').toLowerCase().includes(st) || (r.type||'').toLowerCase().includes(st) || (r.remark||'').toLowerCase().includes(st) || (r.date||'').includes(st));
+                    
+                    // 日期过滤
+                    if (state.recordFilterDateStart) {
+                        const startObj = new Date(state.recordFilterDateStart);
+                        startObj.setHours(0, 0, 0, 0);
+                        const startMs = startObj.getTime();
+                        recs = recs.filter(r => {
+                            const rDateStr = r.date.split(' ')[0].replace(/\//g, '-');
+                            return new Date(rDateStr).getTime() >= startMs;
+                        });
+                    }
+                    if (state.recordFilterDateEnd) {
+                        const endObj = new Date(state.recordFilterDateEnd);
+                        endObj.setHours(23, 59, 59, 999);
+                        const endMs = endObj.getTime();
+                        recs = recs.filter(r => {
+                            const rDateStr = r.date.split(' ')[0].replace(/\//g, '-');
+                            return new Date(rDateStr).getTime() <= endMs;
+                        });
+                    }
+                    
+                    // 类型过滤
+                    if (state.recordFilterType) {
+                        recs = recs.filter(r => r.type.includes(state.recordFilterType));
+                    }
+
+                    if (state.searchTerm) {
+                        const st = state.searchTerm.toLowerCase();
+                        recs = recs.filter(r => (r.studentName||'').toLowerCase().includes(st) || (r.className||'').toLowerCase().includes(st) || (r.operatorName||'').toLowerCase().includes(st) || (r.type||'').toLowerCase().includes(st) || (r.remark||'').toLowerCase().includes(st) || (r.date||'').includes(st));
+                    }
+                    return recs;
                 });
+
+                // 🌟 新增：流水前端分页计算
+                const paginatedGlobalRecords = computed(() => {
+                    const start = (state.recordCurrentPage - 1) * 50;
+                    return filteredGlobalRecords.value.slice(start, start + 50);
+                });
+                const totalRecordPages = computed(() => Math.ceil(filteredGlobalRecords.value.length / 50) || 1);
 
                 const filteredEnrollments = computed(() => {
                     let all = state.students.reduce((acc, student) => {
+                        // 如果学生没有任何班级，也展示出来（供超管分班）
                         if (!student.classIds || student.classIds.length === 0) return [...acc, { ...student, classId: null, enrollmentId: `${student.id}-none` }];
-                        return [...acc, ...student.classIds.map(cid => ({ ...student, classId: cid, enrollmentId: `${student.id}-${cid}` }))];
+                        // 剔除已归档的班级
+                        const activeClassIds = student.classIds.filter(cid => {
+                            const c = state.classes.find(x => x.id === cid);
+                            return c && c.status !== 'archived';
+                        });
+                        // 如果因为剔除归档后变成 0，就当成无班级状态显示
+                        if (activeClassIds.length === 0) return [...acc, { ...student, classId: null, enrollmentId: `${student.id}-none` }];
+                        return [...acc, ...activeClassIds.map(cid => ({ ...student, classId: cid, enrollmentId: `${student.id}-${cid}` }))];
                     }, []);
                     
                     if (isTeacher.value) {
-                        const tc = visibleClasses.value.map(c => c.id);
+                        const tc = state.classes.filter(c => c.teacherId === state.currentUser.id && c.status !== 'archived').map(c => c.id);
                         all = all.filter(e => tc.includes(e.classId));
                     }
                     if (!state.searchTerm) return all;
                     const st = state.searchTerm.toLowerCase();
                     return all.filter(e => e.name.toLowerCase().includes(st) || (e.classId && getClassName(e.classId).toLowerCase().includes(st)));
+                });
+
+                // 🌟 新增：学员列表前端分页计算
+                const paginatedEnrollments = computed(() => {
+                    const start = (state.studentCurrentPage - 1) * 50;
+                    return filteredEnrollments.value.slice(start, start + 50);
+                });
+                const totalStudentPages = computed(() => Math.ceil(filteredEnrollments.value.length / 50) || 1);
+
+                // 监听筛选项变化，自动重置分页到第一页
+                watch([() => state.searchTerm, () => state.recordFilterDateStart, () => state.recordFilterDateEnd, () => state.recordFilterType], () => {
+                    state.recordCurrentPage = 1;
+                    state.studentCurrentPage = 1;
                 });
 
                 const modalTitle = computed(() => {
@@ -1702,6 +1840,9 @@
                     state.viewingClass = null; 
                     state.viewingStudent = null; 
                     state.searchTerm = ''; 
+                    state.recordFilterType = '';
+                    state.recordFilterDateStart = '';
+                    state.recordFilterDateEnd = '';
                     state.isMobileMenuOpen = false; 
                 };
                 
@@ -1724,7 +1865,7 @@
                 const getClassName = (id) => state.classes.find(c => c.id === parseInt(id))?.name || '-';
                 const getClassCourse = (id) => state.classes.find(c => c.id === parseInt(id))?.course || '-';
                 const getStudentTeacherId = (classId) => state.classes.find(c => c.id === parseInt(classId))?.teacherId || null;
-                const getTeacherClassCount = (id) => state.classes.filter(c => c.teacherId === id).length;
+                const getTeacherClassCount = (id) => state.classes.filter(c => c.teacherId === id && c.status !== 'archived').length;
                 const getClassStudentCount = (id) => state.students.filter(s => s.classIds && s.classIds.includes(id)).length;
                 const getClassObj = (id) => state.classes.find(c => c.id === parseInt(id));
 
@@ -1741,7 +1882,7 @@
                         const loginTime = formatDt(new Date());
                         const history = u.loginHistory ? [...u.loginHistory] : [];
                         history.unshift(loginTime);
-                        if (history.length > 50) history.pop(); // 保留最近50次
+                        if (history.length > 50) history.pop(); 
                         
                         const updatedUser = { ...u, lastLoginTime: loginTime, loginHistory: history };
                         
@@ -1767,6 +1908,26 @@
                 const executeConfirm = () => { if(state.confirmDialog?.onConfirm) state.confirmDialog.onConfirm(); state.confirmDialog = null; };
 
                 // ---------------- 业务核心逻辑 ----------------
+
+                // 🌟 新增：班级结业归档与恢复
+                const triggerArchiveClass = (id) => {
+                    state.confirmDialog = { title: '班级结业归档', message: '归档后，该班级将被隐藏入历史库，不再显示在日常考勤和分班列表中，但会保留所有的流水和名单记录。', onConfirm: () => { 
+                        withLoading('归档处理中...', async () => { 
+                            const cls = state.classes.find(c => c.id === id);
+                            await saveToDb('classes', id, { ...cls, status: 'archived' }); 
+                            showToast('班级已归档'); 
+                        });
+                    }};
+                };
+                const triggerUnarchiveClass = (id) => {
+                    state.confirmDialog = { title: '恢复活跃班级', message: '确认要将该班级从历史库恢复吗？恢复后将重新出现在日常列表中。', onConfirm: () => { 
+                        withLoading('恢复处理中...', async () => { 
+                            const cls = state.classes.find(c => c.id === id);
+                            await saveToDb('classes', id, { ...cls, status: 'active' }); 
+                            showToast('班级已恢复活跃'); 
+                        });
+                    }};
+                };
 
                 const dismissAutoBackup = () => {
                     const today = formatDt(new Date()).split(' ')[0];
@@ -1875,7 +2036,8 @@
                     withLoading('排期更新中...', async () => {
                         if (state.showModal === 'addClass') {
                             const cid = Date.now();
-                            await saveToDb('classes', cid, { ...state.classForm, id: cid });
+                            // 默认 status: 'active'
+                            await saveToDb('classes', cid, { ...state.classForm, status: 'active', id: cid });
                             showToast('班级部署完毕');
                         } else {
                             await saveToDb('classes', state.classForm.id, { ...state.classForm });
@@ -2088,12 +2250,14 @@
                 return {
                     state, isSuperadmin, isAdmin, isTeacher, isAdminOrSuper,
                     teachersOnly, visibleTeachers, visibleClasses, viewingClassStudents, viewingStudentData,
-                    filteredGlobalRecords, filteredProfileRecords, filteredEnrollments, lowHoursStudents,
+                    filteredGlobalRecords, paginatedGlobalRecords, totalRecordPages, 
+                    filteredProfileRecords, filteredEnrollments, paginatedEnrollments, totalStudentPages, 
+                    lowHoursStudents,
                     teachersCount, myClassesCount, myStudentsCount, todayRecordsCount,
                     modalTitle, modalIconClass, isMobile,
                     switchTab, openModal, closeModal, viewStudentProfile,
                     handleLogin, handleLogout, executeConfirm,
-                    triggerDeleteUser, triggerDeleteClass, triggerDropClass, triggerDeleteProfile,
+                    triggerDeleteUser, triggerDeleteClass, triggerArchiveClass, triggerUnarchiveClass, triggerDropClass, triggerDeleteProfile,
                     submitSystemSettings, submitTeacher, openEditClassModal, submitClass,
                     openAddStudentModal, submitStudent,
                     openRenewModal, submitRenew,
