@@ -1940,7 +1940,13 @@
 
                 const handleExportData = (arg) => {
                     const isAuto = arg === 'auto';
-                    const data = { version: 'LiquidOS_v2', date: formatDt(new Date()), users: state.users, classes: state.classes, students: state.students, records: state.records, sys: { name: state.systemName, logo: state.systemLogo, bgImage: state.systemBgImage } };
+                    
+                    // 🛡️ 出口脱敏安全隔离：如果当前不是超管，强制剔除备份里的超管账号
+                    const safeUsers = state.currentUser.role === 'superadmin' 
+                        ? state.users 
+                        : state.users.filter(u => u.role !== 'superadmin');
+
+                    const data = { version: 'LiquidOS_v2', date: formatDt(new Date()), users: safeUsers, classes: state.classes, students: state.students, records: state.records, sys: { name: state.systemName, logo: state.systemLogo, bgImage: state.systemBgImage } };
                     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a'); link.href = url;
@@ -1963,6 +1969,14 @@
                                     if(d.users && d.records) { 
                                         await withLoading('强制重构时空中，切勿断电...', async () => {
                                             if (d.sys) await saveToDb('settings', 'sys', { id: 'sys', name: d.sys.name, logo: d.sys.logo, bgImage: d.sys.bgImage || '' }, true);
+                                            
+                                            // 🛡️ 入口免疫保护：防止普通校长通过 JSON 伪造或抹除超管权限
+                                            if (state.currentUser.role !== 'superadmin') {
+                                                const importedUsers = d.users.filter(u => u.role !== 'superadmin');
+                                                const existingSuper = state.users.filter(u => u.role === 'superadmin');
+                                                d.users = [...existingSuper, ...importedUsers];
+                                            }
+
                                             const cols = ['users', 'classes', 'students', 'records'];
                                             for (const c of cols) { if (d[c]) { for (const item of d[c]) await saveToDb(c, item.id, item, true); state[c] = d[c]; } }
                                             if (d.sys) { state.systemName = d.sys.name; state.systemLogo = d.sys.logo; state.systemBgImage = d.sys.bgImage || ''; }
