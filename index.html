@@ -776,7 +776,7 @@
                                                 <td class="font-mono text-xs md:text-sm font-bold text-gray-600">{{ rec.date }}</td>
                                                 <td class="font-extrabold text-gray-800 text-sm md:text-base">{{ rec.className || '-' }}</td>
                                                 <td>
-                                                    <span :class="['px-2 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold shadow-sm inline-block border backdrop-blur-sm', rec.type.includes('请假') ? 'bg-amber-100/80 text-amber-700 border-amber-200/50' : rec.type.includes('签到') ? 'bg-emerald-100/80 text-emerald-700 border-emerald-200/50' : rec.type.includes('修改') || rec.type.includes('覆写') ? 'bg-purple-100/80 text-purple-700 border-purple-200/50' : 'bg-blue-100/80 text-blue-700 border-blue-200/50']">
+                                                    <span :class="['px-2 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold shadow-sm inline-block border backdrop-blur-sm whitespace-nowrap', rec.type.includes('请假') ? 'bg-amber-100/80 text-amber-700 border-amber-200/50' : (rec.type.includes('签到') || rec.type.includes('核销')) ? 'bg-emerald-100/80 text-emerald-700 border-emerald-200/50' : rec.type.includes('修改') || rec.type.includes('覆写') ? 'bg-purple-100/80 text-purple-700 border-purple-200/50' : 'bg-blue-100/80 text-blue-700 border-blue-200/50']">
                                                         {{ rec.type }}
                                                     </span>
                                                 </td>
@@ -919,7 +919,7 @@
                                             <td>
                                                 <span :class="['px-2 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-[10px] text-[10px] md:text-xs font-bold shadow-sm inline-block border backdrop-blur-sm whitespace-nowrap', 
                                                     rec.type.includes('请假') ? 'bg-amber-100/80 text-amber-700 border-amber-200/50' :
-                                                    rec.type.includes('签到') ? 'bg-emerald-100/80 text-emerald-700 border-emerald-200/50' : 
+                                                    (rec.type.includes('签到') || rec.type.includes('核销')) ? 'bg-emerald-100/80 text-emerald-700 border-emerald-200/50' : 
                                                     rec.type.includes('建档') || rec.type.includes('充值') ? 'bg-blue-100/80 text-blue-700 border-blue-200/50' : 
                                                     'bg-purple-100/80 text-purple-700 border-purple-200/50']">
                                                     {{ rec.type }}
@@ -1678,9 +1678,9 @@
 
                 const hasAttendedToday = (studentId, classId) => {
                     const todayDate = formatDt(new Date()).split(' ')[0];
-                    const rec = state.records.find(r => r.studentId === studentId && r.classId === classId && r.date.startsWith(todayDate) && (r.type.includes('签到') || r.type.includes('请假')));
+                    const rec = state.records.find(r => r.studentId === studentId && r.classId === classId && r.date.startsWith(todayDate) && (r.type.includes('签到') || r.type.includes('核销') || r.type.includes('请假')));
                     if (!rec) return 'none';
-                    return rec.type.includes('签到') ? 'present' : 'leave';
+                    return (rec.type.includes('签到') || rec.type.includes('核销')) ? 'present' : 'leave';
                 };
 
                 const handleLogin = () => {
@@ -1871,19 +1871,25 @@
                     const s = state.students.find(x=>x.id===af.student.id);
                     if (hasAttendedToday(s.id, af.classObj.id) !== 'none') return showToast('防止误触，您今天已经点过名了', 'error');
 
-                    withLoading('打卡信号发射中...', async () => {
-                        if (af.type === 'present') {
-                            if (s.remainingHours <= 0) return showToast('课时库已枯竭！', 'error');
-                            const newS = { ...s, remainingHours: s.remainingHours - 1 };
-                            await saveToDb('students', s.id, newS);
-                            await addRecord(s.id, s.name, af.classObj.id, af.classObj.teacherId, '正课核销 (-1节)', af.remark);
-                            showToast('点名成功，已扣费');
-                        } else {
-                            await addRecord(s.id, s.name, af.classObj.id, af.classObj.teacherId, '事由请假 (豁免)', af.remark);
-                            showToast('请假单已归档');
+                    state.confirmDialog = {
+                        title: '最后核对',
+                        message: af.type === 'present' ? `确认将【${s.name}】设为出勤吗？这将立即扣除 1 节共享课时！` : `确认为【${s.name}】登记请假单吗？(不扣课时)`,
+                        onConfirm: () => {
+                            withLoading('打卡信号发射中...', async () => {
+                                if (af.type === 'present') {
+                                    if (s.remainingHours <= 0) return showToast('课时库已枯竭！', 'error');
+                                    const newS = { ...s, remainingHours: s.remainingHours - 1 };
+                                    await saveToDb('students', s.id, newS);
+                                    await addRecord(s.id, s.name, af.classObj.id, af.classObj.teacherId, '上课签到 (-1节)', af.remark);
+                                    showToast('点名成功，已扣费');
+                                } else {
+                                    await addRecord(s.id, s.name, af.classObj.id, af.classObj.teacherId, '事由请假 (豁免)', af.remark);
+                                    showToast('请假单已归档');
+                                }
+                                closeModal();
+                            });
                         }
-                        closeModal();
-                    });
+                    };
                 };
 
                 const handleExportData = () => {
