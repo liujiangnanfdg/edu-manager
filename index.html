@@ -247,8 +247,7 @@
                 <div class="glass-panel p-6 sm:p-10 w-full max-w-md animate-[springUp_0.8s_ease-out] rounded-[32px] md:rounded-[36px]">
                     <div class="text-center mb-8 sm:mb-10">
                         <div class="w-20 h-20 sm:w-24 sm:h-24 bg-white/80 text-blue-600 rounded-[24px] sm:rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-liquid border border-white overflow-hidden transform hover:scale-105 transition-transform duration-500">
-                            <img v-if="state.systemLogo" :src="state.systemLogo" class="w-full h-full object-contain p-2" />
-                            <i v-else class="ph ph-planet text-5xl sm:text-6xl drop-shadow-md"></i>
+                            <i class="ph ph-planet text-5xl sm:text-6xl drop-shadow-md"></i>
                         </div>
                         <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-800 tracking-tight">{{ state.systemName }}</h1>
                         <p class="text-gray-500 mt-2 font-medium">请验证您的身份以继续</p>
@@ -288,8 +287,7 @@
                         <div class="p-5 md:p-6 flex items-center justify-between md:justify-start border-b border-white/30 rounded-t-[32px] md:rounded-t-[36px]">
                             <div class="flex items-center space-x-3 md:space-x-4 overflow-hidden">
                                 <div class="w-10 h-10 md:w-14 md:h-14 bg-white/60 backdrop-blur-md rounded-[16px] md:rounded-[20px] flex items-center justify-center shadow-sm overflow-hidden border border-white/50 shrink-0">
-                                    <img v-if="state.systemLogo" :src="state.systemLogo" class="w-full h-full object-contain p-1" />
-                                    <i v-else class="ph ph-planet text-2xl md:text-3xl text-blue-600"></i>
+                                    <i class="ph ph-planet text-2xl md:text-3xl text-blue-600"></i>
                                 </div>
                                 <div class="overflow-hidden">
                                     <span class="text-base md:text-lg font-extrabold text-gray-800 block truncate tracking-tight">{{ state.systemName }}</span>
@@ -327,7 +325,7 @@
                                 <button @click="switchTab('database')" :class="['w-full flex items-center space-x-3 px-4 md:px-5 py-3 md:py-4 rounded-[20px] md:rounded-[24px] transition-all font-bold text-sm md:text-base', state.activeTab === 'database' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/40 hover:shadow-sm']">
                                     <i class="ph ph-database text-xl md:text-2xl"></i><span>数据备份与恢复</span>
                                 </button>
-                                <!-- 已移除系统偏好设置入口，保障代码稳定不报错 -->
+                                <!-- 已绝对拔除 settings 入口 -->
                             </div>
                         </nav>
 
@@ -360,7 +358,7 @@
                     <!-- 顶部超管横幅 -->
                     <transition name="fade">
                         <div v-if="isSuperadmin" class="mb-3 md:mb-4 bg-orange-100/50 backdrop-blur-xl border border-orange-200/80 px-4 md:px-6 py-2.5 md:py-3.5 rounded-[20px] md:rounded-[24px] flex items-center text-orange-800 text-xs md:text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
-                            <i class="ph ph-shield-warning text-lg md:text-xl mr-2 md:mr-3 relative z-10 text-orange-600 shrink-0"></i>
+                            <i class="ph ph-shield-warning text-lg md:text-xl mr-2 md:mr-3 relative z-10 text-orange-600"></i>
                             <span class="relative z-10 font-bold truncate">超级管理员登录，可执行高级覆写。</span>
                         </div>
                     </transition>
@@ -978,7 +976,6 @@
             <div v-if="state.showModal" class="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-md sm:p-4">
                 
                 <transition name="spring-up" appear>
-                    <!-- 确保弹窗在移动端也是大圆角 -->
                     <div class="glass-panel w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col relative !bg-white/80 !backdrop-blur-[40px] border-white rounded-[32px] sm:!rounded-[36px] !rounded-b-none sm:!rounded-b-[36px]" @click.stop>
                         
                         <!-- 移动端顶部下拉把手指示器 -->
@@ -1178,48 +1175,6 @@
                                 </div>
                             </form>
 
-                            <!-- 偏好设置 -->
-                            <form v-if="state.showModal === 'systemSettings'" @submit.prevent="submitSystemSettings" class="space-y-6 sm:space-y-8">
-                                <div>
-                                    <label class="block text-xs sm:text-sm font-black text-gray-700 mb-3 sm:mb-4 uppercase tracking-wider">系统全局背景图</label>
-                                    <div class="flex flex-col sm:flex-row items-center sm:space-x-8 p-4 sm:p-6 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-100 gap-4 sm:gap-0">
-                                        <div class="w-full sm:w-28 h-32 sm:h-28 bg-white rounded-xl sm:rounded-[28px] border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group hover:border-blue-400 transition-colors shrink-0">
-                                            <img v-if="state.settingsForm.bgImage" :src="state.settingsForm.bgImage" class="w-full h-full object-cover" />
-                                            <i v-else class="ph ph-image text-4xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
-                                            <div class="absolute inset-0 bg-blue-600/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
-                                                <i class="ph ph-upload-simple text-blue-600 text-3xl font-bold"></i>
-                                            </div>
-                                            <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'bgImage')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" title="点击上传背景" />
-                                        </div>
-                                        <div class="text-xs sm:text-sm text-gray-500 space-y-2 sm:space-y-3 flex-1 text-center sm:text-left w-full">
-                                            <p class="font-bold bg-white px-3 py-2 rounded-lg sm:rounded-xl border inline-block shadow-sm w-full sm:w-auto">自动压缩适应屏幕，防卡顿。</p>
-                                            <div><button type="button" @click="state.settingsForm.bgImage = ''" class="text-red-500 font-bold hover:bg-red-50 px-4 py-2 rounded-lg sm:rounded-xl transition-colors w-full sm:w-auto border border-red-100 sm:border-transparent"><i class="ph ph-trash mr-1"></i>恢复默认光晕</button></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="border-t border-gray-100 pt-4 sm:pt-6">
-                                    <label class="block text-xs sm:text-sm font-black text-gray-700 mb-3 sm:mb-4 uppercase tracking-wider">品牌 Logo 标识</label>
-                                    <div class="flex flex-col sm:flex-row items-center sm:space-x-8 p-4 sm:p-6 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-100 gap-4 sm:gap-0">
-                                        <div class="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-xl sm:rounded-[24px] border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-sm relative group hover:border-blue-400 transition-colors shrink-0">
-                                            <img v-if="state.settingsForm.logo" :src="state.settingsForm.logo" class="w-full h-full object-contain p-2" />
-                                            <i v-else class="ph ph-image text-3xl sm:text-4xl text-gray-300 group-hover:text-blue-400 transition-colors"></i>
-                                            <input type="file" accept="image/*" @change="e => handleImageUpload(e, 'logo')" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-                                        </div>
-                                        <div class="text-xs sm:text-sm flex-1 w-full text-center sm:text-left">
-                                            <button type="button" @click="state.settingsForm.logo = ''" class="text-red-500 font-bold hover:bg-red-50 px-4 py-2 rounded-lg sm:rounded-xl transition-colors w-full sm:w-auto border border-red-100 sm:border-transparent"><i class="ph ph-trash mr-1"></i>移除 Logo</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="pt-2">
-                                    <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">系统显示名称</label>
-                                    <input type="text" required v-model="state.settingsForm.name" class="glass-input w-full font-bold text-lg sm:text-xl py-2.5 sm:py-3" placeholder="例如：新东方教育" />
-                                </div>
-                                <div class="flex flex-col sm:flex-row justify-end pt-4 sm:pt-6 border-t border-gray-100 gap-3 sm:gap-0">
-                                    <button type="submit" class="glass-button-primary shadow-blue-500/20 px-8 py-3 text-base sm:text-lg rounded-xl sm:rounded-full w-full sm:w-auto order-1 sm:order-2 sm:ml-3">保存设置并同步</button>
-                                    <button type="button" @click="closeModal" class="px-6 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors bg-gray-50 sm:bg-transparent w-full sm:w-auto order-2 sm:order-1">放弃更改</button>
-                                </div>
-                            </form>
-
                             <!-- 添加老师 -->
                             <form v-if="state.showModal === 'addTeacher'" @submit.prevent="submitTeacher" class="space-y-4 sm:space-y-6">
                                 <div><label class="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">真实姓名</label><input type="text" required v-model="state.teacherForm.name" class="glass-input w-full font-bold" /></div>
@@ -1368,7 +1323,7 @@
         createApp({
             setup() {
                 const state = reactive({
-                    systemName: 'EduOS Liquid',
+                    systemName: '培训机构云端系统',
                     systemLogo: '',
                     systemBgImage: '',
                     isLoading: true,
@@ -1398,7 +1353,6 @@
                     superEditForm: { targetId: null, remainingHours: 0, totalHours: 0, paymentAmount: 0 },
 
                     loginForm: { username: '', password: '' },
-                    settingsForm: { name: '', logo: '', bgImage: '' },
                     classForm: { id: null, name: '', course: '', schedule: '', teacherId: '' },
                     teacherForm: { name: '', username: '', password: '', role: 'teacher' },
                     addStudentMode: 'new',
@@ -1450,7 +1404,8 @@
                         state.isCloud = true;
 
                         state.loadingMsg = 'Syncing Cloud Data...';
-                        const collectionsToCheck = ['users', 'classes', 'students', 'records', 'settings'];
+                        // 彻底剔除了 settings 集合，不会再报权限拦截错误
+                        const collectionsToCheck = ['users', 'classes', 'students', 'records'];
                         
                         for (const col of collectionsToCheck) {
                             try {
@@ -1460,7 +1415,6 @@
                                 
                                 let defaultData = [];
                                 if (col === 'users') defaultData = fallbackUsers;
-                                if (col === 'settings') defaultData = [{ id: 'sys', name: 'EduOS Liquid', logo: '', bgImage: '' }];
 
                                 for (const defItem of defaultData) {
                                     const exists = resData.find(r => r.id == defItem.id || r._id == defItem.id);
@@ -1474,27 +1428,17 @@
                                     }
                                 }
 
-                                if (col === 'settings') {
-                                    const sysData = resData.find(r => r.id === 'sys' || r._id === 'sys');
-                                    if(sysData){ state.systemName = sData.name; state.systemLogo = sData.logo; state.systemBgImage = sData.bgImage; }
-                                } else {
-                                    let docs = resData.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
-                                    if (col === 'records') docs.sort((a,b) => b.id - a.id);
-                                    state[col] = docs;
-                                }
+                                let docs = resData.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
+                                if (col === 'records') docs.sort((a,b) => b.id - a.id);
+                                state[col] = docs;
 
                                 tcbDb.collection(col).watch({
                                     onChange: (snapshot) => {
                                         const snapDocs = snapshot.docs || snapshot.data || snapshot || [];
                                         if (Array.isArray(snapDocs)) {
-                                            if (col === 'settings') {
-                                                const sData = snapDocs.find(r => r.id === 'sys' || r._id === 'sys');
-                                                if(sData){ state.systemName = sData.name; state.systemLogo = sData.logo; state.systemBgImage = sData.bgImage; }
-                                            } else {
-                                                let wDocs = snapDocs.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
-                                                if (col === 'records') wDocs.sort((a,b) => b.id - a.id);
-                                                state[col] = wDocs;
-                                            }
+                                            let wDocs = snapDocs.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
+                                            if (col === 'records') wDocs.sort((a,b) => b.id - a.id);
+                                            state[col] = wDocs;
                                         }
                                     },
                                     onError: () => {}
@@ -1536,7 +1480,7 @@
                         
                         await tcbDb.collection(colName).doc(id.toString()).set(payload);
                         
-                        if (!skipLocalUpdate && colName !== 'settings') {
+                        if (!skipLocalUpdate) {
                             const arr = state[colName];
                             const idx = arr.findIndex(x => x.id === id);
                             if (idx > -1) arr[idx] = data; else arr.push(data);
@@ -1631,11 +1575,11 @@
                 });
 
                 const modalTitle = computed(() => {
-                    const t = { addTeacher: '创建教职工', addClass: '新班排期', editClass: '编辑班级', addStudent: '学员录入', renewStudent: '缴费充值', attendance: '课堂签到', systemSettings: '视觉与偏好', changePassword: '安全身份验证', editAvatar: '个人相貌资料', superEditStudent: '高危覆写区' };
+                    const t = { addTeacher: '创建教职工', addClass: '新班排期', editClass: '编辑班级', addStudent: '学员录入', renewStudent: '缴费充值', attendance: '课堂签到', changePassword: '安全身份验证', editAvatar: '个人相貌资料', superEditStudent: '高危覆写区' };
                     return t[state.showModal] || '';
                 });
                 const modalIconClass = computed(() => {
-                    const i = { addTeacher: 'ph-user-plus', addClass: 'ph-chalkboard-teacher', editClass: 'ph-pencil-simple', addStudent: 'ph-student', renewStudent: 'ph-coins', attendance: 'ph-calendar-check', systemSettings: 'ph-gear', changePassword: 'ph-key', editAvatar: 'ph-camera', superEditStudent: 'ph-wrench' };
+                    const i = { addTeacher: 'ph-user-plus', addClass: 'ph-chalkboard-teacher', editClass: 'ph-pencil-simple', addStudent: 'ph-student', renewStudent: 'ph-coins', attendance: 'ph-calendar-check', changePassword: 'ph-key', editAvatar: 'ph-camera', superEditStudent: 'ph-wrench' };
                     return i[state.showModal] || 'ph-app-window';
                 });
 
@@ -1648,13 +1592,12 @@
                     state.viewingClass = null; 
                     state.viewingStudent = null; 
                     state.searchTerm = ''; 
-                    state.isMobileMenuOpen = false; 
+                    state.isMobileMenuOpen = false; // 切换后自动收起移动端菜单
                 };
                 
                 const openModal = (m) => { 
                     state.showModal = m; 
                     state.isMobileMenuOpen = false; 
-                    if(m==='systemSettings') state.settingsForm = { name: state.systemName, logo: state.systemLogo, bgImage: state.systemBgImage || '' };
                     
                     // 已补回重置家长信息，防止缓存干扰
                     if(m==='addStudent') {
@@ -1761,17 +1704,6 @@
                     await saveToDb('records', rid, newRec);
                 };
 
-                const submitSystemSettings = () => {
-                    withLoading('云端配置广播中...', async () => {
-                        const payload = { id: 'sys', name: state.settingsForm.name, logo: state.settingsForm.logo, bgImage: state.settingsForm.bgImage || '' };
-                        await saveToDb('settings', 'sys', payload);
-                        state.systemName = state.settingsForm.name;
-                        state.systemLogo = state.settingsForm.logo;
-                        state.systemBgImage = state.settingsForm.bgImage || '';
-                        closeModal(); showToast('界面已重绘');
-                    });
-                };
-
                 const submitTeacher = () => {
                     if (state.users.some(u=>u.username===state.teacherForm.username)) return showToast('登录名重合', 'error');
                     const tid = Date.now();
@@ -1809,6 +1741,7 @@
                     });
                 };
 
+                // 从特定班级触发编入学员时，锁定该班级，并清空所有上一次打开表单的残留！
                 const openAddStudentModal = (lockedClassObj=null, mode='new') => {
                     state.addStudentMode = mode;
                     state.studentForm = { existingId: '', name: '', contact: '', payment: 0, hours: '', bonus: 0, teacherId: lockedClassObj?.teacherId||'', classId: lockedClassObj?.id||'', remark: '', lockedClass: lockedClassObj, avatar: '', school: '', grade: '', parentName: '', parentRole: '妈妈' };
@@ -1818,6 +1751,7 @@
                 const submitStudent = () => {
                     const sf = state.studentForm; 
                     
+                    // 🌟 强力手动红字拦截：手机浏览器往往不听话，必须用 JS 手动卡住必填项
                     if (state.addStudentMode === 'new' && !sf.name) return showToast('请输入学员真实姓名', 'error');
                     if (state.addStudentMode === 'existing' && !sf.existingId) return showToast('请在上方选择要加报的老生档案', 'error');
                     
@@ -1885,7 +1819,7 @@
                 };
 
                 const handleExportData = () => {
-                    const data = { version: 'LiquidOS_v2', date: formatDt(new Date()), users: state.users, classes: state.classes, students: state.students, records: state.records, sys: { name: state.systemName, logo: state.systemLogo, bgImage: state.systemBgImage } };
+                    const data = { version: 'LiquidOS_v2', date: formatDt(new Date()), users: state.users, classes: state.classes, students: state.students, records: state.records };
                     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a'); link.href = url;
@@ -1906,10 +1840,8 @@
                                     const d = JSON.parse(evt.target.result); 
                                     if(d.users && d.records) { 
                                         await withLoading('强制重构时空中，切勿断电...', async () => {
-                                            if (d.sys) await saveToDb('settings', 'sys', { id: 'sys', name: d.sys.name, logo: d.sys.logo, bgImage: d.sys.bgImage || '' }, true);
                                             const cols = ['users', 'classes', 'students', 'records'];
                                             for (const c of cols) { if (d[c]) { for (const item of d[c]) await saveToDb(c, item.id, item, true); state[c] = d[c]; } }
-                                            if (d.sys) { state.systemName = d.sys.name; state.systemLogo = d.sys.logo; state.systemBgImage = d.sys.bgImage || ''; }
                                             showToast('时空线跃迁完成'); switchTab('dashboard');
                                         });
                                     }
@@ -1940,8 +1872,6 @@
                     reader.onload = (evt) => { 
                         const qWidth = field === 'bgImage' ? 1920 : 400;
                         compressImage(evt.target.result, qWidth, (compressedBase64) => {
-                            if(field === 'logo') state.settingsForm.logo = compressedBase64;
-                            if(field === 'bgImage') state.settingsForm.bgImage = compressedBase64;
                             if(field === 'studentAvatar') state.studentForm.avatar = compressedBase64;
                             if(field === 'editStudentAvatar') state.editAvatarForm.avatar = compressedBase64;
                         });
@@ -1983,7 +1913,7 @@
                     switchTab, openModal, closeModal, viewStudentProfile,
                     handleLogin, handleLogout, executeConfirm,
                     triggerDeleteUser, triggerDeleteClass, triggerDropClass, triggerDeleteProfile,
-                    submitSystemSettings, submitTeacher, openEditClassModal, submitClass,
+                    submitTeacher, openEditClassModal, submitClass,
                     openAddStudentModal, submitStudent,
                     openRenewModal, submitRenew,
                     openAttendanceModal, submitAttendance,
