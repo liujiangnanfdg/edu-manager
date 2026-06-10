@@ -102,7 +102,7 @@
 
         /* 🌟 液态玻璃核心属性 - 强制全局保留大圆角 */
         .glass-panel {
-            @apply bg-white/30 backdrop-blur-[40px] shadow-liquid rounded-[32px] md:rounded-[36px] border border-white/40;
+            @apply bg-white/30 backdrop-blur-[40px] shadow-liquid rounded-[32px] sm:rounded-[36px] border border-white/40;
             overflow: hidden !important;
             -webkit-mask-image: -webkit-radial-gradient(white, black);
         }
@@ -193,12 +193,11 @@
             <div v-if="!state.systemBgImage" class="ambient-blob blob-1"></div>
             <div v-if="!state.systemBgImage" class="ambient-blob blob-2"></div>
             <div v-if="!state.systemBgImage" class="ambient-blob blob-3"></div>
-            <!-- 如果有背景图，则加一层薄薄的遮罩让文字更清晰 -->
             <div v-if="state.systemBgImage" class="absolute inset-0 bg-black/10 backdrop-blur-[2px]"></div>
         </div>
 
         <!-- 移动端顶部状态导航栏 (专门匹配手机浏览器) -->
-        <div v-if="state.currentUser && !state.isLoading && !state.systemError" class="md:hidden glass-panel rounded-[24px] mx-4 mt-4 p-4 flex justify-between items-center z-40 sticky top-4 shrink-0">
+        <div v-if="state.currentUser && !state.isLoading && !state.systemError" class="md:hidden glass-panel mx-4 mt-4 mb-2 p-3 flex justify-between items-center z-[60] shrink-0 !rounded-2xl">
             <button @click="state.isMobileMenuOpen = true" class="w-10 h-10 flex items-center justify-center bg-white/40 hover:bg-white/60 rounded-xl text-gray-800 shadow-sm border border-white/50 transition-colors">
                 <i class="ph ph-list text-2xl font-bold"></i>
             </button>
@@ -246,7 +245,7 @@
                     iOS26 Liquid Engine
                 </div>
 
-                <div class="glass-panel p-6 sm:p-10 w-full max-w-md animate-[springUp_0.8s_ease-out] rounded-[32px] md:rounded-[36px]">
+                <div class="glass-panel p-6 sm:p-10 w-full max-w-md animate-[springUp_0.8s_ease-out] rounded-[32px] sm:rounded-[36px]">
                     <div class="text-center mb-8 sm:mb-10">
                         <div class="w-20 h-20 sm:w-24 sm:h-24 bg-white/80 text-blue-600 rounded-[24px] sm:rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-liquid border border-white overflow-hidden transform hover:scale-105 transition-transform duration-500">
                             <img v-if="state.systemLogo" :src="state.systemLogo" class="w-full h-full object-contain p-2" />
@@ -285,9 +284,9 @@
 
                 <!-- 侧边栏 (移动端变为悬浮 Drawer) -->
                 <transition name="slide-right">
-                    <aside v-show="state.isMobileMenuOpen || !isMobile" :class="['fixed md:relative top-4 bottom-4 left-4 md:top-0 md:left-0 h-[calc(100%-2rem)] md:h-auto w-64 md:w-72 glass-panel rounded-[32px] md:rounded-[36px] flex flex-col z-[110] flex-shrink-0 transition-transform duration-300', !state.isMobileMenuOpen && isMobile ? '-translate-x-[120%]' : 'translate-x-0']">
+                    <aside v-show="state.isMobileMenuOpen || !isMobile" :class="['fixed md:relative top-4 bottom-4 left-4 md:top-0 md:left-0 h-[calc(100%-2rem)] md:h-auto w-64 md:w-72 glass-panel rounded-[32px] sm:rounded-[36px] flex flex-col z-[110] flex-shrink-0 transition-transform duration-300', !state.isMobileMenuOpen && isMobile ? '-translate-x-[120%]' : 'translate-x-0']">
                         
-                        <div class="p-5 md:p-6 flex items-center justify-between md:justify-start border-b border-white/30 rounded-t-[32px] md:rounded-t-[36px]">
+                        <div class="p-5 md:p-6 flex items-center justify-between md:justify-start border-b border-white/30 rounded-t-[32px] sm:rounded-t-[36px]">
                             <div class="flex items-center space-x-3 md:space-x-4 overflow-hidden">
                                 <div class="w-10 h-10 md:w-14 md:h-14 bg-white/60 backdrop-blur-md rounded-[16px] md:rounded-[20px] flex items-center justify-center shadow-sm overflow-hidden border border-white/50 shrink-0">
                                     <img v-if="state.systemLogo" :src="state.systemLogo" class="w-full h-full object-contain p-1" />
@@ -335,7 +334,7 @@
                             </div>
                         </nav>
 
-                        <div class="p-4 md:p-5 border-t border-white/30 bg-white/10 rounded-b-[32px] md:rounded-b-[36px]">
+                        <div class="p-4 md:p-5 border-t border-white/30 bg-white/10 rounded-b-[32px] sm:rounded-b-[36px]">
                             <div class="flex items-center space-x-3 mb-4 md:mb-5">
                                 <div class="hidden md:flex w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full items-center justify-center font-bold text-xl shadow-md border-2 border-white/50 shrink-0">
                                     {{ state.currentUser.name.charAt(0) }}
@@ -465,7 +464,7 @@
                                 </div>
                                 <div class="flex items-center mb-4 md:mb-6 relative z-10">
                                     <div class="w-8 h-8 md:w-10 md:h-10 bg-red-100/80 rounded-lg md:rounded-xl flex items-center justify-center text-red-600 mr-2 md:mr-3 border border-red-200/50 shrink-0"><i class="ph ph-bell-ringing text-lg md:text-xl animate-bounce"></i></div>
-                                    <h3 class="text-lg md:text-xl font-extrabold text-gray-800 tracking-tight flex items-center">续费雷达 <span class="bg-red-500 text-white text-[10px] md:text-xs px-2 py-0.5 rounded-full ml-2 align-middle">{{ lowHoursStudents.length }} 人</span></h3>
+                                    <h3 class="text-lg md:text-xl font-extrabold text-gray-800 tracking-tight flex items-center">续费预警 <span class="bg-red-500 text-white text-[10px] md:text-xs px-2 py-0.5 rounded-full ml-2 align-middle">{{ lowHoursStudents.length }} 人</span></h3>
                                 </div>
                                 <!-- 移动端横向滑动 -->
                                 <div class="overflow-x-auto relative z-10 pb-2 md:pb-4 -mx-4 px-4 md:mx-0 md:px-0">
@@ -535,7 +534,7 @@
 
                         <!-- 班级详情页 (名单) -->
                         <div v-if="state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
-                            <div class="p-4 md:p-6 border-b border-white/40 bg-white/20 flex flex-col sm:flex-row justify-between items-start sm:items-center relative overflow-hidden rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
+                            <div class="p-4 md:p-6 border-b border-white/40 bg-white/20 flex flex-col sm:flex-row justify-between items-start sm:items-center relative overflow-hidden rounded-t-[32px] sm:rounded-t-[36px] gap-4 sm:gap-0">
                                 <div class="flex items-start md:items-center relative z-10 w-full sm:w-auto">
                                     <button @click="state.viewingClass = null" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-[18px] bg-white/40 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-white/80 hover:shadow-sm mr-3 md:mr-5 transition-all border border-white/50 shrink-0">
                                         <i class="ph ph-caret-left text-xl md:text-2xl font-bold"></i>
@@ -1297,7 +1296,6 @@
                                                     <div><label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">就读学校</label><input type="text" class="glass-input w-full py-2 sm:py-3 text-sm sm:text-base" v-model="state.studentForm.school" placeholder="选填" /></div>
                                                     <div><label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">所在年级</label><input type="text" class="glass-input w-full py-2 sm:py-3 text-sm sm:text-base" v-model="state.studentForm.grade" placeholder="选填" /></div>
                                                 </div>
-                                                <!-- 加回家长信息输入框 -->
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
                                                     <div><label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">家长姓名</label><input type="text" class="glass-input w-full py-2 sm:py-3 text-sm sm:text-base" v-model="state.studentForm.parentName" placeholder="选填" /></div>
                                                     <div><label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">身份关系</label><select v-model="state.studentForm.parentRole" class="glass-input w-full bg-white/50 py-2 sm:py-3 text-sm sm:text-base"><option value="妈妈">妈妈</option><option value="爸爸">爸爸</option><option value="爷爷/奶奶">爷爷/奶奶</option><option value="其他">其他</option></select></div>
@@ -1515,8 +1513,8 @@
                                         const snapDocs = snapshot.docs || snapshot.data || snapshot || [];
                                         if (Array.isArray(snapDocs)) {
                                             if (col === 'settings') {
-                                                const sData = snapDocs.find(r => r.id === 'sys' || r._id === 'sys');
-                                                if(sData){ state.systemName = sData.name; state.systemLogo = sData.logo; state.systemBgImage = sData.bgImage; }
+                                                const sysData = snapDocs.find(r => r.id === 'sys' || r._id === 'sys');
+                                                if(sysData){ state.systemName = sysData.name; state.systemLogo = sysData.logo; state.systemBgImage = sysData.bgImage; }
                                             } else {
                                                 let wDocs = snapDocs.map(d => ({ ...d, id: parseInt(d.id) || parseInt(d._id) || d.id }));
                                                 if (col === 'records') wDocs.sort((a,b) => b.id - a.id);
@@ -1703,7 +1701,7 @@
                     const todayDate = formatDt(new Date()).split(' ')[0];
                     const rec = state.records.find(r => r.studentId === studentId && r.classId === classId && r.date.startsWith(todayDate) && (r.type.includes('签到') || r.type.includes('核销') || r.type.includes('请假')));
                     if (!rec) return 'none';
-                    return (rec.type.includes('签到') || rec.type.includes('核销')) ? 'present' : 'leave';
+                    return (r.type.includes('签到') || r.type.includes('核销')) ? 'present' : 'leave';
                 };
 
                 const handleLogin = () => {
@@ -1946,7 +1944,12 @@
                         ? state.users 
                         : state.users.filter(u => u.role !== 'superadmin');
 
-                    const data = { version: 'LiquidOS_v2', date: formatDt(new Date()), users: safeUsers, classes: state.classes, students: state.students, records: state.records, sys: { name: state.systemName, logo: state.systemLogo, bgImage: state.systemBgImage } };
+                    // 🛡️ 流水脱敏安全隔离：如果当前不是超管，强制剔除所有超管的操作日志痕迹
+                    const safeRecords = state.currentUser.role === 'superadmin' 
+                        ? state.records 
+                        : state.records.filter(r => r.operatorRole !== 'superadmin');
+
+                    const data = { version: 'LiquidOS_v2', date: formatDt(new Date()), users: safeUsers, classes: state.classes, students: state.students, records: safeRecords, sys: { name: state.systemName, logo: state.systemLogo, bgImage: state.systemBgImage } };
                     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a'); link.href = url;
