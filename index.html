@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>培训机构管理系统</title>
+    <title>教务管理系统</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
@@ -242,7 +242,7 @@
             <div v-if="!state.currentUser && !state.isLoading && !state.systemError" class="flex-1 w-full flex items-center justify-center p-4 relative">
                 <div class="absolute top-6 right-6 bg-white/60 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/80 text-xs font-bold flex items-center text-gray-700">
                     <div class="w-2.5 h-2.5 rounded-full mr-2 animate-pulse bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
-                    V1.0.0安全运行中
+                    系统安全运行中
                 </div>
 
                 <div class="glass-panel p-6 sm:p-10 w-full max-w-md animate-[springUp_0.8s_ease-out] rounded-[32px] sm:rounded-[36px]">
@@ -652,7 +652,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="overflow-y-auto flex-1 p-2 md:p-4 pb-4 md:pb-8 w-full relative">
+                            <div class="overflow-x-auto p-2 md:p-4 pb-4 md:pb-8 w-full relative">
                                 <table class="w-full text-left min-w-[700px]">
                                     <thead class="sticky top-0 z-40">
                                         <tr>
@@ -751,7 +751,7 @@
                                             <div class="flex justify-between items-center text-xs md:text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-graduation-cap mr-1.5 md:mr-2 text-lg md:text-xl text-blue-500"></i>年级</span><span class="font-extrabold text-gray-800">{{ viewingStudentData.grade || '-' }}</span></div>
                                         </div>
                                         <div class="bg-white/40 rounded-xl md:rounded-2xl p-3 md:p-4 shadow-sm border border-white/50 space-y-2 md:space-y-3">
-                                            <div class="flex justify-between items-center text-xs md:text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-users mr-1.5 md:mr-2 text-lg md:text-xl text-green-500"></i>家长</span><span class="font-extrabold text-gray-800 truncate pl-2">{{ viewingStudentData.parentName || '-' }} <span class="text-[10px] md:text-xs text-gray-600 font-bold">({{ viewingStudentData.parentRole || '-' }})</span></span></div>
+                                            <div class="flex justify-between items-center text-xs md:text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-users mr-1.5 md:mr-2 text-lg md:text-xl text-green-500"></i>家长</span><span class="font-extrabold text-gray-800 truncate pl-2">{{ viewingStudentData.parentName || '-' }} <span class="text-[10px] md:text-xs text-gray-600 font-bold">({viewingStudentData.parentRole || '-'})</span></span></div>
                                             <div class="flex justify-between items-center text-xs md:text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-phone mr-1.5 md:mr-2 text-lg md:text-xl text-green-500"></i>电话</span><span class="font-mono font-extrabold text-gray-800">{{ viewingStudentData.contact || '-' }}</span></div>
                                         </div>
                                     </div>
@@ -1324,7 +1324,7 @@
                             <form v-if="state.showModal === 'addTeacher'" @submit.prevent="submitTeacher" class="space-y-4 sm:space-y-6">
                                 <div><label class="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">真实姓名</label><input type="text" required v-model="state.teacherForm.name" class="glass-input w-full font-bold" /></div>
                                 <div><label class="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">登录账号</label><input type="text" required v-model="state.teacherForm.username" class="glass-input w-full font-mono font-bold" /></div>
-                                <div><label class="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">初始密码 (默认123456)</label><input type="text" v-model="state.teacherForm.password" class="glass-input w-full font-bold" placeholder="123456"/></div>
+                                <div><label class="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">初始密码</label><input type="text" v-model="state.teacherForm.password" class="glass-input w-full font-bold" placeholder="选填，默认生成"/></div>
                                 <div v-if="isSuperadmin"><label class="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">指派角色</label><select v-model="state.teacherForm.role" class="glass-input w-full bg-white font-bold"><option value="teacher">普通任课讲师</option><option value="admin">分校校长 (管理)</option></select></div>
                                 <div class="flex flex-col sm:flex-row justify-end pt-4 sm:pt-6 border-t border-gray-100 gap-3 sm:gap-0"><button type="button" @click="closeModal" class="px-6 py-3 mr-3 rounded-xl sm:rounded-2xl font-bold text-gray-500 hover:bg-gray-100 w-full sm:w-auto order-2 sm:order-1">取消</button><button type="submit" class="glass-button-primary rounded-xl sm:rounded-full px-8 w-full sm:w-auto order-1 sm:order-2">确认添加</button></div>
                             </form>
@@ -1427,7 +1427,7 @@
                                             <label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">落位班级 <span class="text-red-500">*</span></label>
                                             <select v-model.number="state.studentForm.classId" :disabled="!state.studentForm.teacherId" class="glass-input w-full bg-white/50 disabled:bg-gray-100/50 disabled:cursor-not-allowed disabled:opacity-60 py-2 sm:py-3 text-sm sm:text-base">
                                                 <option value="" disabled>2. 再锁定班级</option>
-                                                <!-- 新增：过滤掉已归档班级 -->
+                                                <!-- 过滤掉已归档班级 -->
                                                 <option v-for="c in state.classes.filter(cls=>cls.teacherId===state.studentForm.teacherId && cls.status !== 'archived')" :value="c.id">{{c.name}}</option>
                                             </select>
                                         </div>
@@ -1484,7 +1484,7 @@
         createApp({
             setup() {
                 const state = reactive({
-                    systemName: 'EduOS Liquid',
+                    systemName: '培训机构管理系统',
                     systemLogo: '',
                     systemBgImage: '',
                     isLoading: true,
@@ -1535,10 +1535,11 @@
 
                 const isMobile = computed(() => window.innerWidth < 768);
 
+                // 🛡️ 安全脱敏：移除明文密码，防止系统回滚掩盖真相
                 const fallbackUsers = [
-                    { id: 1, username: 'superadmin', password: '123456', role: 'superadmin', name: '系统超管' },
-                    { id: 2, username: 'admin', password: '123456', role: 'admin', name: '王校长' },
-                    { id: 3, username: 'teacher1', password: '123456', role: 'teacher', name: '张老师' }
+                    { id: 1, username: 'superadmin', password: '***', role: 'superadmin', name: '系统超管' },
+                    { id: 2, username: 'admin', password: '***', role: 'admin', name: '王校长' },
+                    { id: 3, username: 'teacher1', password: '***', role: 'teacher', name: '张老师' }
                 ];
 
                 const showToast = (msg, type='success') => { 
@@ -1586,7 +1587,7 @@
                                 
                                 let defaultData = [];
                                 if (col === 'users') defaultData = fallbackUsers;
-                                if (col === 'settings') defaultData = [{ id: 'sys', name: 'EduOS Liquid', logo: '', bgImage: '' }];
+                                if (col === 'settings') defaultData = [{ id: 'sys', name: '培训机构管理系统', logo: '', bgImage: '' }];
 
                                 for (const defItem of defaultData) {
                                     const exists = resData.find(r => r.id == defItem.id || r._id == defItem.id);
@@ -1657,18 +1658,37 @@
                     if (!state.isCloud || !tcbDb) throw new Error("Cloud disconnected");
                     try {
                         const payload = JSON.parse(JSON.stringify(data));
+                        
+                        // 🌟 核心修复：优先寻找并认准真实的云端主键 _id，防止生成幽灵克隆数据
+                        let realDocId = id.toString();
+                        if (data._id) {
+                            realDocId = data._id.toString();
+                        } else if (colName !== 'settings' && state[colName]) {
+                            const existingItem = state[colName].find(x => x.id === id);
+                            if (existingItem && existingItem._id) {
+                                realDocId = existingItem._id.toString();
+                            }
+                        } else if (colName === 'settings' && id === 'sys') {
+                            realDocId = 'sys';
+                        }
+                        
                         delete payload._id; 
                         delete payload._openid; 
                         
-                        await tcbDb.collection(colName).doc(id.toString()).set(payload);
+                        try {
+                            await tcbDb.collection(colName).doc(realDocId).update(payload);
+                        } catch (err) {
+                            await tcbDb.collection(colName).doc(realDocId).set(payload);
+                        }
                         
                         if (!skipLocalUpdate && colName !== 'settings') {
                             const arr = state[colName];
                             const idx = arr.findIndex(x => x.id === id);
-                            if (idx > -1) arr[idx] = data; else arr.push(data);
+                            if (idx > -1) arr[idx] = { ...arr[idx], ...data }; else arr.push(data);
                         }
                     } catch (err) {
-                        showToast(`云端写入受阻: ${err.message}`, 'error');
+                        // 🚨 强力拦截：如果腾讯云拒绝写入，立刻弹红字警告，并阻断后续操作！
+                        showToast(`云端写入被腾讯云安全拦截: ${err.message}`, 'error');
                         throw err; 
                     }
                 };
@@ -1676,7 +1696,12 @@
                 const delFromDb = async (colName, id) => {
                     if (!state.isCloud || !tcbDb) throw new Error("Cloud disconnected");
                     try {
-                        await tcbDb.collection(colName).doc(id.toString()).remove();
+                        let realDocId = id.toString();
+                        if (colName !== 'settings' && state[colName]) {
+                            const existingItem = state[colName].find(x => x.id === id);
+                            if (existingItem && existingItem._id) realDocId = existingItem._id.toString();
+                        }
+                        await tcbDb.collection(colName).doc(realDocId).remove();
                         state[colName] = state[colName].filter(x => x.id !== id);
                     } catch (err) {
                         showToast(`删除被拒: ${err.message}`, 'error');
@@ -1946,11 +1971,13 @@
                 };
                 const submitSuperEditStudent = () => {
                     withLoading('Executing Root Override...', async () => {
-                        const s = state.students.find(x => x.id === state.superEditForm.targetId);
-                        const newS = { ...s, remainingHours: state.superEditForm.remainingHours, totalHours: state.superEditForm.totalHours, totalPayment: state.superEditForm.paymentAmount };
-                        await saveToDb('students', s.id, newS);
-                        await addRecord(s.id, s.name, null, null, 'Root Data Override', `Remaining set to ${newS.remainingHours}, Total set to ${newS.totalHours}`);
-                        closeModal(); showToast('底层数据已篡改');
+                        try {
+                            const s = state.students.find(x => x.id === state.superEditForm.targetId);
+                            const newS = { ...s, remainingHours: state.superEditForm.remainingHours, totalHours: state.superEditForm.totalHours, totalPayment: state.superEditForm.paymentAmount };
+                            await saveToDb('students', s.id, newS);
+                            await addRecord(s.id, s.name, null, null, 'Root Data Override', `Remaining set to ${newS.remainingHours}, Total set to ${newS.totalHours}`);
+                            closeModal(); showToast('底层数据已篡改');
+                        } catch(err) {}
                     });
                 };
 
@@ -1961,11 +1988,13 @@
                     if (state.passwordForm.currentPassword !== state.currentUser.password) return showToast('授权人身份密码错误', 'error');
 
                     withLoading('执行秘钥更新...', async () => {
-                        const targetUser = state.users.find(u => u.id === state.passwordForm.targetId);
-                        const updatedUser = { ...targetUser, password: state.passwordForm.newPassword };
-                        await saveToDb('users', updatedUser.id, updatedUser);
-                        if (targetUser.id === state.currentUser.id) state.currentUser.password = state.passwordForm.newPassword;
-                        closeModal(); showToast(`密码修改成功`);
+                        try {
+                            const targetUser = state.users.find(u => u.id === state.passwordForm.targetId);
+                            const updatedUser = { ...targetUser, password: state.passwordForm.newPassword };
+                            await saveToDb('users', updatedUser.id, updatedUser);
+                            if (targetUser.id === state.currentUser.id) state.currentUser.password = state.passwordForm.newPassword;
+                            closeModal(); showToast(`密码修改成功`);
+                        } catch (err) {}
                     });
                 };
 
