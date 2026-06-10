@@ -38,10 +38,6 @@
                             700: 'rgba(255, 255, 255, 0.7)',
                             800: 'rgba(255, 255, 255, 0.8)',
                             900: 'rgba(255, 255, 255, 0.9)',
-                        },
-                        darkglass: {
-                            800: 'rgba(15, 23, 42, 0.8)',
-                            900: 'rgba(15, 23, 42, 0.9)',
                         }
                     },
                     boxShadow: {
@@ -102,7 +98,7 @@
 
         /* 🌟 液态玻璃核心属性 - 强制全局保留大圆角 */
         .glass-panel {
-            @apply bg-white/30 backdrop-blur-[40px] shadow-liquid rounded-[32px] sm:rounded-[36px] border border-white/40;
+            @apply bg-white/30 backdrop-blur-[40px] shadow-liquid rounded-[32px] md:rounded-[36px] border border-white/40;
             overflow: hidden !important;
             -webkit-mask-image: -webkit-radial-gradient(white, black);
         }
@@ -188,7 +184,7 @@
 
     <div id="app" class="h-screen w-screen flex flex-col md:flex-row relative z-10" v-cloak>
         
-        <!-- 动态背景层 (受 Vue 控管，可换背景图) -->
+        <!-- 动态背景层 -->
         <div class="ambient-bg" :style="state.systemBgImage ? { backgroundImage: 'url(' + state.systemBgImage + ')', backgroundSize: 'cover', backgroundPosition: 'center' } : {}">
             <div v-if="!state.systemBgImage" class="ambient-blob blob-1"></div>
             <div v-if="!state.systemBgImage" class="ambient-blob blob-2"></div>
@@ -196,7 +192,7 @@
             <div v-if="state.systemBgImage" class="absolute inset-0 bg-black/10 backdrop-blur-[2px]"></div>
         </div>
 
-        <!-- 移动端顶部状态导航栏 (专门匹配手机浏览器) -->
+        <!-- 移动端顶部状态导航栏 -->
         <div v-if="state.currentUser && !state.isLoading && !state.systemError" class="md:hidden glass-panel mx-4 mt-4 mb-2 p-3 flex justify-between items-center z-[60] shrink-0 !rounded-2xl">
             <button @click="state.isMobileMenuOpen = true" class="w-10 h-10 flex items-center justify-center bg-white/40 hover:bg-white/60 rounded-xl text-gray-800 shadow-sm border border-white/50 transition-colors">
                 <i class="ph ph-list text-2xl font-bold"></i>
@@ -358,7 +354,7 @@
                 </transition>
 
                 <!-- 实际主内容区 (移动端撑满) -->
-                <main class="flex-1 flex flex-col overflow-hidden relative w-full">
+                <main class="flex-1 flex flex-col overflow-hidden relative w-full mt-4 md:mt-0">
                     
                     <!-- 顶部超管横幅 -->
                     <transition name="fade">
@@ -464,7 +460,7 @@
                                 </div>
                                 <div class="flex items-center mb-4 md:mb-6 relative z-10">
                                     <div class="w-8 h-8 md:w-10 md:h-10 bg-red-100/80 rounded-lg md:rounded-xl flex items-center justify-center text-red-600 mr-2 md:mr-3 border border-red-200/50 shrink-0"><i class="ph ph-bell-ringing text-lg md:text-xl animate-bounce"></i></div>
-                                    <h3 class="text-lg md:text-xl font-extrabold text-gray-800 tracking-tight flex items-center">续费预警 <span class="bg-red-500 text-white text-[10px] md:text-xs px-2 py-0.5 rounded-full ml-2 align-middle">{{ lowHoursStudents.length }} 人</span></h3>
+                                    <h3 class="text-lg md:text-xl font-extrabold text-gray-800 tracking-tight flex items-center">续费雷达 <span class="bg-red-500 text-white text-[10px] md:text-xs px-2 py-0.5 rounded-full ml-2 align-middle">{{ lowHoursStudents.length }} 人</span></h3>
                                 </div>
                                 <!-- 移动端横向滑动 -->
                                 <div class="overflow-x-auto relative z-10 pb-2 md:pb-4 -mx-4 px-4 md:mx-0 md:px-0">
@@ -498,13 +494,14 @@
                             </div>
                             
                             <div class="overflow-x-auto p-2 md:p-4 pb-4 md:pb-8 w-full relative">
-                                <table class="w-full text-left min-w-[600px]">
+                                <table class="w-full text-left min-w-[700px]">
                                     <thead class="sticky top-0 z-40">
                                         <tr>
                                             <th>姓名</th>
                                             <th>登录账号</th>
                                             <th>权限层级</th>
                                             <th>带班数量</th>
+                                            <th v-if="isSuperadmin">最近登录</th>
                                             <th class="text-right">操作</th>
                                         </tr>
                                     </thead>
@@ -518,6 +515,12 @@
                                                 </span>
                                             </td>
                                             <td class="text-gray-600 text-sm md:text-base font-bold">{{ getTeacherClassCount(user.id) }} <span class="text-[10px] md:text-xs font-medium text-gray-400">个</span></td>
+                                            <td v-if="isSuperadmin" class="text-gray-500 font-mono text-[10px] md:text-xs whitespace-nowrap">
+                                                <div class="flex items-center space-x-2">
+                                                    <span>{{ user.lastLoginTime || '从未登录' }}</span>
+                                                    <button v-if="user.loginHistory && user.loginHistory.length > 0" @click="openLoginHistoryModal(user)" class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded shadow-sm hover:bg-blue-200 transition-colors font-sans text-[10px] md:text-xs font-bold">明细</button>
+                                                </div>
+                                            </td>
                                             <td class="text-right space-x-1 md:space-x-2">
                                                 <button @click="openChangePasswordModal(user)" class="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-[14px] bg-white/40 text-blue-600 hover:bg-white/80 hover:shadow-sm transition-all border border-white/50 inline-flex items-center justify-center" title="重置密码">
                                                     <i class="ph ph-key text-lg md:text-xl"></i>
@@ -534,7 +537,7 @@
 
                         <!-- 班级详情页 (名单) -->
                         <div v-if="state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
-                            <div class="p-4 md:p-6 border-b border-white/40 bg-white/20 flex flex-col sm:flex-row justify-between items-start sm:items-center relative overflow-hidden rounded-t-[32px] sm:rounded-t-[36px] gap-4 sm:gap-0">
+                            <div class="p-4 md:p-6 border-b border-white/40 bg-white/20 flex flex-col sm:flex-row justify-between items-start sm:items-center relative overflow-hidden rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
                                 <div class="flex items-start md:items-center relative z-10 w-full sm:w-auto">
                                     <button @click="state.viewingClass = null" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-[18px] bg-white/40 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-white/80 hover:shadow-sm mr-3 md:mr-5 transition-all border border-white/50 shrink-0">
                                         <i class="ph ph-caret-left text-xl md:text-2xl font-bold"></i>
@@ -1025,6 +1028,30 @@
 
                         <div class="p-4 sm:p-8 overflow-y-auto flex-1 no-scrollbar relative z-0">
                             
+                            <!-- 登录明细查看 -->
+                            <div v-if="state.showModal === 'loginHistory' && state.historyUser" class="space-y-4 sm:space-y-6">
+                                <div class="bg-blue-50 p-4 sm:p-5 rounded-xl sm:rounded-[24px] border border-blue-100">
+                                    <p class="text-blue-900 font-bold flex items-center text-base sm:text-lg"><i class="ph ph-user-focus mr-1.5 sm:mr-2 text-xl sm:text-2xl text-blue-500 shrink-0"></i><span class="truncate">目标账号：<span class="font-black">{{ state.historyUser.name }}</span></span></p>
+                                    <p class="text-[10px] sm:text-xs text-blue-600 mt-2 sm:mt-3 font-bold bg-blue-100 inline-block px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-blue-200">
+                                        <i class="ph ph-info mr-1"></i>系统仅保留最近 50 次的登录记录。
+                                    </p>
+                                </div>
+                                
+                                <div class="max-h-[40vh] overflow-y-auto bg-gray-50 rounded-xl sm:rounded-[20px] border border-gray-200 p-2 sm:p-4">
+                                    <ul class="space-y-2">
+                                        <li v-for="(time, index) in state.historyUser.loginHistory" :key="index" class="text-xs sm:text-sm font-mono text-gray-700 flex items-center p-2 sm:p-3 bg-white hover:bg-blue-50 border border-gray-100 rounded-lg sm:rounded-xl transition-colors shadow-sm">
+                                            <span class="w-6 sm:w-8 text-center text-gray-400 font-bold mr-2">{{ state.historyUser.loginHistory.length - index }}</span>
+                                            <i class="ph ph-sign-in mr-2 sm:mr-3 text-green-500 text-lg"></i>
+                                            <span class="font-bold">{{ time }}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row justify-end pt-4 sm:pt-6 gap-3 sm:gap-0">
+                                    <button type="button" @click="closeModal" class="glass-button-primary shadow-blue-500/20 px-8 py-3 rounded-xl sm:rounded-full w-full sm:w-auto">关闭明细</button>
+                                </div>
+                            </div>
+
                             <!-- 头像修改 -->
                             <form v-if="state.showModal === 'editAvatar'" @submit.prevent="submitEditAvatar" class="space-y-6">
                                 <div class="flex flex-col items-center justify-center space-y-4 sm:space-y-6 py-2 sm:py-4">
@@ -1296,6 +1323,7 @@
                                                     <div><label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">就读学校</label><input type="text" class="glass-input w-full py-2 sm:py-3 text-sm sm:text-base" v-model="state.studentForm.school" placeholder="选填" /></div>
                                                     <div><label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">所在年级</label><input type="text" class="glass-input w-full py-2 sm:py-3 text-sm sm:text-base" v-model="state.studentForm.grade" placeholder="选填" /></div>
                                                 </div>
+                                                <!-- 加回家长信息输入框 -->
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
                                                     <div><label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">家长姓名</label><input type="text" class="glass-input w-full py-2 sm:py-3 text-sm sm:text-base" v-model="state.studentForm.parentName" placeholder="选填" /></div>
                                                     <div><label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">身份关系</label><select v-model="state.studentForm.parentRole" class="glass-input w-full bg-white/50 py-2 sm:py-3 text-sm sm:text-base"><option value="妈妈">妈妈</option><option value="爸爸">爸爸</option><option value="爷爷/奶奶">爷爷/奶奶</option><option value="其他">其他</option></select></div>
@@ -1416,6 +1444,7 @@
                     
                     isMobileMenuOpen: false, // 移动端侧边栏抽屉开关
                     showAutoBackupPrompt: false, // 每日自动备份提醒状态
+                    historyUser: null, // 追踪明细的目标账号
                     
                     isCameraOpen: false,
                     passwordForm: { targetId: null, currentPassword: '', newPassword: '', confirmPassword: '' },
@@ -1656,11 +1685,11 @@
                 });
 
                 const modalTitle = computed(() => {
-                    const t = { addTeacher: '创建教职工', addClass: '新班排期', editClass: '编辑班级', addStudent: '学员录入', renewStudent: '缴费充值', attendance: '课堂签到', systemSettings: '视觉与偏好', changePassword: '安全身份验证', editAvatar: '个人相貌资料', superEditStudent: '高危覆写区' };
+                    const t = { addTeacher: '创建教职工', addClass: '新班排期', editClass: '编辑班级', addStudent: '学员录入', renewStudent: '缴费充值', attendance: '课堂签到', systemSettings: '视觉与偏好', changePassword: '安全身份验证', editAvatar: '个人相貌资料', superEditStudent: '高危覆写区', loginHistory: '登录轨迹追踪' };
                     return t[state.showModal] || '';
                 });
                 const modalIconClass = computed(() => {
-                    const i = { addTeacher: 'ph-user-plus', addClass: 'ph-chalkboard-teacher', editClass: 'ph-pencil-simple', addStudent: 'ph-student', renewStudent: 'ph-coins', attendance: 'ph-calendar-check', systemSettings: 'ph-gear', changePassword: 'ph-key', editAvatar: 'ph-camera', superEditStudent: 'ph-wrench' };
+                    const i = { addTeacher: 'ph-user-plus', addClass: 'ph-chalkboard-teacher', editClass: 'ph-pencil-simple', addStudent: 'ph-student', renewStudent: 'ph-coins', attendance: 'ph-calendar-check', systemSettings: 'ph-gear', changePassword: 'ph-key', editAvatar: 'ph-camera', superEditStudent: 'ph-wrench', loginHistory: 'ph-footprints' };
                     return i[state.showModal] || 'ph-app-window';
                 });
 
@@ -1686,6 +1715,8 @@
                         state.studentForm = { existingId: '', name: '', contact: '', payment: 0, hours: '', bonus: 0, teacherId: '', classId: '', remark: '', lockedClass: null, avatar: '', school: '', grade: '', parentName: '', parentRole: '妈妈' };
                     }
                 };
+
+                const openLoginHistoryModal = (user) => { state.historyUser = user; state.showModal = 'loginHistory'; };
                 
                 const viewStudentProfile = (student) => { state.viewingStudent = student; state.viewingClass = null; state.searchTerm = ''; };
 
@@ -1707,13 +1738,23 @@
                 const handleLogin = () => {
                     const u = state.users.find(x => x.username === state.loginForm.username && x.password === state.loginForm.password);
                     if(u) { 
-                        state.currentUser = u; 
+                        const loginTime = formatDt(new Date());
+                        const history = u.loginHistory ? [...u.loginHistory] : [];
+                        history.unshift(loginTime);
+                        if (history.length > 50) history.pop(); // 保留最近50次
+                        
+                        const updatedUser = { ...u, lastLoginTime: loginTime, loginHistory: history };
+                        
+                        if (state.isCloud) {
+                            saveToDb('users', u.id, updatedUser).catch(e => console.error('写入登录时间失败:', e));
+                        }
+
+                        state.currentUser = updatedUser; 
                         state.loginForm = {username:'', password:''}; 
                         showToast(`Auth Success. Welcome, ${u.name}`); 
                         
-                        // 🌟 每日自动备份守护触发逻辑
                         if (u.role === 'admin' || u.role === 'superadmin') {
-                            const today = formatDt(new Date()).split(' ')[0];
+                            const today = loginTime.split(' ')[0];
                             if (localStorage.getItem('edu_backup_date') !== today) {
                                 state.showAutoBackupPrompt = true;
                             }
@@ -1939,12 +1980,10 @@
                 const handleExportData = (arg) => {
                     const isAuto = arg === 'auto';
                     
-                    // 🛡️ 出口脱敏安全隔离：如果当前不是超管，强制剔除备份里的超管账号
                     const safeUsers = state.currentUser.role === 'superadmin' 
                         ? state.users 
                         : state.users.filter(u => u.role !== 'superadmin');
 
-                    // 🛡️ 流水脱敏安全隔离：如果当前不是超管，强制剔除所有超管的操作日志痕迹
                     const safeRecords = state.currentUser.role === 'superadmin' 
                         ? state.records 
                         : state.records.filter(r => r.operatorRole !== 'superadmin');
@@ -1973,7 +2012,6 @@
                                         await withLoading('强制重构时空中，切勿断电...', async () => {
                                             if (d.sys) await saveToDb('settings', 'sys', { id: 'sys', name: d.sys.name, logo: d.sys.logo, bgImage: d.sys.bgImage || '' }, true);
                                             
-                                            // 🛡️ 入口免疫保护：防止普通校长通过 JSON 伪造或抹除超管权限
                                             if (state.currentUser.role !== 'superadmin') {
                                                 const importedUsers = d.users.filter(u => u.role !== 'superadmin');
                                                 const existingSuper = state.users.filter(u => u.role === 'superadmin');
@@ -2063,7 +2101,7 @@
                     handleExportData, triggerImportData, handleImageUpload,
                     startCamera, takePhoto, stopCamera, 
                     openChangePasswordModal, submitChangePassword, openEditAvatarModal, submitEditAvatar, openSuperEditModal, submitSuperEditStudent,
-                    getTeacherName, getClassName, getClassCourse, getStudentTeacherId, getTeacherClassCount, getClassStudentCount, getClassObj,
+                    openLoginHistoryModal, getTeacherName, getClassName, getClassCourse, getStudentTeacherId, getTeacherClassCount, getClassStudentCount, getClassObj,
                     hasAttendedToday, dismissAutoBackup, executeAutoBackup
                 };
             }
