@@ -246,10 +246,12 @@
         <template v-if="state.currentUser && !state.isLoading && !state.systemError">
             <div class="flex-1 flex flex-row overflow-hidden p-0 md:p-4 gap-0 md:gap-6 relative w-full mt-4 md:mt-0">
                 
+                <!-- 移动端防穿透遮罩 -->
                 <transition name="fade">
                     <div v-if="state.isMobileMenuOpen" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] md:hidden" @click="state.isMobileMenuOpen = false"></div>
                 </transition>
 
+                <!-- 侧边栏 (移动端变为悬浮 Drawer) -->
                 <transition name="slide-right">
                     <aside v-show="state.isMobileMenuOpen || !isMobile" :class="['fixed md:relative top-4 bottom-4 left-4 md:top-0 md:left-0 h-[calc(100%-2rem)] md:h-auto w-64 md:w-72 glass-panel rounded-[32px] sm:rounded-[36px] flex flex-col z-[110] flex-shrink-0 transition-transform duration-300', !state.isMobileMenuOpen && isMobile ? '-translate-x-[120%]' : 'translate-x-0']">
                         
@@ -330,6 +332,7 @@
 
                 <main class="flex-1 flex flex-col overflow-hidden relative w-full mt-4 md:mt-0">
                     
+                    <!-- 顶部超管横幅 -->
                     <transition name="fade">
                         <div v-if="isSuperadmin" class="mb-3 md:mb-4 bg-orange-100/50 backdrop-blur-xl border border-orange-200/80 px-4 md:px-6 py-2.5 md:py-3.5 rounded-[20px] md:rounded-[24px] flex items-center text-orange-800 text-xs md:text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
                             <i class="ph ph-shield-warning text-lg md:text-xl mr-2 md:mr-3 relative z-10 text-orange-600"></i>
@@ -339,7 +342,9 @@
 
                     <div class="flex-1 overflow-y-auto pb-20 md:pb-6 no-scrollbar w-full">
                         
-                        <!-- 1. Dashboard -->
+                        <!-- =========================
+                             1. Dashboard (首页)
+                        =========================== -->
                         <div v-if="state.activeTab === 'dashboard' && !state.viewingStudent && !state.viewingClass" class="space-y-6 md:space-y-8 animate-[springUp_0.6s_ease-out] px-2 md:px-0">
                             
                             <transition name="fade">
@@ -424,6 +429,7 @@
                                 </div>
                             </div>
                             
+                            <!-- 课时不足预警 -->
                             <div v-if="isAdminOrSuper && lowHoursStudents.length > 0" class="glass-panel p-4 md:p-6 border-red-200/40 relative overflow-hidden bg-white/40">
                                 <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-4 translate-y-4 pointer-events-none hidden md:block">
                                     <i class="ph ph-warning text-9xl text-red-500"></i>
@@ -448,7 +454,9 @@
                             </div>
                         </div>
 
-                        <!-- 2. Schedule -->
+                        <!-- =========================
+                             2. Schedule (课表视图)
+                        =========================== -->
                         <div v-if="state.activeTab === 'schedule' && !state.viewingStudent && !state.viewingClass" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
                             <div class="p-4 md:p-6 border-b border-white/40 flex justify-between items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px]">
                                 <div>
@@ -470,7 +478,8 @@
                                             <span class="bg-indigo-100/80 text-indigo-700 text-[10px] font-black px-2 py-0.5 rounded-lg">{{ dayClasses.length }}</span>
                                         </div>
                                         <div class="flex-1 overflow-y-auto no-scrollbar space-y-3 pb-4">
-                                            <div v-for="cls in dayClasses" :key="cls.id" @click="state.viewingClass = cls" class="bg-white/60 backdrop-blur-md p-4 rounded-[20px] shadow-sm border border-white/80 hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden">
+                                            <!-- 🌟 核心修复：点击课表精准进入班级管理列表并打开详情 -->
+                                            <div v-for="cls in dayClasses" :key="cls.id" @click="state.activeTab = 'classes'; state.viewingStudent = null; state.viewingClass = cls;" class="bg-white/60 backdrop-blur-md p-4 rounded-[20px] shadow-sm border border-white/80 hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden">
                                                 <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-400 group-hover:bg-indigo-500 transition-colors"></div>
                                                 <div class="flex justify-between items-start mb-2">
                                                     <span class="font-black text-gray-800 text-base truncate pr-2">{{ cls.name }}</span>
@@ -494,7 +503,9 @@
                             </div>
                         </div>
 
-                        <!-- 3. Teachers -->
+                        <!-- =========================
+                             3. Teachers (教师管理)
+                        =========================== -->
                         <div v-if="state.activeTab === 'teachers' && !state.viewingStudent && !state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
                             <div class="p-4 md:p-6 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
                                 <div>
@@ -550,11 +561,13 @@
                             </div>
                         </div>
 
-                        <!-- 4. Class Details (班级详情 & 名单) -->
+                        <!-- =========================
+                             4. Class Details (班级详情 & 名单)
+                        =========================== -->
                         <div v-if="state.viewingClass && !state.viewingStudent" class="glass-panel animate-[springUp_0.5s_ease-out] flex flex-col h-full">
                             <div class="p-4 md:p-6 border-b border-white/40 bg-white/20 flex flex-col sm:flex-row justify-between items-start sm:items-center relative overflow-hidden rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0 shrink-0">
                                 <div class="flex items-start md:items-center relative z-10 w-full sm:w-auto">
-                                    <button @click="state.viewingClass = null" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-[18px] bg-white/40 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-white/80 hover:shadow-sm mr-3 md:mr-5 transition-all border border-white/50 shrink-0">
+                                    <button @click="state.viewingClass = null; state.activeTab = 'classes';" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-[18px] bg-white/40 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-white/80 hover:shadow-sm mr-3 md:mr-5 transition-all border border-white/50 shrink-0">
                                         <i class="ph ph-caret-left text-xl md:text-2xl font-bold"></i>
                                     </button>
                                     <div class="overflow-hidden">
@@ -570,6 +583,7 @@
                                     </div>
                                 </div>
                                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 w-full sm:w-auto relative z-10">
+                                    <!-- 🌟 一键全员出勤 -->
                                     <button v-if="isAdminOrSuper || isTeacher" @click="triggerBatchAttendance(state.viewingClass)" class="glass-button-secondary bg-emerald-50/80 text-emerald-700 border-emerald-200/50 hover:bg-emerald-100 flex items-center justify-center text-sm md:text-base py-2 md:py-3 w-full sm:w-auto sm:mr-3">
                                         <i class="ph ph-check-square-offset mr-2 text-base md:text-lg"></i> 一键全员出勤
                                     </button>
@@ -651,7 +665,9 @@
                             </div>
                         </div>
 
-                        <!-- 5. Classes (所有班级列表) -->
+                        <!-- =========================
+                             5. Classes (所有班级列表)
+                        =========================== -->
                         <div v-if="state.activeTab === 'classes' && !state.viewingClass && !state.viewingStudent" class="glass-panel animate-[springUp_0.5s_ease-out] flex flex-col h-full">
                             <div class="p-4 md:p-6 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
                                 <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
@@ -730,7 +746,9 @@
                             </div>
                         </div>
 
-                        <!-- 6. Student Profile (个人档案主页) -->
+                        <!-- =========================
+                             6. Student Profile (个人档案主页)
+                        =========================== -->
                         <div v-if="state.viewingStudent && !state.viewingClass" class="animate-[springUp_0.6s_ease-out]">
                             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 md:mb-6 gap-3 sm:gap-0">
                                 <button @click="state.viewingStudent = null; state.searchTerm = ''" class="flex items-center px-4 md:px-5 py-2 md:py-2.5 bg-white/40 backdrop-blur-md rounded-xl md:rounded-[16px] shadow-sm text-gray-700 text-sm md:text-base font-bold hover:bg-white/80 transition-all border border-white/50 w-full sm:w-auto justify-center">
@@ -747,7 +765,6 @@
                             </div>
 
                             <div class="flex flex-col lg:flex-row gap-4 md:gap-6 mb-4 md:mb-6">
-                                <!-- 左侧档案卡 -->
                                 <div class="w-full lg:w-80 flex-shrink-0 glass-panel p-6 md:p-8 flex flex-col items-center relative overflow-hidden">
                                     <div class="absolute top-0 w-full h-24 md:h-32 bg-gradient-to-b from-blue-400/20 to-transparent"></div>
                                     
@@ -773,7 +790,6 @@
                                     </div>
                                 </div>
 
-                                <!-- 右侧数据卡 -->
                                 <div class="flex-1 flex flex-col gap-4 md:gap-6">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                                         <div class="glass-card p-5 md:p-6 relative overflow-hidden bg-gradient-to-br from-green-50/60 to-emerald-100/60 border-green-200/50">
@@ -849,7 +865,9 @@
                             </div>
                         </div>
 
-                        <!-- 7. Students (所有学员管理) -->
+                        <!-- =========================
+                             7. Students (所有学员管理)
+                        =========================== -->
                         <div v-if="state.activeTab === 'students' && !state.viewingStudent && !state.viewingClass" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
                             <div class="p-4 md:p-6 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
                                 <div>
@@ -952,7 +970,9 @@
                             </div>
                         </div>
 
-                        <!-- 8. Records (操作日志) -->
+                        <!-- =========================
+                             8. Records (操作日志)
+                        =========================== -->
                         <div v-if="state.activeTab === 'records' && !state.viewingStudent && !state.viewingClass" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
                             <div class="p-4 md:p-6 border-b border-white/40 flex flex-col md:flex-row justify-between items-start md:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 md:gap-0">
                                 <div>
@@ -1023,7 +1043,9 @@
                             </div>
                         </div>
 
-                        <!-- 9. Database (数据备份与恢复) -->
+                        <!-- =========================
+                             9. Database (数据备份与恢复)
+                        =========================== -->
                         <div v-if="state.activeTab === 'database' && !state.viewingStudent && !state.viewingClass" class="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-[springUp_0.5s_ease-out]">
                             <div class="glass-panel p-6 md:p-10 mt-4 md:mt-10 bg-white/30">
                                 <div class="mb-8 md:mb-10 text-center">
@@ -1439,7 +1461,6 @@
                                             <label class="block text-[10px] sm:text-xs font-bold text-gray-600 mb-1 sm:mb-1.5">落位班级 <span class="text-red-500">*</span></label>
                                             <select v-model.number="state.studentForm.classId" :disabled="!state.studentForm.teacherId" class="glass-input w-full bg-white/50 disabled:bg-gray-100/50 disabled:cursor-not-allowed disabled:opacity-60 py-2 sm:py-3 text-sm sm:text-base">
                                                 <option value="" disabled>2. 再锁定班级</option>
-                                                <!-- 过滤掉已归档班级 -->
                                                 <option v-for="c in state.classes.filter(cls=>cls.teacherId===state.studentForm.teacherId && cls.status !== 'archived')" :value="c.id">{{c.name}}</option>
                                             </select>
                                         </div>
@@ -1464,7 +1485,6 @@
                 <div class="bg-white/90 backdrop-blur-xl rounded-[32px] sm:rounded-[32px] !rounded-b-none sm:!rounded-b-[32px] shadow-2xl w-full sm:max-w-sm overflow-hidden animate-[springUp_0.4s_ease-out] border border-white/50 pb-6 sm:pb-0">
                     <div class="p-6 sm:p-8 text-center relative mt-4 sm:mt-0">
                         <div class="absolute top-0 left-0 w-full h-1.5 bg-red-500 hidden sm:block"></div>
-                        <!-- 移动端顶部下拉把手指示器 -->
                         <div class="w-full flex justify-center absolute top-2 left-0 sm:hidden" @click="state.confirmDialog = null">
                             <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
                         </div>
