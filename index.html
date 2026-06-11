@@ -246,12 +246,10 @@
         <template v-if="state.currentUser && !state.isLoading && !state.systemError">
             <div class="flex-1 flex flex-row overflow-hidden p-0 md:p-4 gap-0 md:gap-6 relative w-full mt-4 md:mt-0">
                 
-                <!-- 移动端防穿透遮罩 -->
                 <transition name="fade">
                     <div v-if="state.isMobileMenuOpen" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] md:hidden" @click="state.isMobileMenuOpen = false"></div>
                 </transition>
 
-                <!-- 侧边栏 (移动端变为悬浮 Drawer) -->
                 <transition name="slide-right">
                     <aside v-show="state.isMobileMenuOpen || !isMobile" :class="['fixed md:relative top-4 bottom-4 left-4 md:top-0 md:left-0 h-[calc(100%-2rem)] md:h-auto w-64 md:w-72 glass-panel rounded-[32px] sm:rounded-[36px] flex flex-col z-[110] flex-shrink-0 transition-transform duration-300', !state.isMobileMenuOpen && isMobile ? '-translate-x-[120%]' : 'translate-x-0']">
                         
@@ -332,7 +330,6 @@
 
                 <main class="flex-1 flex flex-col overflow-hidden relative w-full mt-4 md:mt-0">
                     
-                    <!-- 顶部超管横幅 -->
                     <transition name="fade">
                         <div v-if="isSuperadmin" class="mb-3 md:mb-4 bg-orange-100/50 backdrop-blur-xl border border-orange-200/80 px-4 md:px-6 py-2.5 md:py-3.5 rounded-[20px] md:rounded-[24px] flex items-center text-orange-800 text-xs md:text-sm shadow-sm flex-shrink-0 relative overflow-hidden">
                             <i class="ph ph-shield-warning text-lg md:text-xl mr-2 md:mr-3 relative z-10 text-orange-600"></i>
@@ -342,9 +339,7 @@
 
                     <div class="flex-1 overflow-y-auto pb-20 md:pb-6 no-scrollbar w-full">
                         
-                        <!-- =========================
-                             1. Dashboard (首页)
-                        =========================== -->
+                        <!-- 1. Dashboard -->
                         <div v-if="state.activeTab === 'dashboard' && !state.viewingStudent && !state.viewingClass" class="space-y-6 md:space-y-8 animate-[springUp_0.6s_ease-out] px-2 md:px-0">
                             
                             <transition name="fade">
@@ -454,9 +449,7 @@
                             </div>
                         </div>
 
-                        <!-- =========================
-                             2. Schedule (课表视图)
-                        =========================== -->
+                        <!-- 2. Schedule -->
                         <div v-if="state.activeTab === 'schedule' && !state.viewingStudent && !state.viewingClass" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
                             <div class="p-4 md:p-6 border-b border-white/40 flex justify-between items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px]">
                                 <div>
@@ -478,7 +471,6 @@
                                             <span class="bg-indigo-100/80 text-indigo-700 text-[10px] font-black px-2 py-0.5 rounded-lg">{{ dayClasses.length }}</span>
                                         </div>
                                         <div class="flex-1 overflow-y-auto no-scrollbar space-y-3 pb-4">
-                                            <!-- 🌟 核心修复：点击课表精准进入班级管理列表并打开详情 -->
                                             <div v-for="cls in dayClasses" :key="cls.id" @click="state.activeTab = 'classes'; state.viewingStudent = null; state.viewingClass = cls;" class="bg-white/60 backdrop-blur-md p-4 rounded-[20px] shadow-sm border border-white/80 hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden">
                                                 <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-400 group-hover:bg-indigo-500 transition-colors"></div>
                                                 <div class="flex justify-between items-start mb-2">
@@ -503,9 +495,7 @@
                             </div>
                         </div>
 
-                        <!-- =========================
-                             3. Teachers (教师管理)
-                        =========================== -->
+                        <!-- 3. Teachers -->
                         <div v-if="state.activeTab === 'teachers' && !state.viewingStudent && !state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
                             <div class="p-4 md:p-6 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
                                 <div>
@@ -561,13 +551,12 @@
                             </div>
                         </div>
 
-                        <!-- =========================
-                             4. Class Details (班级详情 & 名单)
-                        =========================== -->
+                        <!-- 4. Class Details (班级详情 & 名单) -->
                         <div v-if="state.viewingClass && !state.viewingStudent" class="glass-panel animate-[springUp_0.5s_ease-out] flex flex-col h-full">
                             <div class="p-4 md:p-6 border-b border-white/40 bg-white/20 flex flex-col sm:flex-row justify-between items-start sm:items-center relative overflow-hidden rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0 shrink-0">
                                 <div class="flex items-start md:items-center relative z-10 w-full sm:w-auto">
-                                    <button @click="state.viewingClass = null; state.activeTab = 'classes';" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-[18px] bg-white/40 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-white/80 hover:shadow-sm mr-3 md:mr-5 transition-all border border-white/50 shrink-0">
+                                    <!-- 🌟 修复：返回按钮仅清空 viewingClass，这样会自动回到刚才所在的 Tab (班级或课表) -->
+                                    <button @click="state.viewingClass = null;" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-[18px] bg-white/40 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-white/80 hover:shadow-sm mr-3 md:mr-5 transition-all border border-white/50 shrink-0">
                                         <i class="ph ph-caret-left text-xl md:text-2xl font-bold"></i>
                                     </button>
                                     <div class="overflow-hidden">
@@ -583,7 +572,6 @@
                                     </div>
                                 </div>
                                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 w-full sm:w-auto relative z-10">
-                                    <!-- 🌟 一键全员出勤 -->
                                     <button v-if="isAdminOrSuper || isTeacher" @click="triggerBatchAttendance(state.viewingClass)" class="glass-button-secondary bg-emerald-50/80 text-emerald-700 border-emerald-200/50 hover:bg-emerald-100 flex items-center justify-center text-sm md:text-base py-2 md:py-3 w-full sm:w-auto sm:mr-3">
                                         <i class="ph ph-check-square-offset mr-2 text-base md:text-lg"></i> 一键全员出勤
                                     </button>
@@ -665,9 +653,7 @@
                             </div>
                         </div>
 
-                        <!-- =========================
-                             5. Classes (所有班级列表)
-                        =========================== -->
+                        <!-- 5. Classes (所有班级列表) -->
                         <div v-if="state.activeTab === 'classes' && !state.viewingClass && !state.viewingStudent" class="glass-panel animate-[springUp_0.5s_ease-out] flex flex-col h-full">
                             <div class="p-4 md:p-6 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
                                 <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
@@ -1950,12 +1936,13 @@
 
                 const hasAttendedToday = (studentId, classId) => {
                     const todayDate = formatDt(new Date()).split(' ')[0];
+                    // 🌟 这里修复了之前会导致白屏的致命错别字 (r -> rec)
                     const rec = state.records.find(r => {
                         if (!r || !r.date || !r.type) return false;
                         return r.studentId === studentId && r.classId === classId && r.date.startsWith(todayDate) && (r.type.includes('签到') || r.type.includes('核销') || r.type.includes('请假'));
                     });
                     if (!rec) return 'none';
-                    return (r.type.includes('签到') || r.type.includes('核销')) ? 'present' : 'leave';
+                    return (rec.type.includes('签到') || rec.type.includes('核销')) ? 'present' : 'leave';
                 };
 
                 const handleLogin = () => {
