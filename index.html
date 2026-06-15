@@ -16,6 +16,11 @@
             document.write('<script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
         }
     </script>
+    <script>
+        if (typeof cloudbase === 'undefined') {
+            document.write('<script src="https://unpkg.com/@cloudbase/js-sdk@2.8.2/cloudbase.full.js"><\/script>');
+        }
+    </script>
     
     <script>
         tailwind.config = {
@@ -146,6 +151,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
+        /* 日历排课表横向滑动样式 */
         .schedule-scroll::-webkit-scrollbar { height: 8px; }
         .schedule-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 4px; }
         .schedule-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
@@ -157,7 +163,6 @@
 
     <div id="app" class="h-screen w-screen flex flex-col md:flex-row relative z-10" v-cloak>
         
-        <!-- 背景层 -->
         <div class="ambient-bg" :style="state.systemBgImage ? { backgroundImage: 'url(' + state.systemBgImage + ')', backgroundSize: 'cover', backgroundPosition: 'center' } : {}">
             <div v-if="!state.systemBgImage" class="ambient-blob blob-1"></div>
             <div v-if="!state.systemBgImage" class="ambient-blob blob-2"></div>
@@ -165,7 +170,6 @@
             <div v-if="state.systemBgImage" class="absolute inset-0 bg-black/10 backdrop-blur-[2px]"></div>
         </div>
 
-        <!-- 移动端顶部状态导航栏 -->
         <div v-if="state.currentUser && !state.isLoading && !state.systemError" class="md:hidden glass-panel mx-4 mt-4 mb-2 p-3 flex justify-between items-center z-[60] shrink-0 !rounded-2xl">
             <button @click="state.isMobileMenuOpen = true" class="w-10 h-10 flex items-center justify-center bg-white/40 hover:bg-white/60 rounded-xl text-gray-800 shadow-sm border border-white/50 transition-colors">
                 <i class="ph ph-list text-2xl font-bold"></i>
@@ -176,7 +180,6 @@
             </div>
         </div>
 
-        <!-- 全局加载遮罩 -->
         <transition name="fade">
             <div v-if="state.isLoading" class="fixed inset-0 z-[999] bg-darkglass-800 backdrop-blur-liquid-heavy flex flex-col items-center justify-center p-4">
                 <div class="p-8 rounded-[32px] bg-white/20 shadow-liquid border border-white/30 flex flex-col items-center animate-pulse backdrop-blur-md max-w-xs w-full text-center">
@@ -186,7 +189,6 @@
             </div>
         </transition>
 
-        <!-- 错误拦截屏 -->
         <transition name="spring-up">
             <div v-if="state.systemError && !state.isLoading" class="fixed inset-0 z-[1000] bg-darkglass-800 backdrop-blur-liquid-heavy flex items-center justify-center p-4">
                 <div class="bg-white/80 backdrop-blur-liquid p-6 md:p-8 rounded-[32px] shadow-2xl max-w-lg w-full text-center border border-white/50 relative overflow-hidden" style="-webkit-mask-image: -webkit-radial-gradient(white, black);">
@@ -206,7 +208,6 @@
             </div>
         </transition>
 
-        <!-- 登录界面 -->
         <transition name="fade">
             <div v-if="!state.currentUser && !state.isLoading && !state.systemError" class="flex-1 w-full flex items-center justify-center p-4 relative">
                 <div class="absolute top-6 right-6 bg-white/60 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/80 text-xs font-bold flex items-center text-gray-700">
@@ -242,7 +243,6 @@
             </div>
         </transition>
 
-        <!-- 主系统框架 -->
         <template v-if="state.currentUser && !state.isLoading && !state.systemError">
             <div class="flex-1 flex flex-row overflow-hidden p-0 md:p-4 gap-0 md:gap-6 relative w-full mt-4 md:mt-0">
                 
@@ -278,6 +278,7 @@
                                 <i class="ph ph-users-three text-xl md:text-2xl"></i><span>{{ isSuperadmin ? '账号权限' : '教职工' }}</span>
                             </button>
 
+                            <!-- 新增：排课视图导航卡 -->
                             <button @click="switchTab('schedule')" :class="['w-full flex items-center space-x-3 px-4 md:px-5 py-3 md:py-4 rounded-[20px] md:rounded-[24px] transition-all font-bold text-sm md:text-base', state.activeTab === 'schedule' ? 'bg-blue-600/90 text-white shadow-md border border-blue-400/30' : 'text-gray-600 hover:bg-white/40 hover:shadow-sm']">
                                 <i class="ph ph-calendar-blank text-xl md:text-2xl"></i><span>周课表视图</span>
                             </button>
@@ -339,7 +340,7 @@
 
                     <div class="flex-1 overflow-y-auto pb-20 md:pb-6 no-scrollbar w-full">
                         
-                        <!-- 1. Dashboard -->
+                        <!-- Dashboard -->
                         <div v-if="state.activeTab === 'dashboard' && !state.viewingStudent && !state.viewingClass" class="space-y-6 md:space-y-8 animate-[springUp_0.6s_ease-out] px-2 md:px-0">
                             
                             <transition name="fade">
@@ -449,7 +450,7 @@
                             </div>
                         </div>
 
-                        <!-- 2. Schedule -->
+                        <!-- 🌟 新增：排课表视图 -->
                         <div v-if="state.activeTab === 'schedule' && !state.viewingStudent && !state.viewingClass" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
                             <div class="p-4 md:p-6 border-b border-white/40 flex justify-between items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px]">
                                 <div>
@@ -463,15 +464,19 @@
                                 </div>
                             </div>
                             
+                            <!-- 横向滑动的看板 UI -->
                             <div class="flex-1 overflow-x-auto overflow-y-hidden p-4 md:p-6 bg-white/10 schedule-scroll">
                                 <div class="flex h-full min-w-max space-x-4 md:space-x-6">
-                                    <div v-for="(dayClasses, day) in weeklySchedule" :key="day" class="w-64 md:w-72 flex flex-col h-full">
+                                    <!-- 每一天的列 -->
+                                    <div v-for="(classes, day) in weeklySchedule" :key="day" class="w-64 md:w-72 flex flex-col h-full">
+                                        <!-- 列头 -->
                                         <div class="mb-3 px-4 py-2.5 bg-white/50 backdrop-blur-md rounded-2xl border border-white/60 shadow-sm flex justify-between items-center shrink-0">
                                             <span class="font-extrabold text-gray-800 tracking-wider">{{ day }}</span>
-                                            <span class="bg-indigo-100/80 text-indigo-700 text-[10px] font-black px-2 py-0.5 rounded-lg">{{ dayClasses.length }}</span>
+                                            <span class="bg-indigo-100/80 text-indigo-700 text-[10px] font-black px-2 py-0.5 rounded-lg">{{ classes.length }}</span>
                                         </div>
+                                        <!-- 列内容 (纵向滑动) -->
                                         <div class="flex-1 overflow-y-auto no-scrollbar space-y-3 pb-4">
-                                            <div v-for="cls in dayClasses" :key="cls.id" @click="state.activeTab = 'classes'; state.viewingStudent = null; state.viewingClass = cls;" class="bg-white/60 backdrop-blur-md p-4 rounded-[20px] shadow-sm border border-white/80 hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden">
+                                            <div v-for="cls in classes" :key="cls.id" @click="state.viewingClass = cls; state.activeTab = 'classes'" class="bg-white/60 backdrop-blur-md p-4 rounded-[20px] shadow-sm border border-white/80 hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden">
                                                 <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-400 group-hover:bg-indigo-500 transition-colors"></div>
                                                 <div class="flex justify-between items-start mb-2">
                                                     <span class="font-black text-gray-800 text-base truncate pr-2">{{ cls.name }}</span>
@@ -486,7 +491,8 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div v-if="dayClasses.length === 0" class="h-24 rounded-[20px] border-2 border-dashed border-white/50 flex items-center justify-center">
+                                            <!-- 空状态 -->
+                                            <div v-if="classes.length === 0" class="h-24 rounded-[20px] border-2 border-dashed border-white/50 flex items-center justify-center">
                                                 <span class="text-gray-400 font-bold text-xs">无排课</span>
                                             </div>
                                         </div>
@@ -495,7 +501,7 @@
                             </div>
                         </div>
 
-                        <!-- 3. Teachers -->
+                        <!-- 教师管理 -->
                         <div v-if="state.activeTab === 'teachers' && !state.viewingStudent && !state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
                             <div class="p-4 md:p-6 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
                                 <div>
@@ -551,12 +557,11 @@
                             </div>
                         </div>
 
-                        <!-- 4. Class Details (班级详情 & 名单) -->
-                        <div v-if="state.viewingClass && !state.viewingStudent" class="glass-panel animate-[springUp_0.5s_ease-out] flex flex-col h-full">
-                            <div class="p-4 md:p-6 border-b border-white/40 bg-white/20 flex flex-col sm:flex-row justify-between items-start sm:items-center relative overflow-hidden rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0 shrink-0">
+                        <!-- 班级详情页 (名单) -->
+                        <div v-if="state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out]">
+                            <div class="p-4 md:p-6 border-b border-white/40 bg-white/20 flex flex-col sm:flex-row justify-between items-start sm:items-center relative overflow-hidden rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
                                 <div class="flex items-start md:items-center relative z-10 w-full sm:w-auto">
-                                    <!-- 🌟 修复：返回按钮仅清空 viewingClass，这样会自动回到刚才所在的 Tab (班级或课表) -->
-                                    <button @click="state.viewingClass = null;" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-[18px] bg-white/40 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-white/80 hover:shadow-sm mr-3 md:mr-5 transition-all border border-white/50 shrink-0">
+                                    <button @click="state.viewingClass = null" class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-[18px] bg-white/40 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-white/80 hover:shadow-sm mr-3 md:mr-5 transition-all border border-white/50 shrink-0">
                                         <i class="ph ph-caret-left text-xl md:text-2xl font-bold"></i>
                                     </button>
                                     <div class="overflow-hidden">
@@ -572,6 +577,7 @@
                                     </div>
                                 </div>
                                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 w-full sm:w-auto relative z-10">
+                                    <!-- 🌟 新增：一键全员出勤 -->
                                     <button v-if="isAdminOrSuper || isTeacher" @click="triggerBatchAttendance(state.viewingClass)" class="glass-button-secondary bg-emerald-50/80 text-emerald-700 border-emerald-200/50 hover:bg-emerald-100 flex items-center justify-center text-sm md:text-base py-2 md:py-3 w-full sm:w-auto sm:mr-3">
                                         <i class="ph ph-check-square-offset mr-2 text-base md:text-lg"></i> 一键全员出勤
                                     </button>
@@ -581,7 +587,7 @@
                                 </div>
                             </div>
 
-                            <div class="overflow-x-auto p-2 md:p-4 pb-4 md:pb-8 w-full flex-1 relative schedule-scroll">
+                            <div class="overflow-x-auto p-2 md:p-4 pb-4 md:pb-8 w-full relative schedule-scroll">
                                 <table class="w-full text-left min-w-[700px]">
                                     <thead class="sticky top-0 z-40">
                                         <tr>
@@ -653,8 +659,8 @@
                             </div>
                         </div>
 
-                        <!-- 5. Classes (所有班级列表) -->
-                        <div v-if="state.activeTab === 'classes' && !state.viewingClass && !state.viewingStudent" class="glass-panel animate-[springUp_0.5s_ease-out] flex flex-col h-full">
+                        <!-- 班级列表页 -->
+                        <div v-if="state.activeTab === 'classes' && !state.viewingClass" class="glass-panel animate-[springUp_0.5s_ease-out] flex flex-col h-full">
                             <div class="p-4 md:p-6 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
                                 <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
                                     <div class="w-8 h-8 md:w-10 md:h-10 bg-indigo-100/80 rounded-lg md:rounded-xl flex items-center justify-center text-indigo-600 mr-2 md:mr-3 border border-indigo-200/50 shrink-0"><i class="ph ph-chalkboard-teacher text-xl md:text-2xl"></i></div>
@@ -732,10 +738,8 @@
                             </div>
                         </div>
 
-                        <!-- =========================
-                             6. Student Profile (个人档案主页)
-                        =========================== -->
-                        <div v-if="state.viewingStudent && !state.viewingClass" class="animate-[springUp_0.6s_ease-out]">
+                        <!-- 学生个人主页 (移动端响应式重构) -->
+                        <div v-if="state.viewingStudent" class="animate-[springUp_0.6s_ease-out]">
                             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 md:mb-6 gap-3 sm:gap-0">
                                 <button @click="state.viewingStudent = null; state.searchTerm = ''" class="flex items-center px-4 md:px-5 py-2 md:py-2.5 bg-white/40 backdrop-blur-md rounded-xl md:rounded-[16px] shadow-sm text-gray-700 text-sm md:text-base font-bold hover:bg-white/80 transition-all border border-white/50 w-full sm:w-auto justify-center">
                                     <i class="ph ph-arrow-left mr-2 text-lg md:text-xl"></i> 返回列表
@@ -751,6 +755,7 @@
                             </div>
 
                             <div class="flex flex-col lg:flex-row gap-4 md:gap-6 mb-4 md:mb-6">
+                                <!-- 左侧档案卡 (移动端置顶) -->
                                 <div class="w-full lg:w-80 flex-shrink-0 glass-panel p-6 md:p-8 flex flex-col items-center relative overflow-hidden">
                                     <div class="absolute top-0 w-full h-24 md:h-32 bg-gradient-to-b from-blue-400/20 to-transparent"></div>
                                     
@@ -770,12 +775,13 @@
                                             <div class="flex justify-between items-center text-xs md:text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-graduation-cap mr-1.5 md:mr-2 text-lg md:text-xl text-blue-500"></i>年级</span><span class="font-extrabold text-gray-800">{{ viewingStudentData.grade || '-' }}</span></div>
                                         </div>
                                         <div class="bg-white/40 rounded-xl md:rounded-2xl p-3 md:p-4 shadow-sm border border-white/50 space-y-2 md:space-y-3">
-                                            <div class="flex justify-between items-center text-xs md:text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-users mr-1.5 md:mr-2 text-lg md:text-xl text-green-500"></i>家长</span><span class="font-extrabold text-gray-800 truncate pl-2">{{ viewingStudentData.parentName || '-' }} <span class="text-[10px] md:text-xs text-gray-600 font-bold">({viewingStudentData.parentRole || '-'})</span></span></div>
+                                            <div class="flex justify-between items-center text-xs md:text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-users mr-1.5 md:mr-2 text-lg md:text-xl text-green-500"></i>家长</span><span class="font-extrabold text-gray-800 truncate pl-2">{{ viewingStudentData.parentName || '-' }} <span class="text-[10px] md:text-xs text-gray-600 font-bold">({{ viewingStudentData.parentRole || '-' }})</span></span></div>
                                             <div class="flex justify-between items-center text-xs md:text-sm"><span class="text-gray-600 font-bold flex items-center"><i class="ph ph-phone mr-1.5 md:mr-2 text-lg md:text-xl text-green-500"></i>电话</span><span class="font-mono font-extrabold text-gray-800">{{ viewingStudentData.contact || '-' }}</span></div>
                                         </div>
                                     </div>
                                 </div>
 
+                                <!-- 右侧数据卡与班级 (移动端流式排布) -->
                                 <div class="flex-1 flex flex-col gap-4 md:gap-6">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                                         <div class="glass-card p-5 md:p-6 relative overflow-hidden bg-gradient-to-br from-green-50/60 to-emerald-100/60 border-green-200/50">
@@ -851,10 +857,8 @@
                             </div>
                         </div>
 
-                        <!-- =========================
-                             7. Students (所有学员管理)
-                        =========================== -->
-                        <div v-if="state.activeTab === 'students' && !state.viewingStudent && !state.viewingClass" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
+                        <!-- 学员管理 -->
+                        <div v-if="state.activeTab === 'students' && !state.viewingStudent" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
                             <div class="p-4 md:p-6 border-b border-white/40 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 sm:gap-0">
                                 <div>
                                     <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
@@ -946,7 +950,8 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div v-if="filteredEnrollments.length > 0" class="px-4 py-3 border-t border-white/30 flex items-center justify-between bg-white/10 rounded-b-[32px] md:rounded-b-[36px] shrink-0">
+                            <!-- 学员列表分页器 -->
+                            <div v-if="filteredEnrollments.length > 0" class="px-4 py-3 border-t border-white/30 flex items-center justify-between bg-white/10 rounded-b-[32px] md:rounded-b-[36px]">
                                 <span class="text-xs md:text-sm text-gray-500 font-bold">共 {{ filteredEnrollments.length }} 条明细</span>
                                 <div class="flex items-center space-x-2">
                                     <button :disabled="state.studentCurrentPage === 1" @click="state.studentCurrentPage--" class="px-3 py-1.5 rounded-lg bg-white/50 text-gray-700 text-xs md:text-sm font-bold hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all">上一页</button>
@@ -956,10 +961,8 @@
                             </div>
                         </div>
 
-                        <!-- =========================
-                             8. Records (操作日志)
-                        =========================== -->
-                        <div v-if="state.activeTab === 'records' && !state.viewingStudent && !state.viewingClass" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
+                        <!-- 全站流水 -->
+                        <div v-if="state.activeTab === 'records' && !state.viewingStudent" class="glass-panel flex flex-col h-full animate-[springUp_0.5s_ease-out]">
                             <div class="p-4 md:p-6 border-b border-white/40 flex flex-col md:flex-row justify-between items-start md:items-center bg-white/20 rounded-t-[32px] md:rounded-t-[36px] gap-4 md:gap-0">
                                 <div>
                                     <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 flex items-center tracking-tight">
@@ -1019,7 +1022,8 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div v-if="filteredGlobalRecords.length > 0" class="px-4 py-3 border-t border-white/30 flex items-center justify-between bg-white/10 rounded-b-[32px] md:rounded-b-[36px] shrink-0">
+                            <!-- 流水记录分页器 -->
+                            <div v-if="filteredGlobalRecords.length > 0" class="px-4 py-3 border-t border-white/30 flex items-center justify-between bg-white/10 rounded-b-[32px] md:rounded-b-[36px]">
                                 <span class="text-xs md:text-sm text-gray-500 font-bold">共 {{ filteredGlobalRecords.length }} 条记录</span>
                                 <div class="flex items-center space-x-2">
                                     <button :disabled="state.recordCurrentPage === 1" @click="state.recordCurrentPage--" class="px-3 py-1.5 rounded-lg bg-white/50 text-gray-700 text-xs md:text-sm font-bold hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all">上一页</button>
@@ -1029,10 +1033,8 @@
                             </div>
                         </div>
 
-                        <!-- =========================
-                             9. Database (数据备份与恢复)
-                        =========================== -->
-                        <div v-if="state.activeTab === 'database' && !state.viewingStudent && !state.viewingClass" class="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-[springUp_0.5s_ease-out]">
+                        <!-- 备份与恢复中心 -->
+                        <div v-if="state.activeTab === 'database' && !state.viewingStudent" class="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-[springUp_0.5s_ease-out]">
                             <div class="glass-panel p-6 md:p-10 mt-4 md:mt-10 bg-white/30">
                                 <div class="mb-8 md:mb-10 text-center">
                                     <div class="w-20 h-20 md:w-24 md:h-24 bg-white/60 rounded-[24px] md:rounded-[32px] flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-liquid border border-white/80">
@@ -1072,13 +1074,14 @@
             </div>
         </template>
 
-        <!-- 🌟 全局弹窗模态框 -->
+        <!-- 🌟 全局弹窗模态框 (自适应重构) -->
         <transition name="fade">
             <div v-if="state.showModal" class="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-md sm:p-4">
                 
                 <transition name="spring-up" appear>
                     <div class="glass-panel w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col relative !bg-white/80 !backdrop-blur-[40px] border-white rounded-[32px] sm:!rounded-[36px] !rounded-b-none sm:!rounded-b-[36px]" @click.stop>
                         
+                        <!-- 移动端顶部下拉把手指示器 -->
                         <div class="w-full flex justify-center pt-3 pb-1 sm:hidden bg-white/50 backdrop-blur-md rounded-t-[32px]" @click="closeModal">
                             <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
                         </div>
@@ -1471,6 +1474,7 @@
                 <div class="bg-white/90 backdrop-blur-xl rounded-[32px] sm:rounded-[32px] !rounded-b-none sm:!rounded-b-[32px] shadow-2xl w-full sm:max-w-sm overflow-hidden animate-[springUp_0.4s_ease-out] border border-white/50 pb-6 sm:pb-0">
                     <div class="p-6 sm:p-8 text-center relative mt-4 sm:mt-0">
                         <div class="absolute top-0 left-0 w-full h-1.5 bg-red-500 hidden sm:block"></div>
+                        <!-- 移动端顶部下拉把手指示器 -->
                         <div class="w-full flex justify-center absolute top-2 left-0 sm:hidden" @click="state.confirmDialog = null">
                             <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
                         </div>
@@ -1575,6 +1579,32 @@
                 };
 
                 let tcbDb = null;
+                const normalizeCloudData = (res) => {
+                    const data = res?.data || res?.docs || res || [];
+                    return Array.isArray(data) ? data : [];
+                };
+                const fetchAllDocs = async (collectionRef, pageSize = 500) => {
+                    const all = [];
+                    let offset = 0;
+                    while (true) {
+                        const page = await collectionRef.skip(offset).limit(pageSize).get();
+                        const batch = normalizeCloudData(page);
+                        all.push(...batch);
+                        if (batch.length < pageSize) break;
+                        offset += pageSize;
+                    }
+                    return all;
+                };
+                const hasRole = (roles) => !!state.currentUser && roles.includes(state.currentUser.role);
+                const requireRole = (roles, message = '当前账号无权执行该操作') => {
+                    if (hasRole(roles)) return true;
+                    showToast(message, 'error');
+                    return false;
+                };
+                const toNumber = (value, fallback = 0) => {
+                    const n = Number(value);
+                    return Number.isFinite(n) ? n : fallback;
+                };
                 const initCloudBase = async () => {
                     try {
                         state.loadingMsg = 'Verifying Credentials...';
@@ -1597,9 +1627,7 @@
                         
                         for (const col of collectionsToCheck) {
                             try {
-                                const checkRes = await tcbDb.collection(col).limit(500).get();
-                                let resData = checkRes.data || checkRes || [];
-                                if (!Array.isArray(resData)) resData = [];
+                                let resData = await fetchAllDocs(tcbDb.collection(col));
                                 
                                 let defaultData = [];
                                 if (col === 'users') defaultData = fallbackUsers;
@@ -1628,7 +1656,7 @@
 
                                 tcbDb.collection(col).watch({
                                     onChange: (snapshot) => {
-                                        const snapDocs = snapshot.docs || snapshot.data || snapshot || [];
+                                        const snapDocs = normalizeCloudData(snapshot);
                                         if (Array.isArray(snapDocs)) {
                                             if (col === 'settings') {
                                                 const sysData = snapDocs.find(r => r.id === 'sys' || r._id === 'sys');
@@ -1736,6 +1764,7 @@
                     return cls.filter(c => state.showArchivedClasses ? c.status === 'archived' : c.status !== 'archived');
                 });
 
+                // 🌟 新增：周课表智能排布算法
                 const weeklySchedule = computed(() => {
                     const scheduleMap = { '周一': [], '周二': [], '周三': [], '周四': [], '周五': [], '周六': [], '周日': [], '未定/其他': [] };
                     const dayKeywords = {
@@ -1767,6 +1796,7 @@
                         }
                     });
 
+                    // 简单按时间文本排序
                     for(let day in scheduleMap) {
                         scheduleMap[day].sort((a,b) => (a.schedule||'').localeCompare(b.schedule||''));
                     }
@@ -1901,6 +1931,11 @@
                     stopCamera(); 
                 };
                 const switchTab = (tab) => { 
+                    const guardedTabs = {
+                        teachers: ['admin', 'superadmin'],
+                        database: ['admin', 'superadmin']
+                    };
+                    if (guardedTabs[tab] && !requireRole(guardedTabs[tab])) return;
                     state.activeTab = tab; 
                     state.viewingClass = null; 
                     state.viewingStudent = null; 
@@ -1912,6 +1947,13 @@
                 };
                 
                 const openModal = (m) => { 
+                    const guardedModals = {
+                        addTeacher: ['admin', 'superadmin'],
+                        addClass: ['admin', 'superadmin'],
+                        addStudent: ['admin', 'superadmin'],
+                        systemSettings: ['admin', 'superadmin']
+                    };
+                    if (guardedModals[m] && !requireRole(guardedModals[m])) return;
                     state.showModal = m; 
                     state.isMobileMenuOpen = false; 
                     if(m==='systemSettings') state.settingsForm = { name: state.systemName, logo: state.systemLogo, bgImage: state.systemBgImage || '' };
@@ -1922,7 +1964,11 @@
                     }
                 };
 
-                const openLoginHistoryModal = (user) => { state.historyUser = user; state.showModal = 'loginHistory'; };
+                const openLoginHistoryModal = (user) => {
+                    if (!requireRole(['superadmin'])) return;
+                    state.historyUser = user;
+                    state.showModal = 'loginHistory';
+                };
                 
                 const viewStudentProfile = (student) => { state.viewingStudent = student; state.viewingClass = null; state.searchTerm = ''; };
 
@@ -1936,13 +1982,9 @@
 
                 const hasAttendedToday = (studentId, classId) => {
                     const todayDate = formatDt(new Date()).split(' ')[0];
-                    // 🌟 这里修复了之前会导致白屏的致命错别字 (r -> rec)
-                    const rec = state.records.find(r => {
-                        if (!r || !r.date || !r.type) return false;
-                        return r.studentId === studentId && r.classId === classId && r.date.startsWith(todayDate) && (r.type.includes('签到') || r.type.includes('核销') || r.type.includes('请假'));
-                    });
+                    const rec = state.records.find(r => r.studentId === studentId && r.classId === classId && (r.date || '').startsWith(todayDate) && ((r.type || '').includes('签到') || (r.type || '').includes('核销') || (r.type || '').includes('请假')));
                     if (!rec) return 'none';
-                    return (rec.type.includes('签到') || rec.type.includes('核销')) ? 'present' : 'leave';
+                    return ((rec.type || '').includes('签到') || (rec.type || '').includes('核销')) ? 'present' : 'leave';
                 };
 
                 const handleLogin = () => {
@@ -1976,7 +2018,11 @@
                 const handleLogout = () => { state.currentUser = null; switchTab('dashboard'); };
                 const executeConfirm = () => { if(state.confirmDialog?.onConfirm) state.confirmDialog.onConfirm(); state.confirmDialog = null; };
 
+                // ---------------- 业务核心逻辑 ----------------
+
+                // 🌟 新增：一键全员签到核销
                 const triggerBatchAttendance = (classObj) => {
+                    if (!requireRole(['teacher', 'admin', 'superadmin'])) return;
                     const unmarkedStudents = viewingClassStudents.value.filter(s => hasAttendedToday(s.id, classObj.id) === 'none');
                     if (unmarkedStudents.length === 0) return showToast('太棒了，该班今日所有人均已完成考勤或请假！', 'success');
 
@@ -1997,12 +2043,14 @@
                                 let successCount = 0;
                                 for (const s of validStudents) {
                                     try {
-                                        const newS = { ...s, remainingHours: s.remainingHours - 1 };
-                                        await saveToDb('students', s.id, newS, true);
-                                        await addRecord(s.id, s.name, classObj.id, classObj.teacherId, '上课签到 (-1节)', '一键批量打卡出勤');
+                                        const latest = state.students.find(x => x.id === s.id);
+                                        if (!latest || latest.remainingHours <= 0 || hasAttendedToday(latest.id, classObj.id) !== 'none') continue;
+                                        const newS = { ...latest, remainingHours: latest.remainingHours - 1 };
+                                        await saveToDb('students', latest.id, newS, true); // skipLocalUpdate to prevent flickering during batch
+                                        await addRecord(latest.id, latest.name, classObj.id, classObj.teacherId, '上课签到 (-1节)', '一键批量打卡出勤');
                                         
                                         const arr = state.students;
-                                        const idx = arr.findIndex(x => x.id === s.id);
+                                        const idx = arr.findIndex(x => x.id === latest.id);
                                         if (idx > -1) arr[idx] = newS;
                                         
                                         successCount++;
@@ -2015,6 +2063,7 @@
                 };
 
                 const triggerArchiveClass = (id) => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
                     state.confirmDialog = { title: '班级结业归档', message: '归档后，该班级将被隐藏入历史库，不再显示在日常考勤和分班列表中，但会保留所有的流水和名单记录。', onConfirm: () => { 
                         withLoading('归档处理中...', async () => { 
                             const cls = state.classes.find(c => c.id === id);
@@ -2024,6 +2073,7 @@
                     }};
                 };
                 const triggerUnarchiveClass = (id) => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
                     state.confirmDialog = { title: '恢复活跃班级', message: '确认要将该班级从历史库恢复吗？恢复后将重新出现在日常列表中。', onConfirm: () => { 
                         withLoading('恢复处理中...', async () => { 
                             const cls = state.classes.find(c => c.id === id);
@@ -2045,10 +2095,12 @@
                 };
 
                 const openSuperEditModal = (student) => {
+                    if (!requireRole(['superadmin'])) return;
                     state.superEditForm = { targetId: student.id, remainingHours: student.remainingHours, totalHours: student.totalHours, paymentAmount: student.totalPayment || student.paymentAmount || 0 };
                     state.showModal = 'superEditStudent';
                 };
                 const submitSuperEditStudent = () => {
+                    if (!requireRole(['superadmin'])) return;
                     withLoading('Executing Root Override...', async () => {
                         try {
                             const s = state.students.find(x => x.id === state.superEditForm.targetId);
@@ -2060,7 +2112,12 @@
                     });
                 };
 
-                const openChangePasswordModal = (user) => { state.passwordForm = { targetId: user.id, currentPassword: '', newPassword: '', confirmPassword: '' }; state.showModal = 'changePassword'; };
+                const openChangePasswordModal = (user) => {
+                    if (user.id !== state.currentUser.id && !requireRole(['admin', 'superadmin'])) return;
+                    if (user.role === 'superadmin' && !requireRole(['superadmin'])) return;
+                    state.passwordForm = { targetId: user.id, currentPassword: '', newPassword: '', confirmPassword: '' };
+                    state.showModal = 'changePassword';
+                };
                 const submitChangePassword = async () => {
                     if (state.passwordForm.newPassword !== state.passwordForm.confirmPassword) return showToast('两遍密码不统一', 'error');
                     if (state.passwordForm.newPassword.length < 6) return showToast('新密码太短，易被破解', 'error');
@@ -2069,6 +2126,9 @@
                     withLoading('执行秘钥更新...', async () => {
                         try {
                             const targetUser = state.users.find(u => u.id === state.passwordForm.targetId);
+                            if (!targetUser) return showToast('目标账号不存在', 'error');
+                            if (targetUser.id !== state.currentUser.id && !requireRole(['admin', 'superadmin'])) return;
+                            if (targetUser.role === 'superadmin' && !requireRole(['superadmin'])) return;
                             const updatedUser = { ...targetUser, password: state.passwordForm.newPassword };
                             await saveToDb('users', updatedUser.id, updatedUser);
                             if (targetUser.id === state.currentUser.id) state.currentUser.password = state.passwordForm.newPassword;
@@ -2078,19 +2138,25 @@
                 };
 
                 const triggerDeleteUser = (id) => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
                     if (id === state.currentUser.id) return showToast('不可自杀', 'error');
+                    const targetUser = state.users.find(u => u.id === id);
+                    if (!targetUser) return showToast('目标账号不存在', 'error');
+                    if (targetUser.role !== 'teacher' && !requireRole(['superadmin'])) return;
                     if (getTeacherClassCount(id) > 0) return showToast('请先将其名下班级移交给他人', 'error');
                     state.confirmDialog = { title: '销毁员工账号', message: '权限将被永久回收。', onConfirm: () => { 
                         withLoading('处理中...', async () => { await delFromDb('users', id); showToast('账号已抹除'); });
                     }};
                 };
                 const triggerDeleteClass = (id) => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
                     if (getClassStudentCount(id) > 0) return showToast('班内尚有学员，请先妥善分流', 'error');
                     state.confirmDialog = { title: '解散班级', message: '所有排期和设置将被抹除。', onConfirm: () => { 
                         withLoading('处理中...', async () => { await delFromDb('classes', id); showToast('班级解散完成'); });
                     }};
                 };
                 const triggerDropClass = (sid, cid) => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
                     state.confirmDialog = { title: '执行退班', message: `将该学员移出此班级 (不没收课时)`, onConfirm: () => {
                         const s = state.students.find(x=>x.id===sid);
                         const newS = { ...s, classIds: s.classIds.filter(id=>id!==cid) };
@@ -2102,6 +2168,7 @@
                     }};
                 };
                 const triggerDeleteProfile = (sid) => {
+                    if (!requireRole(['superadmin'])) return;
                     state.confirmDialog = { title: '物理销毁档案', message: `该学员所有资产将被清零。`, onConfirm: () => {
                         withLoading('擦除中...', async () => { await delFromDb('students', sid); state.viewingStudent = null; showToast('档案已物理毁灭'); });
                     }};
@@ -2109,7 +2176,7 @@
 
                 const addRecord = async (studentId, studentName, classId, teacherId, typeStr, remarkStr='') => {
                     const tid = teacherId || getStudentTeacherId(classId);
-                    const rid = Date.now() + Math.floor(Math.random() * 100);
+                    const rid = Date.now() * 1000 + Math.floor(Math.random() * 1000);
                     const newRec = {
                         id: rid, studentId, studentName, classId, className: getClassName(classId),
                         teacherId: tid, teacherName: getTeacherName(tid),
@@ -2120,6 +2187,7 @@
                 };
 
                 const submitSystemSettings = () => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
                     withLoading('云端配置广播中...', async () => {
                         const payload = { id: 'sys', name: state.settingsForm.name, logo: state.settingsForm.logo, bgImage: state.settingsForm.bgImage || '' };
                         await saveToDb('settings', 'sys', payload);
@@ -2131,16 +2199,27 @@
                 };
 
                 const submitTeacher = () => {
-                    if (state.users.some(u=>u.username===state.teacherForm.username)) return showToast('登录名重合', 'error');
+                    if (!requireRole(['admin', 'superadmin'])) return;
+                    const username = (state.teacherForm.username || '').trim();
+                    const name = (state.teacherForm.name || '').trim();
+                    if (!name || !username) return showToast('姓名和登录账号不能为空', 'error');
+                    if (state.teacherForm.password && state.teacherForm.password.length < 6) return showToast('初始密码至少6位', 'error');
+                    if (state.users.some(u=>u.username===username)) return showToast('登录名重合', 'error');
                     const tid = Date.now();
                     withLoading('开通中...', async () => {
-                        await saveToDb('users', tid, { id: tid, ...state.teacherForm, password: state.teacherForm.password||'123456' });
+                        await saveToDb('users', tid, { id: tid, ...state.teacherForm, name, username, password: state.teacherForm.password||'123456' });
                         closeModal(); state.teacherForm = {name:'', username:'', password:'', role:'teacher'}; showToast('新账号开通完毕');
                     });
                 };
 
-                const openEditClassModal = (cls) => { state.classForm = { id: cls.id, name: cls.name, course: cls.course, schedule: cls.schedule||'', teacherId: cls.teacherId }; state.showModal = 'editClass'; };
+                const openEditClassModal = (cls) => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
+                    state.classForm = { id: cls.id, name: cls.name, course: cls.course, schedule: cls.schedule||'', teacherId: cls.teacherId };
+                    state.showModal = 'editClass';
+                };
                 const submitClass = () => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
+                    if (!state.classForm.name || !state.classForm.course || !state.classForm.teacherId) return showToast('请完整填写班级名称、课程和任课老师', 'error');
                     withLoading('排期更新中...', async () => {
                         if (state.showModal === 'addClass') {
                             const cid = Date.now();
@@ -2166,12 +2245,14 @@
                 };
 
                 const openAddStudentModal = (lockedClassObj=null, mode='new') => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
                     state.addStudentMode = mode;
                     state.studentForm = { existingId: '', name: '', contact: '', payment: 0, hours: '', bonus: 0, teacherId: lockedClassObj?.teacherId||'', classId: lockedClassObj?.id||'', remark: '', lockedClass: lockedClassObj, avatar: '', school: '', grade: '', parentName: '', parentRole: '妈妈' };
                     state.showModal = 'addStudent';
                 };
 
                 const submitStudent = () => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
                     const sf = state.studentForm; 
                     
                     if (state.addStudentMode === 'new' && !sf.name) return showToast('请输入学员真实姓名', 'error');
@@ -2191,23 +2272,33 @@
                             await addRecord(s.id, s.name, cid, null, '老生排班', sf.remark);
                             showToast('插班成功');
                         } else {
-                            const total = (sf.hours||0) + (sf.bonus||0); const sid = Date.now();
+                            const hours = toNumber(sf.hours);
+                            const bonus = toNumber(sf.bonus);
+                            const payment = toNumber(sf.payment);
+                            if (hours <= 0 || bonus < 0 || payment < 0) return showToast('课时和金额不能为异常数值', 'error');
+                            const total = hours + bonus; const sid = Date.now();
                             const newS = { 
                                 id: sid, name: sf.name, contact: sf.contact, 
-                                remainingHours: total, totalHours: total, paymentAmount: sf.payment, totalPayment: sf.payment, bonusHours: sf.bonus||0, classIds: [cid], 
+                                remainingHours: total, totalHours: total, paymentAmount: payment, totalPayment: payment, bonusHours: bonus, classIds: [cid], 
                                 avatar: sf.avatar || '', school: sf.school || '', grade: sf.grade || '', parentName: sf.parentName || '', parentRole: sf.parentRole || '妈妈' 
                             };
                             await saveToDb('students', sid, newS);
-                            await addRecord(sid, sf.name, cid, null, `首报录入 (+${sf.hours||0}正, +${sf.bonus||0}赠)`, `收:¥${sf.payment} | ` + sf.remark);
+                            await addRecord(sid, sf.name, cid, null, `首报录入 (+${hours}正, +${bonus}赠)`, `收:¥${payment} | ` + sf.remark);
                             showToast('新兵建档完成');
                         }
                         closeModal();
                     });
                 };
 
-                const openRenewModal = (studentObj) => { state.renewForm = { student: studentObj, hours: '', bonus: 0, payment: '', remark: '' }; state.showModal = 'renewStudent'; };
+                const openRenewModal = (studentObj) => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
+                    state.renewForm = { student: studentObj, hours: '', bonus: 0, payment: '', remark: '' };
+                    state.showModal = 'renewStudent';
+                };
                 const submitRenew = () => {
-                    const rf = state.renewForm; const h = rf.hours||0; const b = rf.bonus||0; const p = rf.payment||0;
+                    if (!requireRole(['admin', 'superadmin'])) return;
+                    const rf = state.renewForm; const h = toNumber(rf.hours); const b = toNumber(rf.bonus); const p = toNumber(rf.payment);
+                    if (h <= 0 || b < 0 || p < 0) return showToast('充值课时和金额不能为异常数值', 'error');
                     const s = state.students.find(x=>x.id===rf.student.id);
                     const newS = { ...s };
                     newS.remainingHours += (h+b); newS.totalHours += (h+b); newS.bonusHours = (newS.bonusHours||0) + b; newS.totalPayment = (newS.totalPayment||s.paymentAmount||0) + p;
@@ -2219,10 +2310,17 @@
                     });
                 };
 
-                const openAttendanceModal = (studentObj, classObj) => { state.attendanceForm = { student: studentObj, classObj: classObj, type: 'present', remark: '' }; state.showModal = 'attendance'; };
+                const openAttendanceModal = (studentObj, classObj) => {
+                    if (!requireRole(['teacher', 'admin', 'superadmin'])) return;
+                    if (!classObj) return showToast('班级数据不存在，无法点名', 'error');
+                    state.attendanceForm = { student: studentObj, classObj: classObj, type: 'present', remark: '' };
+                    state.showModal = 'attendance';
+                };
                 const submitAttendance = () => {
+                    if (!requireRole(['teacher', 'admin', 'superadmin'])) return;
                     const af = state.attendanceForm; 
-                    const s = state.students.find(x=>x.id===af.student.id);
+                    let s = state.students.find(x=>x.id===af.student.id);
+                    if (!s || !af.classObj) return showToast('点名数据不存在，请刷新后重试', 'error');
                     if (hasAttendedToday(s.id, af.classObj.id) !== 'none') return showToast('防止误触，您今天已经点过名了', 'error');
 
                     state.confirmDialog = {
@@ -2230,6 +2328,8 @@
                         message: af.type === 'present' ? `确认将【${s.name}】设为出勤吗？这将立即扣除 1 节共享课时！` : `确认为【${s.name}】登记请假单吗？(不扣课时)`,
                         onConfirm: () => {
                             withLoading('打卡信号发射中...', async () => {
+                                s = state.students.find(x=>x.id===af.student.id);
+                                if (!s || hasAttendedToday(s.id, af.classObj.id) !== 'none') return showToast('防止重复提交，最新数据已刷新', 'error');
                                 if (af.type === 'present') {
                                     if (s.remainingHours <= 0) return showToast('课时库已枯竭！', 'error');
                                     const newS = { ...s, remainingHours: s.remainingHours - 1 };
@@ -2247,6 +2347,7 @@
                 };
 
                 const handleExportData = (arg) => {
+                    if (!requireRole(['admin', 'superadmin'])) return;
                     const isAuto = arg === 'auto';
                     
                     const safeUsers = state.currentUser.role === 'superadmin' 
@@ -2268,6 +2369,10 @@
                 };
 
                 const triggerImportData = (e) => {
+                    if (!requireRole(['admin', 'superadmin'])) {
+                        e.target.value = null;
+                        return;
+                    }
                     const file = e.target.files[0]; if(!file) return;
                     state.confirmDialog = { 
                         title: '致命警告：全量还原', 
@@ -2277,7 +2382,7 @@
                             reader.onload = async (evt) => {
                                 try { 
                                     const d = JSON.parse(evt.target.result); 
-                                    if(d.users && d.records) { 
+                                    if(Array.isArray(d.users) && Array.isArray(d.records)) { 
                                         await withLoading('强制重构时空中，切勿断电...', async () => {
                                             if (d.sys) await saveToDb('settings', 'sys', { id: 'sys', name: d.sys.name, logo: d.sys.logo, bgImage: d.sys.bgImage || '' }, true);
                                             
@@ -2288,10 +2393,22 @@
                                             }
 
                                             const cols = ['users', 'classes', 'students', 'records'];
-                                            for (const c of cols) { if (d[c]) { for (const item of d[c]) await saveToDb(c, item.id, item, true); state[c] = d[c]; } }
+                                            for (const c of cols) {
+                                                if (!Array.isArray(d[c])) continue;
+                                                const incomingIds = new Set(d[c].map(item => item.id));
+                                                const existingDocs = [...state[c]];
+                                                for (const oldItem of existingDocs) {
+                                                    if (c === 'users' && state.currentUser.role !== 'superadmin' && oldItem.role === 'superadmin') continue;
+                                                    if (!incomingIds.has(oldItem.id)) await delFromDb(c, oldItem.id);
+                                                }
+                                                for (const item of d[c]) await saveToDb(c, item.id, item, true);
+                                                state[c] = d[c];
+                                            }
                                             if (d.sys) { state.systemName = d.sys.name; state.systemLogo = d.sys.logo; state.systemBgImage = d.sys.bgImage || ''; }
                                             showToast('时空线跃迁完成'); switchTab('dashboard');
                                         });
+                                    } else {
+                                        showToast('备份文件缺少必要数据表', 'error');
                                     }
                                 } catch(e){ showToast('文件格式遭破坏', 'error'); }
                             };
@@ -2306,7 +2423,8 @@
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ratio = img.height / img.width;
-                        canvas.width = maxWidth; canvas.height = maxWidth * ratio;
+                        canvas.width = Math.min(maxWidth, img.width);
+                        canvas.height = Math.round(canvas.width * ratio);
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         callback(canvas.toDataURL('image/jpeg', 0.8));
@@ -2352,13 +2470,7 @@
                     else if (state.showModal === 'editAvatar') state.editAvatarForm.avatar = base64;
                     stopCamera();
                 };
-                const stopCamera = () => { 
-                    if (localStream) { 
-                        localStream.getTracks().forEach(track => track.stop()); 
-                        localStream = null; 
-                    } 
-                    state.isCameraOpen = false; 
-                };
+                const stopCamera = () => { if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; } state.isCameraOpen = false; };
 
                 return {
                     state, isSuperadmin, isAdmin, isTeacher, isAdminOrSuper,
